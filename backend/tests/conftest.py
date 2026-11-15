@@ -7,6 +7,7 @@ client.
 
 from __future__ import annotations
 
+import math
 import os
 from datetime import date, timedelta
 
@@ -67,20 +68,29 @@ def seeded_db(db):
     db.add_all(assets)
     db.commit()
 
-    # 500 business days ending today; each asset grows at a fixed daily rate
-    # with a deterministic wobble, so every statistic is reproducible.
+    # 500 business days ending today. Each asset grows at a fixed daily rate
+    # with a deterministic sinusoidal wobble, so every statistic is exactly
+    # reproducible across runs.
+    #
+    # Each asset gets its own period, phase and amplitude. Giving them all
+    # the same wobble would make them perfectly correlated, which would erase
+    # the diversification effect the risk tests exist to verify.
     dates = pd.bdate_range(end=date.today(), periods=500)
     profiles = {
-        "RELIANCE": (1000.0, 0.0004), "TCS": (3000.0, 0.0003),
-        "INFY": (1400.0, 0.0002), "GOLDBEES": (50.0, 0.0003),
-        "DEBT": (50.0, 0.0002), "NIFTY50": (18000.0, 0.00035),
-        "OLDCO": (100.0, 0.0001),
+        # symbol:      (start,   daily drift, wobble period, phase, amplitude)
+        "RELIANCE": (1000.0,  0.00040, 23.0, 0.0, 0.020),
+        "TCS":      (3000.0,  0.00030, 31.0, 1.1, 0.018),
+        "INFY":     (1400.0,  0.00020, 17.0, 2.3, 0.022),
+        "GOLDBEES": (  50.0,  0.00030, 41.0, 3.7, 0.015),
+        "DEBT":     (  50.0,  0.00020, 59.0, 0.6, 0.003),
+        "NIFTY50":  (18000.0, 0.00035, 27.0, 0.4, 0.016),
+        "OLDCO":    ( 100.0,  0.00010, 13.0, 2.9, 0.025),
     }
     rows = []
     ids = {a.symbol: a.id for a in db.query(Asset).all()}
-    for symbol, (start_price, drift) in profiles.items():
+    for symbol, (start_price, drift, period, phase, amplitude) in profiles.items():
         for i, when in enumerate(dates):
-            wobble = 1.0 + 0.01 * ((i % 7) - 3) / 3.0
+            wobble = 1.0 + amplitude * math.sin(2 * math.pi * i / period + phase)
             rows.append({
                 "asset_id": ids[symbol],
                 "date": when.date(),

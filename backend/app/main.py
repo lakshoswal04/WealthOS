@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1 import auth, portfolio
+from app.api.v1 import analytics, auth, portfolio
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.services.market_service import market_cache
@@ -128,3 +128,4 @@ def health() -> dict:
 
 app.include_router(auth.router, prefix=settings.api_v1_prefix)
 app.include_router(portfolio.router, prefix=settings.api_v1_prefix)
+app.include_router(analytics.router, prefix=settings.api_v1_prefix)
