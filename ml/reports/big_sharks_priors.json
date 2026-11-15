@@ -1,0 +1,47 @@
+{
+  "generated_at": "2026-11-15T23:16:40.327639+00:00",
+  "symbol_mapping": {
+    "total_names": 1169,
+    "exact_matches": 823,
+    "fuzzy_matches": 22,
+    "unmatched": 324,
+    "match_rate": 0.7228,
+    "fuzzy_threshold": 88,
+    "unmatched_sample": [
+      "360_One_Wam_Ltd",
+      "7Seas_Entertainment_Ltd",
+      "ABC_India_Ltd",
+      "AGI_Greenpac_Ltd",
+      "AGS_Transact_Technologies_Ltd",
+      "ARCL_Organics_Ltd",
+      "A_1_Acid_Ltd",
+      "Aarti_Pharmalabs_Ltd",
+      "Abans_Holdings_Ltd",
+      "Adani_Energy_Solutions_Ltd",
+      "Aditya_Birla_Sun_Life_AMC_Ltd",
+      "Aditya_Vision_Ltd",
+      "Ador_Fontech_Ltd",
+      "Aeroflex_Industries_Ltd",
+      "Affordable_Robotic_&_Automation_Ltd",
+      "Allcargo_Gati_Ltd",
+      "Allcargo_Terminals_Ltd",
+      "Amara_Raja_Energy_&_Mobility_Ltd",
+      "Amarjothi_Spinning_Mills_Ltd",
+      "Ami_Organics_Ltd"
+    ]
+  },
+  "concentration": {
+    "investors": 50,
+    "hhi": {
+      "p10": 0.0483,
+      "median": 0.2266,
+      "p90": 0.8748
+    },
+    "n_holdings": {
+      "p10": 2,
+      "median": 13,
+      "p90": 80
+    },
+    "caveat": "Derived from large and institutional investors, not retail ones. Used as a loose shape for the synthetic concentration distribution, never as a retail benchmark."
+  }
+}

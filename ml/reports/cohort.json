@@ -1,0 +1,68 @@
+{
+  "generated_at": "2026-11-15T23:21:19.570201+00:00",
+  "n_investors": 10000,
+  "seed": 42,
+  "archetype_counts": {
+    "balanced_investor": 2606,
+    "aggressive_growth": 2003,
+    "conservative_saver": 1835,
+    "goal_focused_sip": 1656,
+    "active_trader": 1211,
+    "dormant_holder": 689
+  },
+  "risk_mismatch_count": 1520,
+  "holdings_per_investor": {
+    "median": 12,
+    "min": 7,
+    "max": 22
+  },
+  "investor_months": 1253505,
+  "final_value": {
+    "median": 4513940.94,
+    "p10": 1174658.27,
+    "p90": 13220045.24
+  },
+  "growth_multiple": {
+    "median": 2.258,
+    "p10": 1.628,
+    "p90": 3.397
+  },
+  "anomalies": {
+    "months": 3556,
+    "investors": 1200,
+    "by_type": {
+      "turnover_spike": 742,
+      "dormancy_break": 734,
+      "panic_sell": 717,
+      "concentration_spike": 690,
+      "allocation_shock": 673
+    },
+    "caveat": "Injected, not observed. They are deliberately unambiguous, so detection scores against them are an upper bound on real-world performance."
+  },
+  "snapshot_rows": 1253505,
+  "snapshot_columns": [
+    "investor_id",
+    "date",
+    "total_value",
+    "invested_amount",
+    "net_contribution",
+    "period_return",
+    "cumulative_return",
+    "volatility",
+    "current_drawdown",
+    "max_drawdown",
+    "hhi",
+    "top_holding_weight",
+    "n_holdings",
+    "turnover",
+    "n_trades",
+    "is_anomaly",
+    "anomaly_type",
+    "equity_allocation",
+    "etf_allocation",
+    "gold_allocation",
+    "debt_allocation",
+    "cash_allocation",
+    "archetype"
+  ]
+}
