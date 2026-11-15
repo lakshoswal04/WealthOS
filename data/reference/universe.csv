@@ -1,7 +1,8 @@
 symbol,file_symbol,name,asset_class,sector,yahoo_symbol,status,note
 CASH,,Cash / liquid holdings,cash,Cash,,active,
-GILT5YBEES,,Nippon India ETF Nifty 5yr Benchmark G-Sec,debt,Sovereign Debt,GILT5YBEES.NS,active,Tradeable debt asset from 2021-04. Carries the debt class past the Kaggle cutoff; vol 3.1% vs 4.3% for the GS Composite it hands off from.
-NIFTY_GS_COMPOSITE,NIFTY GS COMPSITE,Nifty Government Securities Composite Index,debt,Sovereign Debt,,active,"Kaggle index 2011-2021; historical debt reference only, not tradeable."
+DEBT,,Indian Government Securities (composite),debt,Sovereign Debt,,active,"Spliced series: NIFTY GS Composite (2012-2021) handing off to GILT5YBEES (2021-2026). Instrument change, not a continuation; overlap correlation 0.858."
+GILT5YBEES,,Nippon India ETF Nifty 5yr Benchmark G-Sec,debt,Sovereign Debt,GILT5YBEES.NS,component,Tradeable debt asset from 2021-04. Carries the debt class past the Kaggle cutoff; vol 3.1% vs 4.3% for the GS Composite it hands off from.
+NIFTY_GS_COMPOSITE,NIFTY GS COMPSITE,Nifty Government Securities Composite Index,debt,Sovereign Debt,,component,"Kaggle index 2011-2021; historical debt reference only, not tradeable."
 BAJAJ-AUTO,BAJAJ-AUTO,Bajaj Auto,equity,Auto,BAJAJ-AUTO.NS,active,
 EICHERMOT,EICHERMOT,Eicher Motors,equity,Auto,EICHERMOT.NS,active,
 HEROMOTOCO,HEROMOTOCO,Hero MotoCorp,equity,Auto,HEROMOTOCO.NS,active,
