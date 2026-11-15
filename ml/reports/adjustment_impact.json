@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-11-15T22:49:27.692177+00:00",
+  "window": [
+    "2012-01-01",
+    "2021-07-01"
+  ],
+  "symbols_compared": 51,
+  "symbols_with_phantom_moves": 24,
+  "total_phantom_moves": 28,
+  "volatility_overstated_pp": {
+    "median": 4.81,
+    "max": 15.18
+  },
+  "max_drawdown_overstated_pp": {
+    "median": 7.88,
+    "max": 63.8
+  },
+  "sharpe_understated": {
+    "median": 0.211,
+    "max": 0.941
+  },
+  "sharpe_sign_flips": 15,
+  "worst_cases": [
+    {
+      "symbol": "ASIANPAINT",
+      "phantom_moves": 1,
+      "vol_unadjusted": 0.396,
+      "vol_adjusted": 0.244,
+      "mdd_unadjusted": -0.925,
+      "mdd_adjusted": -0.287,
+      "sharpe_unadjusted": -0.11,
+      "sharpe_adjusted": 0.831
+    },
+    {
+      "symbol": "INFY",
+      "phantom_moves": 3,
+      "vol_unadjusted": 0.401,
+      "vol_adjusted": 0.263,
+      "mdd_unadjusted": -0.879,
+      "mdd_adjusted": -0.365,
+      "sharpe_unadjusted": -0.302,
+      "sharpe_adjusted": 0.427
+    },
+    {
+      "symbol": "EICHERMOT",
+      "phantom_moves": 1,
+      "vol_unadjusted": 0.446,
+      "vol_adjusted": 0.31,
+      "mdd_unadjusted": -0.938,
+      "mdd_adjusted": -0.607,
+      "sharpe_unadjusted": 0.01,
+      "sharpe_adjusted": 0.806
+    },
+    {
+      "symbol": "TRENT",
+      "phantom_moves": 1,
+      "vol_unadjusted": 0.448,
+      "vol_adjusted": 0.313,
+      "mdd_unadjusted": -0.926,
+      "mdd_adjusted": -0.493,
+      "sharpe_unadjusted": -0.129,
+      "sharpe_adjusted": 0.581
+    },
+    {
+      "symbol": "SBIN",
+      "phantom_moves": 1,
+      "vol_unadjusted": 0.462,
+      "vol_adjusted": 0.331,
+      "mdd_unadjusted": -0.949,
+      "mdd_adjusted": -0.595,
+      "sharpe_unadjusted": -0.422,
+      "sharpe_adjusted": 0.124
+    }
+  ]
+}

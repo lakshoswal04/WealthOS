@@ -1,0 +1,780 @@
+{
+  "generated_at": "2026-11-15T22:47:46.110281+00:00",
+  "splices": {
+    "NIFTY50": {
+      "kind": "same_instrument",
+      "overlap_days": 3374,
+      "historical_span": [
+        "1990-07-03",
+        "2021-07-01"
+      ],
+      "recent_span": [
+        "2007-09-17",
+        "2026-11-13"
+      ],
+      "return_correlation": 1.0,
+      "scale_factor": 1.0,
+      "ratio_drift": 0.0,
+      "historical_ann_vol": 0.226,
+      "recent_ann_vol": 0.226,
+      "vol_ratio": 1.0,
+      "max_move_at_join": 0.0409,
+      "handover_date": "2007-09-17",
+      "result_span": [
+        "1990-07-03",
+        "2026-11-13"
+      ],
+      "result_rows": 8795
+    },
+    "DEBT": {
+      "kind": "proxy_handoff",
+      "overlap_days": 57,
+      "historical_span": [
+        "2011-01-03",
+        "2021-07-01"
+      ],
+      "recent_span": [
+        "2021-04-07",
+        "2026-11-13"
+      ],
+      "return_correlation": 0.8581,
+      "scale_factor": 0.020887,
+      "ratio_drift": 0.0004,
+      "historical_ann_vol": 0.0193,
+      "recent_ann_vol": 0.0198,
+      "vol_ratio": 1.027,
+      "max_move_at_join": 0.0039,
+      "handover_date": "2021-04-07",
+      "result_span": [
+        "2011-01-03",
+        "2026-11-13"
+      ],
+      "result_rows": 4104
+    }
+  },
+  "assets": {
+    "NIFTY50": {
+      "source": "kaggle_index+yahoo(spliced)",
+      "rows": 4067,
+      "start": "2012-01-03",
+      "end": "2026-11-13",
+      "ann_return_pct": 10.86,
+      "ann_vol_pct": 15.21
+    },
+    "DEBT": {
+      "source": "kaggle_gs_composite+gilt5ybees(handoff)",
+      "rows": 4069,
+      "start": "2012-01-01",
+      "end": "2026-11-13",
+      "ann_return_pct": 7.09,
+      "ann_vol_pct": 3.88
+    },
+    "BAJAJ-AUTO": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 15.8,
+      "ann_vol_pct": 24.02
+    },
+    "EICHERMOT": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 28.5,
+      "ann_vol_pct": 29.52
+    },
+    "HEROMOTOCO": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 9.9,
+      "ann_vol_pct": 26.05
+    },
+    "M&M": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 16.36,
+      "ann_vol_pct": 28.01
+    },
+    "MARUTI": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 18.51,
+      "ann_vol_pct": 26.27
+    },
+    "TVSMOTOR": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 33.72,
+      "ann_vol_pct": 32.55
+    },
+    "GRASIM": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 14.54,
+      "ann_vol_pct": 26.08
+    },
+    "SHREECEM": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 16.85,
+      "ann_vol_pct": 26.35
+    },
+    "ULTRACEMCO": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 16.23,
+      "ann_vol_pct": 25.22
+    },
+    "UPL": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 13.57,
+      "ann_vol_pct": 33.08
+    },
+    "LT": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 16.3,
+      "ann_vol_pct": 26.44
+    },
+    "ASIANPAINT": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 16.17,
+      "ann_vol_pct": 23.75
+    },
+    "TITAN": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 23.39,
+      "ann_vol_pct": 29.2
+    },
+    "BPCL": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 18.63,
+      "ann_vol_pct": 31.82
+    },
+    "COALINDIA": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 9.04,
+      "ann_vol_pct": 27.08
+    },
+    "ONGC": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 6.33,
+      "ann_vol_pct": 30.78
+    },
+    "RELIANCE": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 14.76,
+      "ann_vol_pct": 25.37
+    },
+    "BRITANNIA": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 22.35,
+      "ann_vol_pct": 23.46
+    },
+    "HINDUNILVR": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 12.29,
+      "ann_vol_pct": 21.83
+    },
+    "ITC": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 8.15,
+      "ann_vol_pct": 22.97
+    },
+    "NESTLEIND": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 13.21,
+      "ann_vol_pct": 21.46
+    },
+    "TATACONSUM": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 17.89,
+      "ann_vol_pct": 28.69
+    },
+    "AXISBANK": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 14.59,
+      "ann_vol_pct": 31.35
+    },
+    "BAJAJFINSV": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 26.74,
+      "ann_vol_pct": 30.36
+    },
+    "BAJFINANCE": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 39.08,
+      "ann_vol_pct": 33.1
+    },
+    "HDFCBANK": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 14.26,
+      "ann_vol_pct": 21.48
+    },
+    "HDFCLIFE": {
+      "source": "yahoo_adj_close",
+      "rows": 2223,
+      "start": "2017-11-17",
+      "end": "2026-11-13",
+      "ann_return_pct": 6.66,
+      "ann_vol_pct": 28.96
+    },
+    "ICICIBANK": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 18.13,
+      "ann_vol_pct": 28.7
+    },
+    "INDUSINDBK": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 9.58,
+      "ann_vol_pct": 36.78
+    },
+    "KOTAKBANK": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 16.48,
+      "ann_vol_pct": 25.17
+    },
+    "SBILIFE": {
+      "source": "yahoo_adj_close",
+      "rows": 2255,
+      "start": "2017-10-03",
+      "end": "2026-11-13",
+      "ann_return_pct": 11.16,
+      "ann_vol_pct": 26.5
+    },
+    "SBIN": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 13.74,
+      "ann_vol_pct": 30.53
+    },
+    "APOLLOHOSP": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 18.9,
+      "ann_vol_pct": 29.5
+    },
+    "HCLTECH": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 20.63,
+      "ann_vol_pct": 25.79
+    },
+    "INFY": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 10.26,
+      "ann_vol_pct": 26.16
+    },
+    "TCS": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 11.46,
+      "ann_vol_pct": 23.12
+    },
+    "TECHM": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 19.71,
+      "ann_vol_pct": 27.61
+    },
+    "WIPRO": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 7.34,
+      "ann_vol_pct": 24.67
+    },
+    "ADANIENT": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 30.3,
+      "ann_vol_pct": 48.81
+    },
+    "ADANIPORTS": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 19.61,
+      "ann_vol_pct": 35.82
+    },
+    "HINDALCO": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 14.93,
+      "ann_vol_pct": 36.32
+    },
+    "JSWSTEEL": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 23.34,
+      "ann_vol_pct": 32.4
+    },
+    "TATASTEEL": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 14.15,
+      "ann_vol_pct": 33.68
+    },
+    "CIPLA": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 10.15,
+      "ann_vol_pct": 24.14
+    },
+    "DIVISLAB": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 24.29,
+      "ann_vol_pct": 28.38
+    },
+    "DRREDDY": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 10.3,
+      "ann_vol_pct": 24.25
+    },
+    "SUNPHARMA": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 14.11,
+      "ann_vol_pct": 26.14
+    },
+    "TRENT": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 25.48,
+      "ann_vol_pct": 33.48
+    },
+    "BHARTIARTL": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 13.21,
+      "ann_vol_pct": 28.02
+    },
+    "NTPC": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 9.15,
+      "ann_vol_pct": 24.81
+    },
+    "POWERGRID": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 13.79,
+      "ann_vol_pct": 23.27
+    },
+    "JUNIORBEES": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 14.96,
+      "ann_vol_pct": 16.4
+    },
+    "NIFTYBEES": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 11.83,
+      "ann_vol_pct": 13.99
+    },
+    "BANKBEES": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 13.6,
+      "ann_vol_pct": 20.3
+    },
+    "GOLDBEES": {
+      "source": "yahoo_adj_close",
+      "rows": 4068,
+      "start": "2012-01-02",
+      "end": "2026-11-13",
+      "ann_return_pct": 9.42,
+      "ann_vol_pct": 14.71
+    },
+    "CASH": {
+      "source": "modelled_accrual_5.5pct",
+      "rows": 4069,
+      "start": "2012-01-01",
+      "end": "2026-11-13",
+      "ann_return_pct": 5.5,
+      "ann_vol_pct": 0.0
+    }
+  },
+  "repairs": {
+    "EICHERMOT": [
+      {
+        "from": "2005-07-28",
+        "to": "2005-07-28",
+        "days": 1,
+        "excursion_ratio": 10.0,
+        "level_before": 22.8176,
+        "level_after": 22.7017
+      }
+    ],
+    "M&M": [
+      {
+        "from": "2005-07-28",
+        "to": "2005-07-28",
+        "days": 1,
+        "excursion_ratio": 2.01406,
+        "level_before": 63.2915,
+        "level_after": 65.8983
+      }
+    ],
+    "GRASIM": [
+      {
+        "from": "2005-07-28",
+        "to": "2005-07-28",
+        "days": 1,
+        "excursion_ratio": 6.48075,
+        "level_before": 149.2144,
+        "level_after": 149.4495
+      }
+    ],
+    "LT": [
+      {
+        "from": "2006-09-27",
+        "to": "2006-09-27",
+        "days": 1,
+        "excursion_ratio": 0.49433,
+        "level_before": 226.3777,
+        "level_after": 218.3228
+      }
+    ],
+    "BPCL": [
+      {
+        "from": "2005-07-28",
+        "to": "2005-07-28",
+        "days": 1,
+        "excursion_ratio": 6.0,
+        "level_before": 12.7374,
+        "level_after": 12.9565
+      }
+    ],
+    "RELIANCE": [
+      {
+        "from": "2005-07-28",
+        "to": "2005-07-28",
+        "days": 1,
+        "excursion_ratio": 4.37478,
+        "level_before": 42.7663,
+        "level_after": 43.0416
+      }
+    ],
+    "BAJFINANCE": [
+      {
+        "from": "2005-07-28",
+        "to": "2005-07-28",
+        "days": 1,
+        "excursion_ratio": 109.49312,
+        "level_before": 2.3102,
+        "level_after": 2.3125
+      }
+    ],
+    "KOTAKBANK": [
+      {
+        "from": "2004-04-26",
+        "to": "2004-04-26",
+        "days": 1,
+        "excursion_ratio": 4.81435,
+        "level_before": 3.8818,
+        "level_after": 3.6998
+      },
+      {
+        "from": "2004-10-13",
+        "to": "2004-10-13",
+        "days": 1,
+        "excursion_ratio": 4.70469,
+        "level_before": 3.6224,
+        "level_after": 3.5961
+      },
+      {
+        "from": "2005-07-28",
+        "to": "2005-07-28",
+        "days": 1,
+        "excursion_ratio": 4.79424,
+        "level_before": 8.4289,
+        "level_after": 8.3515
+      }
+    ],
+    "TCS": [
+      {
+        "from": "2005-07-28",
+        "to": "2005-07-28",
+        "days": 1,
+        "excursion_ratio": 2.0,
+        "level_before": 102.8916,
+        "level_after": 101.634
+      }
+    ],
+    "ADANIENT": [
+      {
+        "from": "2005-07-28",
+        "to": "2005-07-28",
+        "days": 1,
+        "excursion_ratio": 1.83519,
+        "level_before": 3.804,
+        "level_after": 3.7259
+      }
+    ],
+    "TATASTEEL": [
+      {
+        "from": "2003-04-14",
+        "to": "2003-04-14",
+        "days": 1,
+        "excursion_ratio": 6.99713,
+        "level_before": 3.9595,
+        "level_after": 3.7919
+      },
+      {
+        "from": "2003-11-26",
+        "to": "2003-11-26",
+        "days": 1,
+        "excursion_ratio": 6.99739,
+        "level_before": 10.6982,
+        "level_after": 10.7468
+      },
+      {
+        "from": "2003-12-25",
+        "to": "2003-12-25",
+        "days": 1,
+        "excursion_ratio": 6.9973,
+        "level_before": 12.4964,
+        "level_after": 12.8871
+      },
+      {
+        "from": "2004-04-26",
+        "to": "2004-04-26",
+        "days": 1,
+        "excursion_ratio": 6.99739,
+        "level_before": 12.4584,
+        "level_after": 11.5327
+      }
+    ],
+    "CIPLA": [
+      {
+        "from": "2003-04-14",
+        "to": "2003-04-14",
+        "days": 1,
+        "excursion_ratio": 0.07999,
+        "level_before": 49.3499,
+        "level_after": 49.5173
+      },
+      {
+        "from": "2003-11-26",
+        "to": "2003-11-26",
+        "days": 1,
+        "excursion_ratio": 0.08,
+        "level_before": 76.5815,
+        "level_after": 81.124
+      },
+      {
+        "from": "2003-12-25",
+        "to": "2003-12-25",
+        "days": 1,
+        "excursion_ratio": 0.08,
+        "level_before": 85.8663,
+        "level_after": 87.2618
+      },
+      {
+        "from": "2004-04-26",
+        "to": "2004-04-26",
+        "days": 1,
+        "excursion_ratio": 0.08,
+        "level_before": 88.1799,
+        "level_after": 91.0591
+      },
+      {
+        "from": "2004-05-11",
+        "to": "2004-05-11",
+        "days": 1,
+        "excursion_ratio": 4.86117,
+        "level_before": 88.8133,
+        "level_after": 88.3932
+      }
+    ],
+    "DRREDDY": [
+      {
+        "from": "2001-10-10",
+        "to": "2001-10-12",
+        "days": 3,
+        "excursion_ratio": 2.04516,
+        "level_before": 76.4743,
+        "level_after": 79.2592
+      },
+      {
+        "from": "2005-07-28",
+        "to": "2005-07-28",
+        "days": 1,
+        "excursion_ratio": 5.0,
+        "level_before": 70.507,
+        "level_after": 72.861
+      }
+    ],
+    "TRENT": [
+      {
+        "from": "2005-07-28",
+        "to": "2005-07-28",
+        "days": 1,
+        "excursion_ratio": 10.59053,
+        "level_before": 48.9738,
+        "level_after": 49.5976
+      }
+    ],
+    "NIFTYBEES": [
+      {
+        "from": "2019-12-19",
+        "to": "2019-12-20",
+        "days": 2,
+        "excursion_ratio": 0.10073,
+        "level_before": 129.254,
+        "level_after": 129.93
+      }
+    ],
+    "BANKBEES": [
+      {
+        "from": "2019-12-19",
+        "to": "2019-12-20",
+        "days": 2,
+        "excursion_ratio": 0.10025,
+        "level_before": 328.695,
+        "level_after": 330.71
+      }
+    ],
+    "GOLDBEES": [
+      {
+        "from": "2019-12-19",
+        "to": "2019-12-20",
+        "days": 2,
+        "excursion_ratio": 0.00999,
+        "level_before": 33.596,
+        "level_after": 33.65
+      }
+    ]
+  },
+  "panel": {
+    "start": "2012-01-01",
+    "end": "2026-11-13",
+    "trading_days": 4069,
+    "assets": 58,
+    "simulation_start": "2012-01-01"
+  }
+}

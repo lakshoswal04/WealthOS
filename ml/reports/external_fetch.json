@@ -1,0 +1,518 @@
+{
+  "generated_at": "2026-11-15T22:45:58.543269+00:00",
+  "symbols": {
+    "GILT5YBEES": {
+      "status": "ok",
+      "yahoo_symbol": "GILT5YBEES.NS",
+      "asset_class": "debt",
+      "rows": 1378,
+      "start": "2021-04-07",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/GILT5YBEES.parquet"
+    },
+    "BAJAJ-AUTO": {
+      "status": "ok",
+      "yahoo_symbol": "BAJAJ-AUTO.NS",
+      "asset_class": "equity",
+      "rows": 6052,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/BAJAJ-AUTO.parquet"
+    },
+    "EICHERMOT": {
+      "status": "ok",
+      "yahoo_symbol": "EICHERMOT.NS",
+      "asset_class": "equity",
+      "rows": 6699,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/EICHERMOT.parquet"
+    },
+    "HEROMOTOCO": {
+      "status": "ok",
+      "yahoo_symbol": "HEROMOTOCO.NS",
+      "asset_class": "equity",
+      "rows": 6049,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/HEROMOTOCO.parquet"
+    },
+    "M&M": {
+      "status": "ok",
+      "yahoo_symbol": "M&M.NS",
+      "asset_class": "equity",
+      "rows": 6700,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/M&M.parquet"
+    },
+    "MARUTI": {
+      "status": "ok",
+      "yahoo_symbol": "MARUTI.NS",
+      "asset_class": "equity",
+      "rows": 5785,
+      "start": "2003-07-09",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/MARUTI.parquet"
+    },
+    "TVSMOTOR": {
+      "status": "ok",
+      "yahoo_symbol": "TVSMOTOR.NS",
+      "asset_class": "equity",
+      "rows": 6550,
+      "start": "2000-08-02",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/TVSMOTOR.parquet"
+    },
+    "GRASIM": {
+      "status": "ok",
+      "yahoo_symbol": "GRASIM.NS",
+      "asset_class": "equity",
+      "rows": 6049,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/GRASIM.parquet"
+    },
+    "SHREECEM": {
+      "status": "ok",
+      "yahoo_symbol": "SHREECEM.NS",
+      "asset_class": "equity",
+      "rows": 6309,
+      "start": "2001-07-02",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/SHREECEM.parquet"
+    },
+    "ULTRACEMCO": {
+      "status": "ok",
+      "yahoo_symbol": "ULTRACEMCO.NS",
+      "asset_class": "equity",
+      "rows": 6019,
+      "start": "2002-08-12",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/ULTRACEMCO.parquet"
+    },
+    "UPL": {
+      "status": "ok",
+      "yahoo_symbol": "UPL.NS",
+      "asset_class": "equity",
+      "rows": 6050,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/UPL.parquet"
+    },
+    "LT": {
+      "status": "ok",
+      "yahoo_symbol": "LT.NS",
+      "asset_class": "equity",
+      "rows": 6052,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/LT.parquet"
+    },
+    "ASIANPAINT": {
+      "status": "ok",
+      "yahoo_symbol": "ASIANPAINT.NS",
+      "asset_class": "equity",
+      "rows": 6049,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/ASIANPAINT.parquet"
+    },
+    "TITAN": {
+      "status": "ok",
+      "yahoo_symbol": "TITAN.NS",
+      "asset_class": "equity",
+      "rows": 6702,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/TITAN.parquet"
+    },
+    "BPCL": {
+      "status": "ok",
+      "yahoo_symbol": "BPCL.NS",
+      "asset_class": "equity",
+      "rows": 6699,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/BPCL.parquet"
+    },
+    "COALINDIA": {
+      "status": "ok",
+      "yahoo_symbol": "COALINDIA.NS",
+      "asset_class": "equity",
+      "rows": 3952,
+      "start": "2010-11-04",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/COALINDIA.parquet"
+    },
+    "ONGC": {
+      "status": "ok",
+      "yahoo_symbol": "ONGC.NS",
+      "asset_class": "equity",
+      "rows": 6699,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/ONGC.parquet"
+    },
+    "RELIANCE": {
+      "status": "ok",
+      "yahoo_symbol": "RELIANCE.NS",
+      "asset_class": "equity",
+      "rows": 6699,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/RELIANCE.parquet"
+    },
+    "BRITANNIA": {
+      "status": "ok",
+      "yahoo_symbol": "BRITANNIA.NS",
+      "asset_class": "equity",
+      "rows": 6702,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/BRITANNIA.parquet"
+    },
+    "HINDUNILVR": {
+      "status": "ok",
+      "yahoo_symbol": "HINDUNILVR.NS",
+      "asset_class": "equity",
+      "rows": 6702,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/HINDUNILVR.parquet"
+    },
+    "ITC": {
+      "status": "ok",
+      "yahoo_symbol": "ITC.NS",
+      "asset_class": "equity",
+      "rows": 6699,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/ITC.parquet"
+    },
+    "NESTLEIND": {
+      "status": "ok",
+      "yahoo_symbol": "NESTLEIND.NS",
+      "asset_class": "equity",
+      "rows": 6022,
+      "start": "2002-08-12",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/NESTLEIND.parquet"
+    },
+    "TATACONSUM": {
+      "status": "ok",
+      "yahoo_symbol": "TATACONSUM.NS",
+      "asset_class": "equity",
+      "rows": 6699,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/TATACONSUM.parquet"
+    },
+    "AXISBANK": {
+      "status": "ok",
+      "yahoo_symbol": "AXISBANK.NS",
+      "asset_class": "equity",
+      "rows": 6699,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/AXISBANK.parquet"
+    },
+    "BAJAJFINSV": {
+      "status": "ok",
+      "yahoo_symbol": "BAJAJFINSV.NS",
+      "asset_class": "equity",
+      "rows": 6018,
+      "start": "2002-08-12",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/BAJAJFINSV.parquet"
+    },
+    "BAJFINANCE": {
+      "status": "ok",
+      "yahoo_symbol": "BAJFINANCE.NS",
+      "asset_class": "equity",
+      "rows": 6049,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/BAJFINANCE.parquet"
+    },
+    "HDFCBANK": {
+      "status": "ok",
+      "yahoo_symbol": "HDFCBANK.NS",
+      "asset_class": "equity",
+      "rows": 6702,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/HDFCBANK.parquet"
+    },
+    "HDFCLIFE": {
+      "status": "ok",
+      "yahoo_symbol": "HDFCLIFE.NS",
+      "asset_class": "equity",
+      "rows": 2220,
+      "start": "2017-11-17",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/HDFCLIFE.parquet"
+    },
+    "ICICIBANK": {
+      "status": "ok",
+      "yahoo_symbol": "ICICIBANK.NS",
+      "asset_class": "equity",
+      "rows": 6049,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/ICICIBANK.parquet"
+    },
+    "INDUSINDBK": {
+      "status": "ok",
+      "yahoo_symbol": "INDUSINDBK.NS",
+      "asset_class": "equity",
+      "rows": 6050,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/INDUSINDBK.parquet"
+    },
+    "KOTAKBANK": {
+      "status": "ok",
+      "yahoo_symbol": "KOTAKBANK.NS",
+      "asset_class": "equity",
+      "rows": 6311,
+      "start": "2001-07-02",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/KOTAKBANK.parquet"
+    },
+    "SBILIFE": {
+      "status": "ok",
+      "yahoo_symbol": "SBILIFE.NS",
+      "asset_class": "equity",
+      "rows": 2252,
+      "start": "2017-10-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/SBILIFE.parquet"
+    },
+    "SBIN": {
+      "status": "ok",
+      "yahoo_symbol": "SBIN.NS",
+      "asset_class": "equity",
+      "rows": 6700,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/SBIN.parquet"
+    },
+    "APOLLOHOSP": {
+      "status": "ok",
+      "yahoo_symbol": "APOLLOHOSP.NS",
+      "asset_class": "equity",
+      "rows": 6049,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/APOLLOHOSP.parquet"
+    },
+    "HCLTECH": {
+      "status": "ok",
+      "yahoo_symbol": "HCLTECH.NS",
+      "asset_class": "equity",
+      "rows": 6023,
+      "start": "2002-08-12",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/HCLTECH.parquet"
+    },
+    "INFY": {
+      "status": "ok",
+      "yahoo_symbol": "INFY.NS",
+      "asset_class": "equity",
+      "rows": 6702,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/INFY.parquet"
+    },
+    "TCS": {
+      "status": "ok",
+      "yahoo_symbol": "TCS.NS",
+      "asset_class": "equity",
+      "rows": 6020,
+      "start": "2002-08-12",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/TCS.parquet"
+    },
+    "TECHM": {
+      "status": "ok",
+      "yahoo_symbol": "TECHM.NS",
+      "asset_class": "equity",
+      "rows": 4986,
+      "start": "2006-08-28",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/TECHM.parquet"
+    },
+    "WIPRO": {
+      "status": "ok",
+      "yahoo_symbol": "WIPRO.NS",
+      "asset_class": "equity",
+      "rows": 6702,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/WIPRO.parquet"
+    },
+    "ADANIENT": {
+      "status": "ok",
+      "yahoo_symbol": "ADANIENT.NS",
+      "asset_class": "equity",
+      "rows": 6051,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/ADANIENT.parquet"
+    },
+    "ADANIPORTS": {
+      "status": "ok",
+      "yahoo_symbol": "ADANIPORTS.NS",
+      "asset_class": "equity",
+      "rows": 4675,
+      "start": "2007-11-27",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/ADANIPORTS.parquet"
+    },
+    "HINDALCO": {
+      "status": "ok",
+      "yahoo_symbol": "HINDALCO.NS",
+      "asset_class": "equity",
+      "rows": 6702,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/HINDALCO.parquet"
+    },
+    "JSWSTEEL": {
+      "status": "ok",
+      "yahoo_symbol": "JSWSTEEL.NS",
+      "asset_class": "equity",
+      "rows": 5829,
+      "start": "2003-05-08",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/JSWSTEEL.parquet"
+    },
+    "TATASTEEL": {
+      "status": "ok",
+      "yahoo_symbol": "TATASTEEL.NS",
+      "asset_class": "equity",
+      "rows": 6702,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/TATASTEEL.parquet"
+    },
+    "CIPLA": {
+      "status": "ok",
+      "yahoo_symbol": "CIPLA.NS",
+      "asset_class": "equity",
+      "rows": 6701,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/CIPLA.parquet"
+    },
+    "DIVISLAB": {
+      "status": "ok",
+      "yahoo_symbol": "DIVISLAB.NS",
+      "asset_class": "equity",
+      "rows": 5870,
+      "start": "2003-03-12",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/DIVISLAB.parquet"
+    },
+    "DRREDDY": {
+      "status": "ok",
+      "yahoo_symbol": "DRREDDY.NS",
+      "asset_class": "equity",
+      "rows": 6699,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/DRREDDY.parquet"
+    },
+    "SUNPHARMA": {
+      "status": "ok",
+      "yahoo_symbol": "SUNPHARMA.NS",
+      "asset_class": "equity",
+      "rows": 6702,
+      "start": "2000-01-03",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/SUNPHARMA.parquet"
+    },
+    "TRENT": {
+      "status": "ok",
+      "yahoo_symbol": "TRENT.NS",
+      "asset_class": "equity",
+      "rows": 6049,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/TRENT.parquet"
+    },
+    "BHARTIARTL": {
+      "status": "ok",
+      "yahoo_symbol": "BHARTIARTL.NS",
+      "asset_class": "equity",
+      "rows": 6049,
+      "start": "2002-07-01",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/BHARTIARTL.parquet"
+    },
+    "NTPC": {
+      "status": "ok",
+      "yahoo_symbol": "NTPC.NS",
+      "asset_class": "equity",
+      "rows": 5438,
+      "start": "2004-11-05",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/NTPC.parquet"
+    },
+    "POWERGRID": {
+      "status": "ok",
+      "yahoo_symbol": "POWERGRID.NS",
+      "asset_class": "equity",
+      "rows": 4711,
+      "start": "2007-10-05",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/POWERGRID.parquet"
+    },
+    "JUNIORBEES": {
+      "status": "ok",
+      "yahoo_symbol": "JUNIORBEES.NS",
+      "asset_class": "etf",
+      "rows": 4403,
+      "start": "2009-01-02",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/JUNIORBEES.parquet"
+    },
+    "NIFTYBEES": {
+      "status": "ok",
+      "yahoo_symbol": "NIFTYBEES.NS",
+      "asset_class": "etf",
+      "rows": 4403,
+      "start": "2009-01-02",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/NIFTYBEES.parquet"
+    },
+    "BANKBEES": {
+      "status": "ok",
+      "yahoo_symbol": "BANKBEES.NS",
+      "asset_class": "etf",
+      "rows": 4403,
+      "start": "2009-01-02",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/BANKBEES.parquet"
+    },
+    "GOLDBEES": {
+      "status": "ok",
+      "yahoo_symbol": "GOLDBEES.NS",
+      "asset_class": "gold",
+      "rows": 4402,
+      "start": "2009-01-02",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/GOLDBEES.parquet"
+    },
+    "NIFTY50": {
+      "status": "ok",
+      "yahoo_symbol": "^NSEI",
+      "asset_class": "index",
+      "rows": 4700,
+      "start": "2007-09-17",
+      "end": "2026-11-13",
+      "path": "data/external/yahoo/NIFTY50.parquet"
+    }
+  }
+}
