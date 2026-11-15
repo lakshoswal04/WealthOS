@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wealthos"
+version = "0.1.0"
+description = "WealthOS — AI-powered personal wealth intelligence and portfolio management platform"
+requires-python = ">=3.12,<3.14"
+
+[tool.setuptools]
+packages = ["wealthos_core"]
+package-dir = {"" = "packages"}
+
+[tool.pytest.ini_options]
+testpaths = ["packages/wealthos_core/tests", "backend/tests", "ml/tests"]
+pythonpath = ["packages", "backend", "."]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

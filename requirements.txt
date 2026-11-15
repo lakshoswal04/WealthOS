@@ -1,0 +1,51 @@
+# WealthOS — Python dependencies
+# Target interpreter: Python 3.12 (PyTorch publishes no 3.14 wheels)
+# macOS prerequisite: `brew install libomp` (XGBoost links against OpenMP)
+
+# --- core data stack ---
+numpy==2.2.6
+pandas==2.3.3
+pyarrow==21.0.0
+scipy==1.18.1          # 1.15.x ships a macOS binary that fails to dlopen on Darwin 27
+
+# --- classical ML ---
+scikit-learn==1.7.2
+xgboost==3.0.5
+joblib==1.5.2
+
+# --- deep learning ---
+torch==2.8.0
+
+# --- web / API ---
+fastapi==0.118.0
+uvicorn[standard]==0.37.0
+pydantic==2.11.9
+pydantic-settings==2.11.0
+python-multipart==0.0.20
+email-validator==2.2.0
+
+# --- database ---
+SQLAlchemy==2.0.43
+alembic==1.16.5
+psycopg[binary]==3.2.10
+
+# --- auth / security ---
+bcrypt==4.3.0
+PyJWT==2.10.1
+
+# --- LLM (Wealth Copilot) ---
+anthropic==0.69.0
+
+# --- plotting (ml reports / notebooks) ---
+matplotlib==3.10.6
+seaborn==0.13.2
+
+# --- utilities ---
+python-dotenv==1.1.1
+httpx==0.28.1
+tqdm==4.67.1
+rapidfuzz==3.14.1
+
+# --- testing ---
+pytest==8.4.2
+pytest-asyncio==1.2.0
