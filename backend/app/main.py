@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1 import analytics, auth, goals, portfolio
+from app.api.v1 import analytics, auth, goals, insights, portfolio
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.services.market_service import market_cache
@@ -55,6 +55,21 @@ async def lifespan(app: FastAPI):
         # A cold cache must not stop the API from booting; endpoints that need
         # prices will report the problem themselves.
         log.error("market cache failed to load: %s", exc)
+
+    try:
+        from app.ml_runtime.registry import registry
+
+        status = registry.status()
+        loaded = [k for k, v in status["available"].items() if v]
+        missing = [k for k, v in status["available"].items() if not v]
+        log.info("models loaded: %s", ", ".join(loaded) or "none")
+        if missing:
+            log.warning(
+                "models unavailable (those endpoints will report it): %s",
+                ", ".join(missing),
+            )
+    except Exception as exc:
+        log.error("model registry failed to initialise: %s", exc)
 
     log.info(
         "wealth copilot: %s",
@@ -130,3 +145,4 @@ app.include_router(auth.router, prefix=settings.api_v1_prefix)
 app.include_router(portfolio.router, prefix=settings.api_v1_prefix)
 app.include_router(analytics.router, prefix=settings.api_v1_prefix)
 app.include_router(goals.router, prefix=settings.api_v1_prefix)
+app.include_router(insights.router, prefix=settings.api_v1_prefix)

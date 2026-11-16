@@ -418,7 +418,7 @@ def main() -> None:
             {"max_depth": 6, "learning_rate": 0.05, "min_child_weight": 5},
         ]
         search = []
-        model, best_rmse, best_params = None, float("inf"), None
+        xgb_model, best_rmse, best_params = None, float("inf"), None
         for params in grid:
             candidate = xgb.XGBRegressor(
                 n_estimators=1500, subsample=0.8, colsample_bytree=0.8,
@@ -437,13 +437,13 @@ def main() -> None:
                      params["max_depth"], params["learning_rate"],
                      params["min_child_weight"], rmse, candidate.best_iteration)
             if rmse < best_rmse:
-                model, best_rmse, best_params = candidate, rmse, params
+                xgb_model, best_rmse, best_params = candidate, rmse, params
 
         report["xgboost_search"] = search
         report["xgboost_best_params"] = best_params
         log.info("  chosen: %s", best_params)
 
-        predicted_growth_xgb = model.predict(tabular(test))
+        predicted_growth_xgb = xgb_model.predict(tabular(test))
         predicted_value_xgb = baseline_value * np.exp(predicted_growth_xgb)
 
         results["xgboost"] = {
@@ -455,14 +455,14 @@ def main() -> None:
             "skill_vs_mean_baseline": round(
                 skill_score(actual_growth, predicted_growth_xgb, mean_growth), 4
             ),
-            "best_iteration": int(model.best_iteration),
+            "best_iteration": int(xgb_model.best_iteration),
         }
         log.info("  value R² %.4f   growth R² %.4f   skill vs mean %.4f   (%d trees)",
                  results["xgboost"]["value"]["r2"], results["xgboost"]["growth"]["r2"],
-                 results["xgboost"]["skill_vs_mean_baseline"], model.best_iteration)
+                 results["xgboost"]["skill_vs_mean_baseline"], xgb_model.best_iteration)
 
         importance = sorted(
-            zip(TABULAR_FEATURES, model.feature_importances_), key=lambda kv: -kv[1]
+            zip(TABULAR_FEATURES, xgb_model.feature_importances_), key=lambda kv: -kv[1]
         )[:12]
         report["xgboost_feature_importance"] = [
             {"feature": f, "importance": round(float(v), 5)} for f, v in importance
@@ -499,11 +499,11 @@ def main() -> None:
     sequence_models = {}
     for cell in ("lstm", "gru"):
         with Stage(log, cell.upper()):
-            model, history = train_sequence_model(
+            sequence_model, history = train_sequence_model(
                 cell, x_train, y_train, x_validation, y_validation, epochs
             )
-            sequence_models[cell] = model
-            predicted = predict_sequence(model, x_test)
+            sequence_models[cell] = sequence_model
+            predicted = predict_sequence(sequence_model, x_test)
 
             # Sequence models cover a subset of test rows; compare on that subset.
             subset_actual_growth = y_test
@@ -568,7 +568,7 @@ def main() -> None:
     with Stage(log, "save artifacts"):
         joblib.dump(
             {
-                "xgboost": model, "tabular_features": TABULAR_FEATURES,
+                "xgboost": xgb_model, "tabular_features": TABULAR_FEATURES,
                 "tabular_medians": medians, "sequence_scaler": sequence_scaler,
                 "sequence_features": SEQUENCE_FEATURES, "sequence_length": SEQUENCE_LENGTH,
                 "horizon": horizon, "version": "1.0.0",
