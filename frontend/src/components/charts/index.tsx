@@ -60,7 +60,11 @@ export function AllocationDonut({ data, byAssetClass = true }: {
   }));
 
   return (
-    <div className="flex flex-col items-center gap-4 sm:flex-row">
+    // The donut is given a fixed basis rather than flexing: inside a flex row
+    // a 100%-width chart container consumes the whole track and squeezes the
+    // legend until its labels truncate to single characters.
+    <div className="flex flex-col items-center gap-5 sm:flex-row">
+      <div className="w-full shrink-0 sm:w-[220px]">
       <Frame height={210}>
         <PieChart>
           <Pie
@@ -79,15 +83,16 @@ export function AllocationDonut({ data, byAssetClass = true }: {
           />
         </PieChart>
       </Frame>
+      </div>
       {/* A legend carries identity, so colour is never the only cue. */}
-      <ul className="w-full min-w-0 flex-1 space-y-1.5">
+      <ul className="w-full min-w-0 flex-1 space-y-2">
         {colored.map((slice) => (
           <li key={slice.label} className="flex items-center justify-between gap-3 text-[12.5px]">
             <span className="flex min-w-0 items-center gap-2">
               <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: slice.fill }} />
               <span className="truncate text-[var(--ink-secondary)]">{titleCase(slice.label)}</span>
             </span>
-            <span className="tabular shrink-0 text-[var(--ink-primary)]">
+            <span className="tabular shrink-0 whitespace-nowrap text-[var(--ink-primary)]">
               {percent(slice.weight, 1)}
             </span>
           </li>

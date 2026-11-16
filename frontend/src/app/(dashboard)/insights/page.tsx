@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/auth";
-import { percent, rupeesCompact, shortDate, titleCase } from "@/lib/format";
+import { percent, rupeesCompact, scoreColor, shortDate, titleCase } from "@/lib/format";
 import {
   Badge, Card, CardBody, CardHeader, ErrorNote, Meter, Spinner, Stat, Unavailable,
 } from "@/components/ui";
@@ -57,7 +57,11 @@ export default function InsightsPage() {
                       </span>
                     </div>
                     {component.score !== null && (
-                      <div className="mt-2"><Meter value={component.score} /></div>
+                      <div className="mt-2">
+                        {/* Same status colours as the chart above, so a
+                            component does not look different in two places. */}
+                        <Meter value={component.score} color={scoreColor(component.score)} />
+                      </div>
                     )}
                     <p className="mt-2 text-[11.5px] leading-relaxed text-[var(--ink-secondary)]">
                       {component.reason}

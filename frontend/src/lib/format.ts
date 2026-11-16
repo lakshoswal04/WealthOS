@@ -55,8 +55,26 @@ export function monthLabel(value: string): string {
   return date.toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
 }
 
+// Acronyms that must not be sentence-cased into "Etf" or "Hhi".
+const ACRONYMS = new Set(["etf", "hhi", "var", "cvar", "sip", "nav", "it", "fmcg"]);
+
 export function titleCase(value: string): string {
-  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return value
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) =>
+      ACRONYMS.has(word.toLowerCase())
+        ? word.toUpperCase()
+        : word.charAt(0).toUpperCase() + word.slice(1),
+    )
+    .join(" ");
+}
+
+/** Status colour for a 0-100 score, matching the health-score bars. */
+export function scoreColor(score: number): string {
+  if (score >= 80) return "var(--good)";
+  if (score >= 60) return "var(--warning)";
+  return "var(--serious)";
 }
 
 /** Gains are green and losses red, but never colour alone: callers pair this

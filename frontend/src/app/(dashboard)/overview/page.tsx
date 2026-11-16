@@ -186,23 +186,37 @@ export default function OverviewPage() {
                 against what it is actually for.
               </p>
             )}
-            {activeGoals.slice(0, 4).map((goal) => (
-              <div key={goal.id}>
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="truncate text-[13px] text-[var(--ink-primary)]">{goal.name}</span>
-                  <span className="tabular shrink-0 text-[12px] text-[var(--ink-secondary)]">
-                    {percent(goal.progress_fraction, 0)}
-                  </span>
+            {activeGoals.slice(0, 4).map((goal) => {
+              // The backend measures a goal against its own recorded amount
+              // when one is set, and otherwise against the whole portfolio,
+              // since the MVP does not earmark assets to a goal. Reading
+              // current_amount alone showed 0% here while the goal's own
+              // forecast said it was fully funded.
+              const saved = goal.current_amount > 0 ? goal.current_amount : summary.total_value;
+              const progress = Math.min(saved / goal.target_amount, 1);
+              return (
+                <div key={goal.id}>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="truncate text-[13px] text-[var(--ink-primary)]">{goal.name}</span>
+                    <span className="tabular shrink-0 text-[12px] text-[var(--ink-secondary)]">
+                      {percent(progress, 0)}
+                    </span>
+                  </div>
+                  <div className="mt-1.5">
+                    <Meter value={progress * 100} color="var(--series-3)" />
+                  </div>
+                  <div className="tabular mt-1 text-[11px] text-[var(--ink-muted)]">
+                    {rupeesCompact(saved)} of {rupeesCompact(goal.target_amount)}
+                    {" · by "}{shortDate(goal.target_date)}
+                  </div>
+                  {goal.current_amount === 0 && (
+                    <div className="mt-0.5 text-[10.5px] text-[var(--ink-muted)]">
+                      measured against the whole portfolio
+                    </div>
+                  )}
                 </div>
-                <div className="mt-1.5">
-                  <Meter value={goal.progress_fraction * 100} color="var(--series-3)" />
-                </div>
-                <div className="tabular mt-1 text-[11px] text-[var(--ink-muted)]">
-                  {rupeesCompact(goal.current_amount)} of {rupeesCompact(goal.target_amount)}
-                  {" · by "}{shortDate(goal.target_date)}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </CardBody>
         </Card>
       </div>

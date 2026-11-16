@@ -66,7 +66,7 @@ test("the full demonstration journey works end to end", async ({ page }) => {
   await page.waitForURL("**/overview");
 
   // ---- overview ----
-  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
   await expect(page.getByText("Total value")).toBeVisible();
   await expect(page.getByText("Asset allocation")).toBeVisible();
   // A real figure, not a placeholder.
@@ -82,7 +82,7 @@ test("the full demonstration journey works end to end", async ({ page }) => {
   // ---- risk ----
   await page.getByRole("link", { name: /^Risk/ }).click();
   await page.waitForURL("**/risk");
-  await expect(page.getByRole("heading", { name: "Risk" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Risk", exact: true })).toBeVisible();
   await expect(page.getByText("Sharpe ratio").first()).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText("Max drawdown")).toBeVisible();
   await expect(page.getByText("Correlation").first()).toBeVisible();
