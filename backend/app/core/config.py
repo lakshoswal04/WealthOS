@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     # With no key the Copilot falls back to a deterministic explainer over the
     # same backend tool outputs, so the platform stays usable.
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")
-    copilot_model: str = Field(default="claude-sonnet-5-5", alias="COPILOT_MODEL")
+    copilot_model: str = Field(default="claude-opus-5-5", alias="COPILOT_MODEL")
 
     # --- CORS ---
     cors_origins: list[str] = Field(

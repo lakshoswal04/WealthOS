@@ -1,0 +1,447 @@
+{
+  "generated_at": "2026-11-16T01:33:38.426639+00:00",
+  "mode": "deterministic_fallback",
+  "model": "template-explainer",
+  "n_questions": 30,
+  "user_id": 1,
+  "results": [
+    {
+      "question": "What is my portfolio worth?",
+      "tools_called": [
+        "get_forecast",
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 13,
+      "numbers_verified": 13,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 1280.8,
+      "answer_preview": "Over 12 months the models project Rs 972,407, against a baseline of Rs 961,076 if markets returned nothing.\n\nThe individual models span Rs 853,739 to Rs 1,076,633; models disagree substantially; treat the single figure w"
+    },
+    {
+      "question": "What do I own?",
+      "tools_called": [
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 9,
+      "numbers_verified": 9,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 1.1,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "How is my wealth allocated?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_health_score"
+      ],
+      "numbers_checked": 20,
+      "numbers_verified": 20,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 30.7,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "What are my biggest holdings?",
+      "tools_called": [
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 9,
+      "numbers_verified": 9,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 0.8,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "Have I made or lost money overall?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_health_score"
+      ],
+      "numbers_checked": 20,
+      "numbers_verified": 20,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 25.7,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "How risky is my portfolio?",
+      "tools_called": [
+        "get_risk_metrics",
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 17,
+      "numbers_verified": 17,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 23.3,
+      "answer_preview": "Annualised volatility is 11.08% and the annualised return 12.53%, giving a Sharpe ratio of 0.589 at a 6% risk-free rate.\n\nThe worst peak-to-trough fall was 27.14%, from 2020-01-17 to 2020-03-23 and it has since recovered"
+    },
+    {
+      "question": "What is my volatility?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_risk_metrics"
+      ],
+      "numbers_checked": 17,
+      "numbers_verified": 17,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 22.8,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "What was my worst drawdown?",
+      "tools_called": [
+        "get_risk_metrics",
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 17,
+      "numbers_verified": 17,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 23.7,
+      "answer_preview": "Annualised volatility is 11.08% and the annualised return 12.53%, giving a Sharpe ratio of 0.589 at a 6% risk-free rate.\n\nThe worst peak-to-trough fall was 27.14%, from 2020-01-17 to 2020-03-23 and it has since recovered"
+    },
+    {
+      "question": "What is my Sharpe ratio and what does it mean?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_risk_metrics"
+      ],
+      "numbers_checked": 17,
+      "numbers_verified": 17,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 23.2,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "How sensitive is my portfolio to the market?",
+      "tools_called": [
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 9,
+      "numbers_verified": 9,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 1.0,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "Could I lose money in a bad month?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_health_score"
+      ],
+      "numbers_checked": 20,
+      "numbers_verified": 20,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 25.0,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "Am I diversified?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_concentration"
+      ],
+      "numbers_checked": 13,
+      "numbers_verified": 13,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 5.8,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "What are my largest concentrations?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_concentration"
+      ],
+      "numbers_checked": 13,
+      "numbers_verified": 13,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 5.9,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "Which sector am I most exposed to?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_concentration"
+      ],
+      "numbers_checked": 13,
+      "numbers_verified": 13,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 5.8,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "Is my portfolio too concentrated in one holding?",
+      "tools_called": [
+        "get_concentration",
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 13,
+      "numbers_verified": 13,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 5.7,
+      "answer_preview": "The portfolio holds 8 positions but behaves like about 6.3 equally weighted ones. The largest, NIFTYBEES, is 23.8% and the top five are 78.3%.\n\nThe heaviest sector is Diversified Equity at 23.8%.\n\nNo single holding, sect"
+    },
+    {
+      "question": "How healthy is my portfolio?",
+      "tools_called": [
+        "get_health_score",
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 20,
+      "numbers_verified": 20,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 24.9,
+      "answer_preview": "The Portfolio Health Score is 83.6 out of 100 (Good).\n\nConcentration scores 70. Position sizes are reasonable: the largest holding is 23.8% and the top five are 78.3%.\n\nRisk scores 73. Volatility of 11.1% sits within the"
+    },
+    {
+      "question": "Why is my health score what it is?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_health_score"
+      ],
+      "numbers_checked": 20,
+      "numbers_verified": 20,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 24.7,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "Which part of my health score is weakest?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_health_score"
+      ],
+      "numbers_checked": 20,
+      "numbers_verified": 20,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 24.5,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "Am I on track for my goals?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_goal_status"
+      ],
+      "numbers_checked": 17,
+      "numbers_verified": 17,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 9.1,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "Will I reach my retirement target?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_goal_status"
+      ],
+      "numbers_checked": 17,
+      "numbers_verified": 17,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 9.0,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "How much more should I save each month?",
+      "tools_called": [
+        "get_goal_status",
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 17,
+      "numbers_verified": 17,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 9.0,
+      "answer_preview": "1 of 2 goals are projected to be met.\n\nRetirement: Rs 41,487,739 projected against a Rs 25,000,000 target by 2046-04-01, 166% funded.\n\nHome down payment: Rs 1,943,563 projected against a Rs 3,000,000 target by 2030-06-01"
+    },
+    {
+      "question": "What will my portfolio be worth in a year?",
+      "tools_called": [
+        "get_forecast",
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 13,
+      "numbers_verified": 13,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 55.7,
+      "answer_preview": "Over 12 months the models project Rs 972,407, against a baseline of Rs 961,076 if markets returned nothing.\n\nThe individual models span Rs 853,739 to Rs 1,076,633; models disagree substantially; treat the single figure w"
+    },
+    {
+      "question": "Project my wealth forward.",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_forecast"
+      ],
+      "numbers_checked": 13,
+      "numbers_verified": 13,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 54.4,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "How much will I have in six months?",
+      "tools_called": [
+        "get_forecast",
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 13,
+      "numbers_verified": 13,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 54.4,
+      "answer_preview": "Over 12 months the models project Rs 972,407, against a baseline of Rs 961,076 if markets returned nothing.\n\nThe individual models span Rs 853,739 to Rs 1,076,633; models disagree substantially; treat the single figure w"
+    },
+    {
+      "question": "What kind of investor am I?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_investor_profile"
+      ],
+      "numbers_checked": 10,
+      "numbers_verified": 10,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 230.4,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "Does my behaviour match my stated risk tolerance?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_risk_metrics",
+        "get_investor_profile"
+      ],
+      "numbers_checked": 18,
+      "numbers_verified": 18,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 70.5,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "Has anything unusual happened in my portfolio?",
+      "tools_called": [
+        "get_anomalies",
+        "get_portfolio_summary"
+      ],
+      "numbers_checked": 10,
+      "numbers_verified": 10,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 113.0,
+      "answer_preview": "No unusual months were detected across the 178 examined.\n\nYour portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 "
+    },
+    {
+      "question": "Were there any alerts I should know about?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_anomalies"
+      ],
+      "numbers_checked": 10,
+      "numbers_verified": 10,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 50.0,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "Should I buy more gold?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_health_score"
+      ],
+      "numbers_checked": 20,
+      "numbers_verified": 20,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 25.9,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    },
+    {
+      "question": "What will the NIFTY 50 do next month?",
+      "tools_called": [
+        "get_portfolio_summary",
+        "get_health_score"
+      ],
+      "numbers_checked": 20,
+      "numbers_verified": 20,
+      "groundedness_rate": 1.0,
+      "unverified_numbers": [],
+      "used_fallback": true,
+      "latency_ms": 24.4,
+      "answer_preview": "Your portfolio is worth Rs 601,076 across 8 holdings in 7 sectors, valued as of 2026-11-13.\n\nAgainst a cost of Rs 553,760 that is an unrealised gain of Rs 47,316 (+8.54%).\n\nBy asset class: equity 50.5%, etf 23.8%, gold 2"
+    }
+  ],
+  "summary": {
+    "overall_groundedness_rate": 1.0,
+    "numbers_checked": 458,
+    "numbers_verified": 458,
+    "fully_grounded_answers": 30,
+    "answers": 30,
+    "fully_grounded_pct": 100.0,
+    "median_latency_ms": 24.4,
+    "answers_using_fallback": 30
+  },
+  "tool_usage": {
+    "get_forecast": 4,
+    "get_portfolio_summary": 30,
+    "get_health_score": 8,
+    "get_risk_metrics": 5,
+    "get_concentration": 4,
+    "get_goal_status": 3,
+    "get_investor_profile": 2,
+    "get_anomalies": 2
+  }
+}
