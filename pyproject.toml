@@ -14,6 +14,7 @@ package-dir = {"" = "packages"}
 
 [tool.pytest.ini_options]
 testpaths = ["packages/wealthos_core/tests", "backend/tests", "ml/tests"]
+markers = ["slow: tests that need the full data pipeline or trained models"]
 pythonpath = [".", "packages", "backend"]
 filterwarnings = ["ignore::DeprecationWarning"]
 

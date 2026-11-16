@@ -1,0 +1,38 @@
+# Local stack. Unverified: see the note in Dockerfile.backend.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: wealthos
+      POSTGRES_USER: wealthos
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-locally}
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wealthos"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: { context: .., dockerfile: docker/Dockerfile.backend }
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      DATABASE_URL: postgresql+psycopg://wealthos:${POSTGRES_PASSWORD:-change-me-locally}@db:5432/wealthos
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ENVIRONMENT: production
+    ports: ["8000:8000"]
+    # Migrations run before the server, so a fresh volume comes up usable.
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+      args: { NEXT_PUBLIC_API_BASE_URL: "http://localhost:8000" }
+    depends_on: [api]
+    ports: ["3000:3000"]
+
+volumes:
+  pgdata:
