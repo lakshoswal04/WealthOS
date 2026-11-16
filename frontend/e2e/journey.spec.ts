@@ -1,0 +1,160 @@
+import { expect, test, type Page } from "@playwright/test";
+
+/**
+ * The end-to-end journey the project demonstration follows:
+ * register → import holdings → analytics → risk → goal → health score →
+ * insights → copilot.
+ */
+
+const API = process.env.E2E_API_URL ?? "http://127.0.0.1:8010";
+
+const HOLDINGS_CSV = `symbol,asset_type,quantity,average_price,purchase_date
+RELIANCE,Equity,40,1150.50,2022-03-15
+TCS,Equity,25,3200.00,2022-05-20
+INFY,Equity,60,1350.00,2023-01-05
+NIFTYBEES,ETF,500,185.40,2022-08-12
+GOLDBEES,Gold,1200,48.20,2023-02-28
+DEBT,Debt,300,52.10,2022-06-01`;
+
+function uniqueEmail(): string {
+  return `e2e-${Date.now()}-${Math.floor(Math.random() * 1e4)}@example.com`;
+}
+
+async function register(page: Page): Promise<string> {
+  const email = uniqueEmail();
+  await page.goto("/register");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("a-strong-test-password");
+  await page.getByLabel("Full name").fill("E2E Investor");
+  await page.getByLabel("Age").fill("34");
+  await page.getByLabel("Horizon (years)").fill("20");
+  await page.getByLabel("Annual income (₹)").fill("1800000");
+  await page.getByLabel("Monthly savings (₹)").fill("45000");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await page.waitForURL("**/import", { timeout: 20_000 });
+  return email;
+}
+
+async function importHoldings(page: Page) {
+  await page.goto("/import");
+  await page.setInputFiles('input[type="file"]', {
+    name: "holdings.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(HOLDINGS_CSV),
+  });
+  await page.getByRole("button", { name: "Import" }).click();
+  await expect(page.getByText("Imported", { exact: true })).toBeVisible({ timeout: 20_000 });
+}
+
+test.beforeAll(async ({ request }) => {
+  // Fail fast and clearly if the API is not running, rather than through a
+  // cascade of confusing UI timeouts.
+  const health = await request.get(`${API}/health`);
+  expect(health.ok(), `API at ${API} is not reachable`).toBeTruthy();
+});
+
+test("the full demonstration journey works end to end", async ({ page }) => {
+  await register(page);
+
+  // ---- import ----
+  await importHoldings(page);
+  await expect(page.getByText(/6 rows read/)).toBeVisible();
+
+  // The HDFCBANK-style cost-basis warning only fires on affected symbols;
+  // here we simply assert the import succeeded and linked onward.
+  await page.getByRole("link", { name: "See your dashboard" }).click();
+  await page.waitForURL("**/overview");
+
+  // ---- overview ----
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  await expect(page.getByText("Total value")).toBeVisible();
+  await expect(page.getByText("Asset allocation")).toBeVisible();
+  // A real figure, not a placeholder.
+  await expect(page.locator("text=/₹[0-9,]+/").first()).toBeVisible();
+
+  // ---- portfolio ----
+  await page.getByRole("link", { name: /^Portfolio/ }).click();
+  await page.waitForURL("**/portfolio");
+  await expect(page.getByText("6 holdings")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("RELIANCE").first()).toBeVisible();
+  await expect(page.getByText("Sector exposure")).toBeVisible();
+
+  // ---- risk ----
+  await page.getByRole("link", { name: /^Risk/ }).click();
+  await page.waitForURL("**/risk");
+  await expect(page.getByRole("heading", { name: "Risk" })).toBeVisible();
+  await expect(page.getByText("Sharpe ratio").first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("Max drawdown")).toBeVisible();
+  await expect(page.getByText("Correlation").first()).toBeVisible();
+  // Assumptions must travel with the numbers.
+  await expect(page.getByText("How these were computed")).toBeVisible();
+
+  // ---- goals ----
+  await page.getByRole("link", { name: /^Goals/ }).click();
+  await page.waitForURL("**/goals");
+  await page.getByRole("button", { name: "New goal" }).click();
+  await page.getByLabel("Name").fill("Retirement");
+  await page.getByLabel("Target amount (₹)").fill("25000000");
+  await page.getByLabel("Target date").fill("2046-04-01");
+  await page.getByLabel("Monthly contribution (₹)").fill("40000");
+  await page.getByRole("button", { name: "Create goal" }).click();
+
+  await page.getByText("Retirement").first().click();
+  await expect(page.getByText("Scenarios")).toBeVisible({ timeout: 20_000 });
+  // A projection must present a range and never read as a promise.
+  await expect(page.getByText("pessimistic")).toBeVisible();
+  await expect(page.getByText(/not a prediction/)).toBeVisible();
+
+  // ---- insights ----
+  await page.getByRole("link", { name: /^Insights/ }).click();
+  await page.waitForURL("**/insights");
+  await expect(page.getByText("Portfolio Health Score")).toBeVisible({ timeout: 25_000 });
+  await expect(page.getByText("What moves the score")).toBeVisible({ timeout: 25_000 });
+  await expect(page.getByText("Wealth forecast")).toBeVisible();
+
+  // ---- copilot ----
+  await page.getByRole("link", { name: /^Copilot/ }).click();
+  await page.waitForURL("**/copilot");
+  await page.getByRole("button", { name: "Why is my portfolio risky?" }).click();
+  // Every figure in the answer must be traceable to a backend measurement.
+  await expect(page.getByText(/figures verified/)).toBeVisible({ timeout: 30_000 });
+});
+
+test("a malformed CSV is rejected in full and says why", async ({ page }) => {
+  await register(page);
+  await page.goto("/import");
+
+  await page.setInputFiles('input[type="file"]', {
+    name: "bad.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(
+      "symbol,quantity,average_price\nRELIANCE,10,1000\nNOTREAL,5,3000\n",
+    ),
+  });
+  await page.getByRole("button", { name: "Import" }).click();
+
+  await expect(page.getByText("Rejected")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(/Nothing was saved/)).toBeVisible();
+  await expect(page.getByText(/not a supported symbol/)).toBeVisible();
+
+  // The valid row must not have been written either.
+  await page.goto("/portfolio");
+  await expect(page.getByText("Nothing held yet")).toBeVisible({ timeout: 15_000 });
+});
+
+test("an empty portfolio explains itself instead of showing broken charts", async ({ page }) => {
+  await register(page);
+
+  await page.goto("/overview");
+  await expect(page.getByText("No holdings yet")).toBeVisible({ timeout: 15_000 });
+
+  await page.goto("/risk");
+  await expect(page.getByText("Not enough history")).toBeVisible({ timeout: 15_000 });
+});
+
+test("protected pages redirect an anonymous visitor to sign in", async ({ page }) => {
+  await page.context().clearCookies();
+  await page.goto("/overview");
+  await page.waitForURL("**/login", { timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+});

@@ -1,0 +1,3 @@
+# sharp builds a native binary used by Next.js image optimisation.
+allowBuilds:
+  sharp: true
