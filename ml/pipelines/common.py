@@ -13,6 +13,7 @@ import os
 import re
 import sys
 import time
+import warnings
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -196,3 +197,29 @@ def describe_frame(df: pd.DataFrame, label: str = "frame") -> str:
     if "symbol" in df.columns:
         parts.append(f"{df['symbol'].nunique():,} symbols")
     return "  │  ".join(parts)
+
+# --------------------------------------------------------------------------
+# Numerical warnings
+# --------------------------------------------------------------------------
+
+def silence_accelerate_matmul_warnings() -> None:
+    """Suppress a known false positive from numpy on Apple's Accelerate BLAS.
+
+    numpy 2.x on macOS Accelerate raises "divide by zero / overflow / invalid
+    value encountered in matmul" on matrix products whose inputs and outputs
+    are entirely finite. Accelerate leaves FPU exception flags set and numpy
+    reports them, but the arithmetic is correct: a clean 9743x15 @ 15x2
+    product of random normals triggers all three warnings and still returns
+    finite values.
+
+    Left alone, these appear throughout scikit-learn's KMeans and PCA output
+    and look exactly like a data-quality failure, which costs real time to
+    chase. Only this precise message on this precise operation is filtered,
+    so genuine overflows elsewhere still surface.
+    """
+    for message in (
+        "divide by zero encountered in matmul",
+        "overflow encountered in matmul",
+        "invalid value encountered in matmul",
+    ):
+        warnings.filterwarnings("ignore", message=message, category=RuntimeWarning)

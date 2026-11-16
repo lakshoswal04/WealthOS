@@ -1,0 +1,240 @@
+{
+  "generated_at": "2026-11-16T01:12:28.766238+00:00",
+  "horizon_months": 6,
+  "target": "excess_log_growth_6m",
+  "random_state": 42,
+  "target_rationale": "Models predict excess log growth over a zero-return contribution baseline. Predicting raw rupee value yields an R-squared near 0.99 that reflects portfolio scale rather than forecasting skill.",
+  "rows": {
+    "train": 675724,
+    "validation": 177884,
+    "test": 229897
+  },
+  "xgboost_search": [
+    {
+      "max_depth": 3,
+      "learning_rate": 0.02,
+      "min_child_weight": 50,
+      "validation_rmse": 0.086628,
+      "best_iteration": 0
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.02,
+      "min_child_weight": 100,
+      "validation_rmse": 0.086766,
+      "best_iteration": 0
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.05,
+      "min_child_weight": 50,
+      "validation_rmse": 0.087403,
+      "best_iteration": 0
+    },
+    {
+      "max_depth": 6,
+      "learning_rate": 0.05,
+      "min_child_weight": 5,
+      "validation_rmse": 0.086425,
+      "best_iteration": 0
+    }
+  ],
+  "xgboost_best_params": {
+    "max_depth": 6,
+    "learning_rate": 0.05,
+    "min_child_weight": 5
+  },
+  "xgboost_feature_importance": [
+    {
+      "feature": "market_volatility_12m",
+      "importance": 0.19436
+    },
+    {
+      "feature": "market_drawdown",
+      "importance": 0.10609
+    },
+    {
+      "feature": "return_3m",
+      "importance": 0.10256
+    },
+    {
+      "feature": "volatility",
+      "importance": 0.07645
+    },
+    {
+      "feature": "month_of_year",
+      "importance": 0.07539
+    },
+    {
+      "feature": "market_return_12m",
+      "importance": 0.0457
+    },
+    {
+      "feature": "market_return_3m",
+      "importance": 0.04551
+    },
+    {
+      "feature": "max_drawdown",
+      "importance": 0.04228
+    },
+    {
+      "feature": "return_6m",
+      "importance": 0.03951
+    },
+    {
+      "feature": "market_return_1m",
+      "importance": 0.03918
+    },
+    {
+      "feature": "contribution_3m",
+      "importance": 0.03024
+    },
+    {
+      "feature": "monthly_savings",
+      "importance": 0.02292
+    }
+  ],
+  "sequences": {
+    "length": 24,
+    "features": 14,
+    "train": 449819,
+    "validation": 167778,
+    "test": 226048,
+    "assignment": "by the split of the month being predicted"
+  },
+  "best_model": {
+    "name": "gru",
+    "skill_vs_mean_baseline": 0.2402
+  },
+  "results": {
+    "baseline_contributions": {
+      "growth": {
+        "label": "excess log growth",
+        "n": 229897,
+        "mae": 0.059394,
+        "rmse": 0.078866,
+        "mape_pct": 100.0,
+        "r2": -0.22759
+      },
+      "value": {
+        "label": "rupee value",
+        "n": 229897,
+        "mae": 357927.483883,
+        "rmse": 850270.794046,
+        "mape_pct": 5.851,
+        "r2": 0.982728
+      },
+      "skill_vs_zero_baseline": 0.0,
+      "skill_vs_mean_baseline": null
+    },
+    "baseline_mean_drift": {
+      "growth": {
+        "label": "excess log growth",
+        "n": 229897,
+        "mae": 0.053296,
+        "rmse": 0.075479,
+        "mape_pct": 1982.215,
+        "r2": -0.124412
+      },
+      "value": {
+        "label": "rupee value",
+        "n": 229897,
+        "mae": 341903.208418,
+        "rmse": 885254.417484,
+        "mape_pct": 5.558,
+        "r2": 0.981277
+      },
+      "skill_vs_zero_baseline": 0.084,
+      "skill_vs_mean_baseline": 0.0,
+      "train_mean_excess_log_growth": 0.059065
+    },
+    "baseline_drift": {
+      "growth": {
+        "label": "excess log growth",
+        "n": 229897,
+        "mae": 0.081724,
+        "rmse": 0.116057,
+        "mape_pct": 3233.456,
+        "r2": -1.658358
+      },
+      "value": {
+        "label": "rupee value",
+        "n": 229897,
+        "mae": 543890.528362,
+        "rmse": 1578146.254528,
+        "mape_pct": 8.697,
+        "r2": 0.940498
+      },
+      "skill_vs_zero_baseline": -1.1655,
+      "skill_vs_mean_baseline": -1.3642
+    },
+    "xgboost": {
+      "growth": {
+        "label": "excess log growth",
+        "n": 229897,
+        "mae": 0.053203,
+        "rmse": 0.074875,
+        "mape_pct": 2019.704,
+        "r2": -0.106473
+      },
+      "value": {
+        "label": "rupee value",
+        "n": 229897,
+        "mae": 340898.93821,
+        "rmse": 875929.759875,
+        "mape_pct": 5.541,
+        "r2": 0.981669
+      },
+      "skill_vs_zero_baseline": 0.0987,
+      "skill_vs_mean_baseline": 0.016,
+      "best_iteration": 0
+    },
+    "lstm": {
+      "growth": {
+        "label": "excess log growth",
+        "n": 226048,
+        "mae": 0.049098,
+        "rmse": 0.065802,
+        "mape_pct": 1708.88,
+        "r2": 0.140896
+      },
+      "value": {
+        "label": "rupee value",
+        "n": 226048,
+        "mae": 317109.88448,
+        "rmse": 780438.910641,
+        "mape_pct": 4.999,
+        "r2": 0.985557
+      },
+      "skill_vs_zero_baseline": 0.3008,
+      "skill_vs_mean_baseline": 0.2364,
+      "epochs_run": 5,
+      "evaluated_on_subset": true,
+      "subset_rows": 226048
+    },
+    "gru": {
+      "growth": {
+        "label": "excess log growth",
+        "n": 226048,
+        "mae": 0.049202,
+        "rmse": 0.065639,
+        "mape_pct": 1670.182,
+        "r2": 0.145155
+      },
+      "value": {
+        "label": "rupee value",
+        "n": 226048,
+        "mae": 316600.856007,
+        "rmse": 781137.00145,
+        "mape_pct": 4.999,
+        "r2": 0.985531
+      },
+      "skill_vs_zero_baseline": 0.3043,
+      "skill_vs_mean_baseline": 0.2402,
+      "epochs_run": 5,
+      "evaluated_on_subset": true,
+      "subset_rows": 226048
+    }
+  },
+  "interpretation": "R-squared on rupee value is high for every model including the zero-return baseline, because portfolio value at t+h is dominated by value at t plus contributions; it measures scale, not skill. Skill against the zero-return baseline is also flattering, because that baseline ignores market drift and so is biased low by roughly the average market return over the horizon. The honest figures are R-squared on excess log growth and the skill score against the mean-drift baseline, which are equivalent to each other and measure what a model adds over the best constant forecast."
+}
