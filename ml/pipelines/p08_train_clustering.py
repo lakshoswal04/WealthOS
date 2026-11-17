@@ -52,6 +52,10 @@ K_RANGE = range(2, 11)
 BOOTSTRAP_ROUNDS = 20
 BOOTSTRAP_FRACTION = 0.8
 
+# Points kept for the display map. Enough to show the structure, small
+# enough to ship as JSON and render in a browser.
+CLUSTER_MAP_POINTS = 2400
+
 # Behavioural features only. Age and income are deliberately excluded: the
 # goal is to group investors by how they *behave*, and including demographics
 # would let the model cluster on who they are instead.
@@ -328,7 +332,41 @@ def main() -> None:
         assignments["pc1"] = coordinates[:, 0]
         assignments["pc2"] = coordinates[:, 1]
         assignments.to_parquet(PROCESSED_DIR / "cluster_assignments.parquet", index=False)
+
+        # A downsampled copy as a tracked report. The parquet lives in
+        # gitignored data/processed, so without this the cluster map would
+        # render on a developer machine and be empty everywhere else. A
+        # stratified sample keeps every cluster represented even though the
+        # smallest holds 2% of the cohort.
+        per_cluster = max(1, CLUSTER_MAP_POINTS // max(best_k, 1))
+        sampled = (
+            assignments.groupby("cluster", group_keys=False)
+            .apply(lambda g: g.sample(min(len(g), per_cluster), random_state=RANDOM_STATE))
+            .reset_index(drop=True)
+        )
+        write_report("cluster_map", {
+            "k": best_k,
+            "n_total": int(len(assignments)),
+            "n_sampled": int(len(sampled)),
+            "note": (
+                "A stratified sample of the full cohort, projected to two "
+                "principal components for display. Axes are unitless; only "
+                "the separation between groups is meaningful."
+            ),
+            "points": [
+                {
+                    "pc1": round(float(r.pc1), 4),
+                    "pc2": round(float(r.pc2), 4),
+                    "cluster": int(r.cluster),
+                    "cluster_name": str(r.cluster_name),
+                    "archetype": str(r.archetype),
+                }
+                for r in sampled.itertuples()
+            ],
+        })
         log.info("  → ml/models/investor_clustering.joblib")
+        log.info("  → ml/reports/cluster_map.json (%d of %d points)",
+                 len(sampled), len(assignments))
 
     write_report("clustering", report)
     log.info("clustering report written")

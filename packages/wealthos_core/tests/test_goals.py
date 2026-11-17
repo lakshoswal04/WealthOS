@@ -165,3 +165,115 @@ def test_projection_path_length_matches_the_horizon():
 def test_projection_path_ends_where_future_value_says_it_should():
     path = projection_path(100_000, 5_000, 0.10, 36)
     assert path[-1] == pytest.approx(future_value(100_000, 5_000, 0.10, 36), rel=1e-9)
+
+
+# --------------------------------------------------------------------------
+# Monte Carlo
+# --------------------------------------------------------------------------
+
+from wealthos_core.goals import PERCENTILES, monte_carlo_paths  # noqa: E402
+
+
+def _simulate(**overrides):
+    kwargs = dict(
+        current_amount=600_000, monthly_contribution=40_000,
+        annual_return=0.115, annual_volatility=0.12, months=120,
+        target_amount=10_000_000, n_paths=800,
+    )
+    kwargs.update(overrides)
+    return monte_carlo_paths(**kwargs)
+
+
+def test_percentile_bands_are_ordered_at_every_month():
+    result = _simulate()
+    bands = result["percentiles"]
+
+    for index in range(len(result["months"])):
+        values = [bands[f"p{p}"][index] for p in PERCENTILES]
+        assert values == sorted(values), f"bands cross at month {index}"
+
+
+def test_every_band_spans_the_whole_horizon():
+    result = _simulate(months=60)
+    assert len(result["months"]) == 61
+    for percentile in PERCENTILES:
+        assert len(result["percentiles"][f"p{percentile}"]) == 61
+
+
+def test_all_bands_start_at_the_current_amount():
+    result = _simulate()
+    for percentile in PERCENTILES:
+        assert result["percentiles"][f"p{percentile}"][0] == pytest.approx(600_000)
+
+
+def test_zero_volatility_collapses_the_fan_onto_the_deterministic_path():
+    result = _simulate(annual_volatility=0.0)
+    expected = future_value(600_000, 40_000, 0.115, 120)
+
+    assert result["final_values"]["p10"] == pytest.approx(result["final_values"]["p90"])
+    assert result["final_values"]["p50"] == pytest.approx(expected, rel=1e-6)
+
+
+def test_more_volatility_widens_the_fan():
+    calm = _simulate(annual_volatility=0.05)
+    wild = _simulate(annual_volatility=0.30)
+
+    calm_spread = calm["final_values"]["p90"] - calm["final_values"]["p10"]
+    wild_spread = wild["final_values"]["p90"] - wild["final_values"]["p10"]
+    assert wild_spread > calm_spread * 2
+
+
+def test_the_median_falls_below_the_deterministic_path():
+    # Volatility drag: compounding random returns, the median outcome lands
+    # below the path that earns the average every month. A simulator whose
+    # median matched the deterministic projection would be wrong.
+    result = _simulate(annual_volatility=0.18)
+    deterministic = future_value(600_000, 40_000, 0.115, 120)
+
+    assert result["final_values"]["p50"] < deterministic
+
+
+def test_success_probability_is_a_probability():
+    probability = _simulate()["success_probability"]
+    assert 0.0 <= probability <= 1.0
+
+
+def test_an_unreachable_target_is_almost_never_met():
+    assert _simulate(target_amount=10_000_000_000)["success_probability"] < 0.01
+
+
+def test_an_already_met_target_is_always_met():
+    assert _simulate(target_amount=1.0)["success_probability"] > 0.99
+
+
+def test_no_target_gives_no_success_probability():
+    assert _simulate(target_amount=None)["success_probability"] is None
+
+
+def test_the_same_seed_reproduces_the_same_fan():
+    # A demonstration must not show different numbers on a second run.
+    assert _simulate(seed=7) == _simulate(seed=7)
+    assert _simulate(seed=7) != _simulate(seed=8)
+
+
+def test_a_zero_month_horizon_returns_the_current_value():
+    result = _simulate(months=0)
+    assert result["months"] == [0]
+    assert result["percentiles"]["p50"] == [pytest.approx(600_000)]
+
+
+def test_simulation_records_its_assumptions_and_disclaims_itself():
+    assumptions = _simulate()["assumptions"]
+
+    assert assumptions["expected_annual_return"] == pytest.approx(0.115)
+    assert assumptions["annual_volatility"] == pytest.approx(0.12)
+    assert assumptions["paths_simulated"] == 800
+    assert "not a prediction" in assumptions["note"]
+    # The normal-returns simplification must be stated, not assumed harmless.
+    assert "fatter tails" in assumptions["note"]
+
+
+def test_values_never_go_negative():
+    # Monthly returns are floored at total loss, so a path cannot invert.
+    result = _simulate(annual_volatility=0.60, months=240)
+    assert min(result["percentiles"]["p10"]) >= 0.0

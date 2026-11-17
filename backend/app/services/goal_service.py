@@ -9,7 +9,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from wealthos_core import DEFAULT_RISK_FREE_RATE, annualized_return, annualized_volatility
-from wealthos_core.goals import GoalProjection, project_goal, projection_path
+from wealthos_core.goals import (
+    GoalProjection, monte_carlo_paths, months_between, project_goal, projection_path,
+)
 from app.models import Goal, GoalStatus, User
 from app.services import portfolio_service, risk_service
 
@@ -175,4 +177,115 @@ def portfolio_goal_alignment(db: Session, user: User) -> dict:
         "n_goals": len(goals),
         "n_on_track": sum(1 for f in forecasts if f["on_track"]),
         "goals": forecasts,
+    }
+
+# Bounds on what a user may dial in on the simulator. They stop the sliders
+# producing projections that are arithmetically valid and financially absurd.
+SIMULATION_BOUNDS = {
+    "annual_return": (-0.10, 0.30),
+    "annual_volatility": (0.0, 0.60),
+    "monthly_contribution": (0.0, 10_000_000.0),
+    "months": (1, 600),
+}
+
+SIMULATION_PATHS = 2000
+
+
+def simulate_goal(
+    db: Session,
+    user: User,
+    goal: Goal,
+    monthly_contribution: float | None = None,
+    annual_return: float | None = None,
+    annual_volatility: float | None = None,
+    months: int | None = None,
+) -> dict:
+    """Project a goal under user-supplied assumptions, with a range.
+
+    Every override is optional; anything left unset falls back to the same
+    values the ordinary forecast uses, so the simulator opens on the user's
+    real position rather than on invented defaults.
+
+    Returns both the deterministic path and a Monte Carlo fan. The fan is the
+    point: a single line implies a precision that does not exist, and the
+    probability of actually reaching the target is the number a user can act
+    on.
+    """
+    estimated_return, estimated_volatility, estimate_detail = expected_return_for_user(db, user)
+    current = _current_amount(db, user, goal)
+
+    default_contribution = float(goal.monthly_contribution or 0.0)
+    if default_contribution <= 0 and user.monthly_savings:
+        default_contribution = float(user.monthly_savings)
+
+    default_months = months_between(date.today(), goal.target_date)
+
+    def clamp(value: float, key: str) -> float:
+        low, high = SIMULATION_BOUNDS[key]
+        return float(min(max(value, low), high))
+
+    contribution = clamp(
+        default_contribution if monthly_contribution is None else monthly_contribution,
+        "monthly_contribution",
+    )
+    rate = clamp(estimated_return if annual_return is None else annual_return, "annual_return")
+    volatility = clamp(
+        estimated_volatility if annual_volatility is None else annual_volatility,
+        "annual_volatility",
+    )
+    horizon = int(clamp(float(default_months if months is None else months), "months"))
+
+    projection = project_goal(
+        target_amount=float(goal.target_amount),
+        current_amount=current,
+        monthly_contribution=contribution,
+        target_date=goal.target_date,
+        expected_annual_return=rate,
+        return_volatility=volatility,
+        goal_id=goal.id,
+        name=goal.name,
+        started_on=goal.created_at.date() if goal.created_at else None,
+    )
+
+    deterministic = projection_path(current, contribution, rate, horizon)
+    fan = monte_carlo_paths(
+        current_amount=current,
+        monthly_contribution=contribution,
+        annual_return=rate,
+        annual_volatility=volatility,
+        months=horizon,
+        target_amount=float(goal.target_amount),
+        n_paths=SIMULATION_PATHS,
+    )
+
+    return {
+        "goal_id": goal.id,
+        "name": goal.name,
+        "target_amount": float(goal.target_amount),
+        "current_amount": round(current, 2),
+        "months": horizon,
+        "inputs": {
+            "monthly_contribution": round(contribution, 2),
+            "annual_return": round(rate, 4),
+            "annual_volatility": round(volatility, 4),
+            "months": horizon,
+        },
+        "defaults": {
+            "monthly_contribution": round(default_contribution, 2),
+            "annual_return": round(estimated_return, 4),
+            "annual_volatility": round(estimated_volatility, 4),
+            "months": default_months,
+        },
+        "bounds": {k: list(v) for k, v in SIMULATION_BOUNDS.items()},
+        "deterministic": {
+            "months": list(range(len(deterministic))),
+            "projected_value": [round(v, 2) for v in deterministic],
+            "final_value": round(deterministic[-1], 2) if deterministic else 0.0,
+        },
+        "monte_carlo": fan,
+        "success_probability": fan["success_probability"],
+        "required_monthly_contribution": projection.required_monthly_contribution,
+        "funding_ratio": projection.funding_ratio,
+        "on_track": projection.on_track,
+        "return_estimate": estimate_detail,
     }

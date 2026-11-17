@@ -22,7 +22,10 @@ __all__ = [
     "future_value",
     "required_monthly_contribution",
     "project_goal",
+    "projection_path",
+    "monte_carlo_paths",
     "SCENARIOS",
+    "PERCENTILES",
 ]
 
 # Return scenarios, expressed as offsets from the portfolio's expected
@@ -258,3 +261,101 @@ def projection_path(
         value = value * (1.0 + monthly_rate) + monthly_contribution
         path.append(value)
     return path
+
+# Percentile bands reported by the Monte Carlo fan.
+PERCENTILES = (10, 25, 50, 75, 90)
+
+
+def monte_carlo_paths(
+    current_amount: float,
+    monthly_contribution: float,
+    annual_return: float,
+    annual_volatility: float,
+    months: int,
+    target_amount: float | None = None,
+    n_paths: int = 2000,
+    seed: int = 42,
+) -> dict:
+    """Simulate many return paths and report the spread of outcomes.
+
+    The deterministic projection answers "what happens if returns are exactly
+    average every month", which never occurs. This answers the more useful
+    question: given the same assumptions, how wide is the range of plausible
+    outcomes, and how often is the target reached?
+
+    Monthly returns are drawn from a normal distribution around the
+    de-annualised expected return. That is a simplification — real equity
+    returns have fatter tails and negative skew, so the extreme percentiles
+    here are, if anything, optimistic. The result says so, and callers are
+    expected to pass it through to the user.
+
+    ``seed`` is fixed by default so a demonstration is reproducible: the same
+    inputs give the same fan every time.
+    """
+    months = max(int(months), 0)
+    if months == 0:
+        value = float(current_amount)
+        return {
+            "months": [0],
+            "percentiles": {f"p{p}": [value] for p in PERCENTILES},
+            "success_probability": (
+                1.0 if target_amount is not None and value >= target_amount else 0.0
+            ),
+            "n_paths": 0,
+            "assumptions": _monte_carlo_assumptions(annual_return, annual_volatility, 0, seed),
+        }
+
+    rng = np.random.default_rng(seed)
+
+    monthly_rate = (1.0 + annual_return) ** (1.0 / MONTHS_PER_YEAR) - 1.0
+    monthly_sigma = annual_volatility / np.sqrt(MONTHS_PER_YEAR)
+
+    # (paths x months) of simulated monthly returns, floored at total loss.
+    draws = rng.normal(monthly_rate, monthly_sigma, size=(n_paths, months))
+    np.clip(draws, -0.95, None, out=draws)
+
+    values = np.empty((n_paths, months + 1), dtype="float64")
+    values[:, 0] = float(current_amount)
+    for month in range(months):
+        # Contributions arrive at month end, matching project_goal.
+        values[:, month + 1] = values[:, month] * (1.0 + draws[:, month]) + monthly_contribution
+
+    bands = {
+        f"p{p}": [round(float(v), 2) for v in np.percentile(values, p, axis=0)]
+        for p in PERCENTILES
+    }
+
+    final = values[:, -1]
+    success = (
+        float((final >= target_amount).mean()) if target_amount is not None else float("nan")
+    )
+
+    return {
+        "months": list(range(months + 1)),
+        "percentiles": bands,
+        "final_values": {
+            f"p{p}": round(float(np.percentile(final, p)), 2) for p in PERCENTILES
+        },
+        "success_probability": None if np.isnan(success) else round(success, 4),
+        "n_paths": n_paths,
+        "assumptions": _monte_carlo_assumptions(annual_return, annual_volatility, n_paths, seed),
+    }
+
+
+def _monte_carlo_assumptions(
+    annual_return: float, annual_volatility: float, n_paths: int, seed: int
+) -> dict:
+    return {
+        "expected_annual_return": round(float(annual_return), 4),
+        "annual_volatility": round(float(annual_volatility), 4),
+        "paths_simulated": n_paths,
+        "seed": seed,
+        "distribution": "normal monthly returns around the expected rate",
+        "contribution_timing": "end of month",
+        "note": (
+            "A range of outcomes under these assumptions, not a prediction. "
+            "Real returns have fatter tails and more negative skew than a "
+            "normal distribution, so the extreme bands are if anything "
+            "optimistic."
+        ),
+    }

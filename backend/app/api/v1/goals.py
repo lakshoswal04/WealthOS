@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query, status
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from app.api.deps import CurrentUser, DbSession
@@ -64,6 +65,34 @@ def forecast_goal(goal_id: int, user: CurrentUser, db: DbSession) -> dict:
     figure, so the projection cannot be read as a promised outcome.
     """
     return goal_service.forecast_goal(db, user, _owned_goal(db, user, goal_id))
+
+
+class SimulationRequest(BaseModel):
+    """Optional overrides for the scenario simulator.
+
+    Anything left unset falls back to the user's actual position, so the
+    simulator opens on reality rather than on invented defaults.
+    """
+
+    monthly_contribution: float | None = Field(default=None, ge=0, le=10_000_000)
+    annual_return: float | None = Field(default=None, ge=-0.10, le=0.30)
+    annual_volatility: float | None = Field(default=None, ge=0.0, le=0.60)
+    months: int | None = Field(default=None, ge=1, le=600)
+
+
+@router.post("/goals/{goal_id}/simulate")
+def simulate_goal(
+    goal_id: int, payload: SimulationRequest, user: CurrentUser, db: DbSession
+) -> dict:
+    """Project a goal under assumptions the user chooses, with a range.
+
+    Returns the deterministic path, a Monte Carlo fan of percentile bands,
+    and the probability of reaching the target. The fan matters more than the
+    line: a single projection implies a precision that does not exist.
+    """
+    return goal_service.simulate_goal(
+        db, user, _owned_goal(db, user, goal_id), **payload.model_dump()
+    )
 
 
 @router.get("/health-score")
