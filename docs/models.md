@@ -298,6 +298,16 @@ values now count.
 
 ---
 
+## Seeing all of this in the product
+
+The **Model Lab** page (`/research`) renders every figure in this document
+from the same `ml/reports/` files, including the charts that are hard to
+convey in prose: the silhouette curve, the 2,273-point cluster map, the
+archetype×cluster recovery matrix, the autoencoder's training curves against
+the Isolation Forest, the skill curve across horizons, and the feature
+importances. **Data Quality** (`/data-quality`) does the same for the
+pipeline findings.
+
 ## Reproducing all of this
 
 ```bash

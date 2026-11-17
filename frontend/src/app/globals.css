@@ -3,44 +3,60 @@
 /* ──────────────────────────────────────────────────────────────────────────
    WealthOS design tokens
 
-   A dark "quant terminal" surface with editorial typography. Dark is the
-   primary mode on purpose: these pages are dense with figures, and a dark
-   ground lets the data carry the only saturated colour on screen.
+   A dark private-bank surface: deep ink, warm metal, generous hairlines.
+   Dark is the primary mode on purpose — these pages are dense with figures,
+   and a dark ground lets the data carry the only saturated colour on screen.
 
-   The eight series colours are the validated categorical palette from the
-   data-visualisation reference, checked against this exact surface
-   (#0E1116) for the lightness band, chroma floor, colour-vision-deficiency
-   separation, normal-vision separation and 3:1 contrast. Do not substitute
-   a hue here without re-running that validator.
+   --surface-1 (#0e1116) is the CHART GROUND and is load-bearing. The eight
+   series colours in lib/viz.ts were validated against exactly this value for
+   the lightness band, chroma floor, colour-vision-deficiency separation,
+   normal-vision separation and 3:1 contrast. Changing it silently
+   invalidates that work: re-run the palette validator before touching it.
    ────────────────────────────────────────────────────────────────────── */
 
 :root {
   color-scheme: dark;
 
-  /* surfaces */
-  --surface-0: #0b0e12;   /* page ground */
-  --surface-1: #0e1116;   /* chart + card surface (validated against) */
-  --surface-2: #151a21;   /* raised card */
-  --surface-3: #1d242d;   /* hover / input */
-  --hairline:  #252d38;
+  /* ── surfaces ── */
+  --surface-0: #070a0e;   /* page ground, deeper than the cards it holds */
+  --surface-1: #0e1116;   /* chart + input ground — validated, do not change */
+  --surface-2: #11151b;   /* card */
+  --surface-3: #1a212a;   /* raised / hover */
+  --surface-4: #232c37;   /* control, active */
 
-  /* ink */
-  --ink-primary:   #eef1f5;
-  --ink-secondary: #9aa6b4;
-  --ink-muted:     #64707e;
+  /* Glass: a card that lets a little of the ground through reads as a
+     physical layer rather than a flat rectangle. */
+  --glass: color-mix(in oklab, var(--surface-2) 88%, transparent);
+  --glass-strong: color-mix(in oklab, var(--surface-2) 96%, transparent);
 
-  /* brand accent — warm gold, nodding to the gold asset class */
-  --accent:      #e8a33d;
-  --accent-dim:  #8a6224;
-  --accent-ink:  #1a1206;
+  --hairline: #1f2731;
+  --hairline-strong: #2b3542;
 
-  /* status — reserved, never reused as a series colour */
-  --good:     #0ca30c;
-  --warning:  #c98500;
-  --serious:  #d95926;
+  /* ── ink ── */
+  --ink-primary: #f2f5f8;
+  --ink-secondary: #a3b0bf;
+  --ink-muted: #6b7889;
+  --ink-faint: #4b5666;
+
+  /* ── accent: warm metal, not amber ──
+     Reads as brushed gold against the ink, and nods to the gold asset class. */
+  --accent: #d4a24c;
+  --accent-bright: #e8bd6d;
+  --accent-dim: #7a5c25;
+  --accent-ink: #130d03;
+  --accent-wash: color-mix(in oklab, var(--accent) 12%, transparent);
+
+  /* ── status: reserved for state, never reused as a series colour ── */
+  --good: #0ca30c;
+  --good-ink: #5ddc5d;
+  --warning: #c98500;
+  --warning-ink: #e8b84b;
+  --serious: #d95926;
+  --serious-ink: #f08a5d;
   --critical: #e66767;
+  --critical-ink: #ff9b9b;
 
-  /* categorical series (dark steps, validated on --surface-1) */
+  /* ── categorical series (validated against --surface-1) ── */
   --series-1: #3987e5;  /* blue */
   --series-2: #d95926;  /* orange */
   --series-3: #199e70;  /* aqua */
@@ -50,15 +66,31 @@
   --series-7: #9085e9;  /* violet */
   --series-8: #e66767;  /* red */
 
-  /* recessive chart furniture */
-  --grid: #1c232c;
-  --axis: #3a4552;
+  /* ── recessive chart furniture ── */
+  --grid: #1a212a;
+  --axis: #3c4654;
 
-  --radius: 10px;
+  /* ── elevation ──
+     Dark interfaces need shadow plus a top highlight; shadow alone reads as
+     a smudge because there is no light surface to cast onto. */
+  --lift-1: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 1px 2px rgb(0 0 0 / 0.4);
+  --lift-2: 0 1px 0 0 rgb(255 255 255 / 0.04) inset,
+            0 2px 8px rgb(0 0 0 / 0.45), 0 12px 32px -12px rgb(0 0 0 / 0.6);
+  --lift-3: 0 1px 0 0 rgb(255 255 255 / 0.05) inset,
+            0 4px 16px rgb(0 0 0 / 0.5), 0 24px 56px -20px rgb(0 0 0 / 0.7);
+  --glow-accent: 0 0 0 1px color-mix(in oklab, var(--accent) 30%, transparent),
+                 0 8px 28px -10px color-mix(in oklab, var(--accent) 40%, transparent);
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 18px;
+
+  --ease: cubic-bezier(0.22, 0.75, 0.3, 1);
 }
 
 * { border-color: var(--hairline); }
 
+html { scroll-behavior: smooth; }
 html, body { background: var(--surface-0); }
 
 body {
@@ -66,32 +98,100 @@ body {
   font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   font-feature-settings: "cv05" 1, "ss01" 1;
   -webkit-font-smoothing: antialiased;
-  /* A faint vertical sheen stops the dark ground reading as flat black. */
+  text-rendering: optimizeLegibility;
+  /* Two faint pools of light stop a very dark ground reading as flat black. */
   background-image:
-    radial-gradient(900px 500px at 15% -10%, rgba(232, 163, 61, 0.05), transparent 60%),
-    radial-gradient(700px 420px at 92% 0%, rgba(57, 135, 229, 0.045), transparent 62%);
+    radial-gradient(1100px 620px at 12% -12%, color-mix(in oklab, var(--accent) 6%, transparent), transparent 62%),
+    radial-gradient(860px 520px at 94% -4%, color-mix(in oklab, var(--series-1) 6%, transparent), transparent 64%);
   background-attachment: fixed;
 }
 
 /* Figures line up in columns only with tabular, same-width digits. */
-.tabular { font-variant-numeric: tabular-nums; font-family: var(--font-mono), ui-monospace, monospace; }
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: -0.01em;
+}
 
-.display { font-family: var(--font-display), Georgia, serif; font-weight: 400; }
+.display {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.012em;
+}
+
+/* A metallic sheen for the wordmark and hero numerals. */
+.metal {
+  background: linear-gradient(170deg, var(--accent-bright) 0%, var(--accent) 45%, #a87f34 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 
 /* A hairline grain, so large dark panels have texture rather than void. */
 .grain::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.025;
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.02;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: var(--surface-0); }
-::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: #2a333e; }
+/* A one-pixel light edge along the top of a card, as though lit from above. */
+.edge-lit { position: relative; }
+.edge-lit::after {
+  content: ""; position: absolute; inset-inline: 0; top: 0; height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.09) 22%,
+              rgb(255 255 255 / 0.09) 78%, transparent);
+}
 
-@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.rise { animation: rise 420ms cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+/* A hairline rule that fades at both ends, for section breaks. */
+.rule-fade {
+  height: 1px; border: 0;
+  background: linear-gradient(90deg, transparent, var(--hairline-strong) 18%,
+              var(--hairline-strong) 82%, transparent);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--surface-4); }
+
+::selection { background: color-mix(in oklab, var(--accent) 32%, transparent); color: var(--ink-primary); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── motion ──
+   One well-staggered page reveal reads as considered; scattered
+   micro-animations read as noise. */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sheen { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+.rise { animation: rise 520ms var(--ease) both; }
+.fade { animation: fade 600ms var(--ease) both; }
+
+/* Stagger children without a class on each one. */
+.stagger > * { animation: rise 520ms var(--ease) both; }
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 60ms; }
+.stagger > *:nth-child(3) { animation-delay: 120ms; }
+.stagger > *:nth-child(4) { animation-delay: 180ms; }
+.stagger > *:nth-child(5) { animation-delay: 240ms; }
+.stagger > *:nth-child(6) { animation-delay: 300ms; }
+
+.shimmer {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: sheen 1.4s linear infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

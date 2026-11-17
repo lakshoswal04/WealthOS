@@ -158,3 +158,99 @@ test("protected pages redirect an anonymous visitor to sign in", async ({ page }
   await page.waitForURL("**/login", { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 });
+
+/* ───────────────── landing page and research pages ───────────────── */
+
+test("the landing page is public and routes to sign-up", async ({ page }) => {
+  await page.context().clearCookies();
+  await page.goto("/");
+
+  // An anonymous visitor must land here, not be bounced to a login form.
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("intelligence layer");
+
+  // Measured results are read from the pipeline reports at runtime.
+  await expect(page.getByText("Clustering ARI")).toBeVisible();
+  await expect(page.getByText("Anomaly PR-AUC")).toBeVisible();
+
+  // The prototype disclaimer is present, not buried.
+  await expect(page.getByText(/not a regulated financial advisory service/)).toBeVisible();
+
+  await page.getByRole("link", { name: "Create your account" }).first().click();
+  await page.waitForURL("**/register");
+});
+
+test("the research reports endpoint needs no account", async ({ request }) => {
+  const response = await request.get(`${API}/api/v1/research/reports`);
+  expect(response.ok()).toBeTruthy();
+  const body = await response.json();
+  expect(Object.keys(body)).toEqual(expect.arrayContaining(["models", "data"]));
+});
+
+test("the Model Lab renders real training evidence", async ({ page }) => {
+  await register(page);
+  await importHoldings(page);
+
+  await page.goto("/research");
+  await expect(page.getByRole("heading", { name: "Model Lab" })).toBeVisible();
+
+  await expect(page.getByText("Investor behaviour clustering")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("ARI vs archetype")).toBeVisible();
+  await expect(page.getByText("Did it recover the real groups?")).toBeVisible();
+
+  await expect(page.getByText("Portfolio anomaly detection")).toBeVisible();
+  await expect(page.getByText("Against a shallow baseline")).toBeVisible();
+
+  await expect(page.getByText("Wealth trajectory forecasting")).toBeVisible();
+  await expect(page.getByText("Skill across horizons")).toBeVisible();
+
+  await expect(page.getByText("Copilot grounding")).toBeVisible();
+  await expect(page.getByText("Leakage controls")).toBeVisible();
+});
+
+test("the Data Quality page shows the corporate-action finding", async ({ page }) => {
+  await register(page);
+
+  await page.goto("/data-quality");
+  await expect(page.getByRole("heading", { name: "Data Quality" })).toBeVisible();
+
+  await expect(page.getByText("The corporate-action problem")).toBeVisible({ timeout: 20_000 });
+  // The specific evidence, not just the heading.
+  await expect(page.getByText(/not adjusted for corporate actions/)).toBeVisible();
+  await expect(page.getByText("Sharpe sign flips")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Joining the sources" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The synthetic cohort" })).toBeVisible();
+});
+
+test("the scenario simulator responds to input", async ({ page }) => {
+  test.setTimeout(90_000);
+  await register(page);
+  await importHoldings(page);
+
+  await page.goto("/goals");
+  await page.getByRole("button", { name: "New goal" }).click();
+  await page.getByLabel("Name").fill("Retirement");
+  await page.getByLabel("Target amount (₹)").fill("25000000");
+  await page.getByLabel("Target date").fill("2046-04-01");
+  await page.getByLabel("Monthly contribution (₹)").fill("20000");
+  await page.getByRole("button", { name: "Create goal" }).click();
+  await page.getByText("Retirement").first().click();
+
+  await expect(page.getByText("What would it take?")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Chance of reaching the target")).toBeVisible();
+
+  // Scoped to the simulator: a bare percentage selector also matches the
+  // goal card's progress figure elsewhere on the page.
+  const probability = page.getByTestId("success-probability");
+  await expect(probability).toBeVisible();
+
+  // A projection must never read as a promise.
+  await expect(page.getByText(/not a prediction/).first()).toBeVisible();
+
+  // Raising the contribution must change the answer.
+  const before = await probability.textContent();
+  await page.getByLabel("Monthly contribution").fill("250000");
+  await expect
+    .poll(async () => probability.textContent(), { timeout: 15_000 })
+    .not.toBe(before);
+});

@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 import { useApi } from "@/lib/auth";
 import { percent, ratio, shortDate } from "@/lib/format";
 import {
-  Assumptions, Badge, Card, CardBody, CardHeader, Empty, ErrorNote, Spinner, Stat,
+  Assumptions, Badge, Card, CardBody, CardHeader, Empty, Spinner, Stat,
 } from "@/components/ui";
 import { PageHead } from "@/components/ui/shell";
 import { CorrelationHeatmap, DrawdownChart, RiskReturnScatter } from "@/components/charts";

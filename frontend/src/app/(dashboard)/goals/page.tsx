@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { api, type GoalForecast } from "@/lib/api";
+import { api, type Goal, type GoalForecast } from "@/lib/api";
 import { useApi } from "@/lib/auth";
 import { percent, rupees, rupeesCompact, shortDate, titleCase } from "@/lib/format";
 import {
@@ -10,6 +10,20 @@ import {
 } from "@/components/ui";
 import { PageHead } from "@/components/ui/shell";
 import { GoalProjectionChart } from "@/components/charts";
+import { ScenarioSimulator } from "@/components/ui/simulator";
+
+/** The backend measures a goal against its recorded amount when one is set,
+ *  and otherwise against the whole portfolio, since the MVP does not earmark
+ *  assets to goals. The list card must use the same basis as the forecast
+ *  panel beside it, or the two disagree on the same screen. */
+function savedToward(goal: Goal, portfolioValue: number): number {
+  return goal.current_amount > 0 ? goal.current_amount : portfolioValue;
+}
+
+function progressOf(goal: Goal, portfolioValue: number): number {
+  if (goal.target_amount <= 0) return 0;
+  return Math.min(savedToward(goal, portfolioValue) / goal.target_amount, 1);
+}
 
 const GOAL_TYPES = [
   "retirement", "home", "education", "travel",
@@ -19,6 +33,7 @@ const GOAL_TYPES = [
 export default function GoalsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const goals = useApi(() => api.goals(), [refreshKey]);
+  const summary = useApi(() => api.portfolio().catch(() => null), [refreshKey]);
   const [selected, setSelected] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -69,6 +84,7 @@ export default function GoalsPage() {
   if (goals.error) return <ErrorNote message={goals.error} />;
 
   const rows = goals.data ?? [];
+  const portfolioValue = summary.data?.total_value ?? 0;
 
   return (
     <>
@@ -161,10 +177,14 @@ export default function GoalsPage() {
                       Delete
                     </button>
                   </div>
-                  <div className="mt-3"><Meter value={goal.progress_fraction * 100} color="var(--series-3)" /></div>
+                  <div className="mt-3">
+                    <Meter value={progressOf(goal, portfolioValue) * 100} color="var(--series-3)" />
+                  </div>
                   <div className="tabular mt-1.5 flex justify-between text-[11.5px] text-[var(--ink-secondary)]">
-                    <span>{rupeesCompact(goal.current_amount)} of {rupeesCompact(goal.target_amount)}</span>
-                    <span>{percent(goal.progress_fraction, 0)}</span>
+                    <span>
+                      {rupeesCompact(savedToward(goal, portfolioValue))} of {rupeesCompact(goal.target_amount)}
+                    </span>
+                    <span>{percent(progressOf(goal, portfolioValue), 0)}</span>
                   </div>
                 </CardBody>
               </Card>
@@ -183,6 +203,15 @@ export default function GoalsPage() {
             {selected && forecast.error && <ErrorNote message={forecast.error} />}
             {forecast.data && <GoalDetail forecast={forecast.data} />}
           </div>
+        </div>
+      )}
+
+      {/* The simulator sits full width rather than inside the detail column.
+          A fan chart and four percentile readouts squeezed into half a column
+          truncate their own labels. */}
+      {forecast.data && (
+        <div className="mt-5">
+          <ScenarioSimulator goalId={forecast.data.goal_id ?? selected ?? 0} />
         </div>
       )}
     </>

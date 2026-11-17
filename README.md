@@ -29,6 +29,10 @@ backend computed.
 | **Copilot** | Ask in plain language; every figure is verified against the backend |
 | **Import** | CSV upload with full validation before anything is written |
 | **Profile** | The investor details that drive risk bands and projections |
+| **Model Lab** | How every model was selected and scored — silhouette by k, the cluster map, loss curves, skill by horizon, feature importances |
+| **Data Quality** | Sources, the corporate-action finding, splice validation, cohort composition |
+
+A public landing page sits at `/`; the dashboard lives behind sign-in.
 
 ---
 
@@ -42,7 +46,7 @@ backend computed.
 | Classical ML | scikit-learn (K-Means), XGBoost |
 | Deep learning | PyTorch (autoencoder, LSTM, GRU) |
 | AI Copilot | Anthropic tool-calling, with a deterministic fallback |
-| Tests | pytest (275), Playwright (5) |
+| Tests | pytest (313), Playwright (12) |
 
 A single shared library, `packages/wealthos_core`, holds every financial
 formula and is imported by both the API and the training pipelines, so a
@@ -103,8 +107,8 @@ Open http://localhost:3000, register, and import
 ### Test
 
 ```bash
-make test      # 275 Python tests
-make test-e2e  # 5 Playwright tests against the running stack
+make test      # 313 Python tests
+make test-e2e  # 12 Playwright tests against the running stack
 ```
 
 ---
@@ -133,6 +137,11 @@ All measured on a held-out test period that no model saw during training.
 | Anomaly detection | PR-AUC **0.935**, F1 0.839, false-positive rate 0.0008 — against 0.326 PR-AUC for an Isolation Forest baseline |
 | Wealth forecasting | Skill over a mean-drift baseline rising with horizon: 0.04 at 1m, 0.24 at 6m, **0.249** at 12m |
 | Copilot grounding | **100%** of 458 figures across 30 questions traceable to a backend measurement |
+
+The **Model Lab** page inside the product shows how each of these was
+produced: the k selection, the algorithm comparison, the archetype recovery
+matrix, the autoencoder's loss curves against its baseline, and the skill
+curve across all four horizons.
 
 The forecasting numbers are deliberately quoted against a *mean-drift*
 baseline rather than a zero-return one. See

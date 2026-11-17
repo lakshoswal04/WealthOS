@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api, type Holding } from "@/lib/api";
 import { useApi } from "@/lib/auth";
-import { percent, rupees, rupeesCompact, shortDate, titleCase, toneFor } from "@/lib/format";
+import { percent, rupees, rupeesCompact, titleCase, toneFor } from "@/lib/format";
 import {
   Badge, Button, Card, CardBody, CardHeader, Empty, ErrorNote, Field,
   inputClass, Spinner,

@@ -77,7 +77,9 @@ A 1:1 bonus issue halves the raw price overnight, so the series records a
 | RELIANCE | 2017-09-07 | 1:1 bonus | **−50.3%** |
 | TCS | 2018-05-31 | 1:1 bonus | **−50.5%** |
 
-There are **78 such phantom moves** in the 51-name MVP universe alone.
+There are **78 such phantom moves** across the full Kaggle history
+(1996–2021) in the 51-name MVP universe alone, and **28** inside the
+2012–2021 window the impact comparison below uses.
 
 The source's `Prev Close` column was checked as a possible fix and carries
 no adjustment information — on RELIANCE's ex-date it simply repeats the

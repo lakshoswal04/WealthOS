@@ -19,7 +19,7 @@ import {
   Tooltip, XAxis, YAxis, ZAxis,
 } from "recharts";
 import { ASSET_CLASS_COLOR, CHART, SERIES, seriesColor } from "@/lib/viz";
-import { monthLabel, percent, percentPoints, rupeesCompact, titleCase } from "@/lib/format";
+import { monthLabel, percent, rupeesCompact, titleCase } from "@/lib/format";
 
 const AXIS = {
   stroke: CHART.axis,
@@ -463,6 +463,353 @@ export function ClusterComparison({ rows }: {
         <Bar dataKey="You" fill={SERIES[0]} radius={[0, 3, 3, 0]} isAnimationActive={false} />
         <Bar dataKey="Cluster average" fill={SERIES[1]} radius={[0, 3, 3, 0]} isAnimationActive={false} />
       </BarChart>
+    </Frame>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Research charts — used by the Model Lab and Data Quality pages.
+   Same conventions as above: fixed hue order, one axis, legend for two or
+   more series, recessive furniture, a tooltip on every plotted form.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/** Silhouette against k, with the selected k marked. Shows that k was
+ *  chosen by a criterion rather than picked. */
+export function SilhouetteByK({ points, chosen }: {
+  points: { k: number; silhouette: number; davies_bouldin: number }[]; chosen: number;
+}) {
+  return (
+    <Frame height={240}>
+      <LineChart data={points} margin={{ top: 10, right: 14, bottom: 4, left: 4 }}>
+        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <XAxis dataKey="k" {...AXIS}
+               label={{ value: "clusters (k)", position: "insideBottom", offset: -2,
+                        fill: CHART.inkMuted, fontSize: 11 }} />
+        <YAxis {...AXIS} width={48} tickFormatter={(v: number) => v.toFixed(2)} />
+        <ReferenceLine x={chosen} stroke={CHART.accent} strokeDasharray="4 3"
+                       label={{ value: `k = ${chosen}`, position: "top",
+                                fill: CHART.accent, fontSize: 11 }} />
+        <Tooltip contentStyle={TOOLTIP_STYLE}
+                 labelFormatter={(k: number) => `k = ${k}`}
+                 formatter={(v: number) => [v.toFixed(4), "Silhouette"]} />
+        <Line type="monotone" dataKey="silhouette" stroke={SERIES[0]} strokeWidth={2}
+              dot={{ r: 3, fill: SERIES[0] }} activeDot={{ r: 5 }} isAnimationActive={false} />
+      </LineChart>
+    </Frame>
+  );
+}
+
+/** The investor cohort projected to two principal components.
+ *  Seven clusters exceed the three-slot all-pairs limit for scatter, so the
+ *  legend is always present and each group is also labelled by name — colour
+ *  is never the only cue. */
+export function ClusterMapScatter({ points }: { points: ClusterPoint[] }) {
+  const groups = new Map<number, { name: string; data: ClusterPoint[] }>();
+  for (const point of points) {
+    if (!groups.has(point.cluster)) {
+      groups.set(point.cluster, { name: point.cluster_name, data: [] });
+    }
+    groups.get(point.cluster)!.data.push(point);
+  }
+  const ordered = [...groups.entries()].sort((a, b) => a[0] - b[0]);
+
+  return (
+    <div>
+      <Frame height={360}>
+        <ScatterChart margin={{ top: 10, right: 16, bottom: 18, left: 4 }}>
+          <CartesianGrid stroke={CHART.grid} />
+          <XAxis type="number" dataKey="pc1" {...AXIS}
+                 tickFormatter={(v: number) => v.toFixed(1)}
+                 label={{ value: "principal component 1", position: "insideBottom",
+                          offset: -8, fill: CHART.inkMuted, fontSize: 11 }} />
+          <YAxis type="number" dataKey="pc2" {...AXIS} width={48}
+                 tickFormatter={(v: number) => v.toFixed(1)}
+                 label={{ value: "PC 2", angle: -90, position: "insideLeft",
+                          fill: CHART.inkMuted, fontSize: 11 }} />
+          <Tooltip
+            contentStyle={TOOLTIP_STYLE} cursor={{ strokeDasharray: "3 3", stroke: CHART.axis }}
+            content={({ payload }) => {
+              if (!payload?.length) return null;
+              const point = payload[0].payload as ClusterPoint;
+              return (
+                <div style={TOOLTIP_STYLE} className="px-3 py-2">
+                  <div className="font-medium">{point.cluster_name}</div>
+                  <div className="mt-1 text-[11.5px] text-[var(--ink-secondary)]">
+                    generated as {titleCase(point.archetype)}
+                  </div>
+                </div>
+              );
+            }}
+          />
+          {ordered.map(([cluster, group]) => (
+            <Scatter key={cluster} name={group.name} data={group.data}
+                     fill={seriesColor(cluster)} fillOpacity={0.6}
+                     isAnimationActive={false} />
+          ))}
+        </ScatterChart>
+      </Frame>
+      <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
+        {ordered.map(([cluster, group]) => (
+          <li key={cluster} className="flex items-center gap-2 text-[11.5px] text-[var(--ink-secondary)]">
+            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: seriesColor(cluster) }} />
+            {group.name}
+            <span className="text-[var(--ink-faint)]">{group.data.length}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export interface ClusterPoint {
+  pc1: number; pc2: number; cluster: number; cluster_name: string; archetype: string;
+}
+
+/** Training and holdout loss. The gap between the two lines is the point:
+ *  it is what overfitting looks like. */
+export function LossCurve({ history }: {
+  history: { epoch: number; train_loss: number; holdout_loss?: number; validation_loss?: number }[];
+}) {
+  const data = history.map((h) => ({
+    epoch: h.epoch,
+    training: h.train_loss,
+    holdout: h.holdout_loss ?? h.validation_loss,
+  }));
+  return (
+    <Frame height={230}>
+      <LineChart data={data} margin={{ top: 10, right: 14, bottom: 4, left: 4 }}>
+        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <XAxis dataKey="epoch" {...AXIS}
+               label={{ value: "epoch", position: "insideBottom", offset: -2,
+                        fill: CHART.inkMuted, fontSize: 11 }} />
+        <YAxis {...AXIS} width={62} tickFormatter={(v: number) => v.toFixed(3)} />
+        <Tooltip contentStyle={TOOLTIP_STYLE}
+                 labelFormatter={(e: number) => `Epoch ${e}`}
+                 formatter={(v: number, name: string) => [v.toFixed(6), titleCase(name)]} />
+        <Legend verticalAlign="top" align="right" height={26}
+                wrapperStyle={{ fontSize: 12, color: CHART.inkSecondary }} />
+        <Line type="monotone" dataKey="training" name="Training" stroke={SERIES[0]}
+              strokeWidth={2} dot={false} isAnimationActive={false} />
+        <Line type="monotone" dataKey="holdout" name="Held out" stroke={SERIES[1]}
+              strokeWidth={2} strokeDasharray="4 3" dot={false} isAnimationActive={false} />
+      </LineChart>
+    </Frame>
+  );
+}
+
+/** Forecast skill across horizons, with zero marked. Below the line a model
+ *  is worse than the baseline, which is a result worth seeing. */
+export function SkillByHorizon({ rows }: {
+  rows: { horizon: string; [model: string]: string | number }[]; 
+}) {
+  const models = Object.keys(rows[0] ?? {}).filter((k) => k !== "horizon");
+  return (
+    <Frame height={280}>
+      <LineChart data={rows} margin={{ top: 10, right: 16, bottom: 4, left: 4 }}>
+        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <XAxis dataKey="horizon" {...AXIS} />
+        <YAxis {...AXIS} width={54} tickFormatter={(v: number) => v.toFixed(2)} />
+        <ReferenceLine y={0} stroke={CHART.axis} strokeDasharray="4 3"
+                       label={{ value: "baseline", position: "insideTopLeft",
+                                fill: CHART.inkMuted, fontSize: 10.5 }} />
+        <Tooltip contentStyle={TOOLTIP_STYLE}
+                 formatter={(v: number, name: string) => [v.toFixed(4), titleCase(name)]} />
+        <Legend verticalAlign="top" align="right" height={26}
+                wrapperStyle={{ fontSize: 12, color: CHART.inkSecondary }} />
+        {models.map((model, index) => (
+          <Line key={model} type="monotone" dataKey={model} name={titleCase(model)}
+                stroke={seriesColor(index)} strokeWidth={2}
+                dot={{ r: 3 }} isAnimationActive={false} />
+        ))}
+      </LineChart>
+    </Frame>
+  );
+}
+
+/** Two models compared across several metrics. Grouped bars, one hue per
+ *  model, so the comparison is the shape rather than the colour. */
+export function MetricComparisonBars({ metrics, seriesNames }: {
+  metrics: { metric: string; [model: string]: string | number }[]; seriesNames: [string, string];
+}) {
+  return (
+    <Frame height={260}>
+      <BarChart data={metrics} margin={{ top: 10, right: 16, bottom: 4, left: 4 }}>
+        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <XAxis dataKey="metric" {...AXIS} />
+        <YAxis {...AXIS} width={48} domain={[0, 1]} tickFormatter={(v: number) => v.toFixed(1)} />
+        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+                 formatter={(v: number) => v.toFixed(4)} />
+        <Legend verticalAlign="top" align="right" height={26}
+                wrapperStyle={{ fontSize: 12, color: CHART.inkSecondary }} />
+        <Bar dataKey={seriesNames[0]} fill={SERIES[0]} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+        <Bar dataKey={seriesNames[1]} fill={SERIES[1]} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+      </BarChart>
+    </Frame>
+  );
+}
+
+/** A labelled magnitude matrix — used for archetype against recovered
+ *  cluster. One hue, light to dark, because the quantity is a count with no
+ *  meaningful midpoint. Every cell prints its value. */
+export function CountMatrix({ rows, columns, values, rowLabel, columnLabel }: {
+  rows: string[]; columns: string[]; values: number[][];
+  rowLabel?: string; columnLabel?: string;
+}) {
+  const max = Math.max(1, ...values.flat());
+
+  return (
+    <div className="overflow-x-auto">
+      {columnLabel && (
+        <div className="mb-1.5 pl-[150px] text-[10.5px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
+          {columnLabel}
+        </div>
+      )}
+      <table className="border-separate" style={{ borderSpacing: 2 }}>
+        <thead>
+          <tr>
+            <th className="sticky left-0 z-10 bg-[var(--surface-2)]" />
+            {columns.map((column) => (
+              <th key={column} className="px-1 pb-1 text-[10px] font-normal text-[var(--ink-muted)]">
+                {column}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={row}>
+              <th className="sticky left-0 z-10 w-[150px] bg-[var(--surface-2)] pr-2.5 text-right text-[10.5px] font-normal text-[var(--ink-secondary)]">
+                {row}
+              </th>
+              {columns.map((column, j) => {
+                const value = values[i]?.[j] ?? 0;
+                const intensity = value / max;
+                return (
+                  <td key={column} title={`${row} → ${column}: ${value}`}>
+                    <div
+                      className="tabular flex h-9 w-14 items-center justify-center rounded-[3px] text-[10.5px]"
+                      style={{
+                        background: `color-mix(in oklab, #1a212a ${(1 - intensity) * 100}%, ${SERIES[0]} ${intensity * 100}%)`,
+                        color: intensity > 0.45 ? "#f2f5f8" : "#64707e",
+                      }}
+                    >
+                      {value || "·"}
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {rowLabel && (
+        <div className="mt-2 text-[10.5px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
+          {rowLabel}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** A horizontal magnitude bar list — feature importances, recall by type.
+ *  One hue: these are one measure, not separate categories. */
+export function MagnitudeBars({ items, format, color, domain }: {
+  items: { label: string; value: number }[];
+  format?: (v: number) => string; color?: string; domain?: [number, number];
+}) {
+  const data = [...items].sort((a, b) => b.value - a.value);
+  return (
+    <Frame height={Math.max(160, data.length * 30)}>
+      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 52, bottom: 4, left: 8 }}>
+        <CartesianGrid stroke={CHART.grid} horizontal={false} />
+        <XAxis type="number" {...AXIS} domain={domain ?? [0, "auto"]}
+               tickFormatter={format ?? ((v: number) => v.toFixed(2))} />
+        <YAxis type="category" dataKey="label" {...AXIS} width={168} />
+        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+                 formatter={(v: number) => (format ?? ((x: number) => x.toFixed(4)))(v)} />
+        <Bar dataKey="value" fill={color ?? SERIES[0]} radius={[0, 4, 4, 0]} isAnimationActive={false} />
+      </BarChart>
+    </Frame>
+  );
+}
+
+/** The Monte Carlo fan: nested percentile bands around the median, against
+ *  the target. Deliberately not a single line — one line would imply a
+ *  precision the simulation does not have. */
+export function ProjectionFan({ months, bands, deterministic, target }: {
+  months: number[];
+  bands: Record<string, number[]>;
+  deterministic?: number[];
+  target: number;
+}) {
+  const step = Math.max(1, Math.floor(months.length / 200));
+  const data = months
+    .filter((_, i) => i % step === 0)
+    .map((month, i) => {
+      const index = i * step;
+      const p10 = bands.p10?.[index] ?? 0;
+      const p25 = bands.p25?.[index] ?? 0;
+      const p75 = bands.p75?.[index] ?? 0;
+      const p90 = bands.p90?.[index] ?? 0;
+      return {
+        month,
+        // Stacked offsets: Recharts draws each area from the previous top,
+        // so the bands nest instead of overpainting one another.
+        base: p10,
+        outer: Math.max(0, p25 - p10),
+        inner: Math.max(0, p75 - p25),
+        outerTop: Math.max(0, p90 - p75),
+        median: bands.p50?.[index] ?? 0,
+        expected: deterministic?.[index],
+        p10, p25, p75, p90,
+      };
+    });
+
+  return (
+    <Frame height={300}>
+      <AreaChart data={data} margin={{ top: 10, right: 16, bottom: 4, left: 8 }}>
+        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <XAxis dataKey="month" {...AXIS} minTickGap={42}
+               tickFormatter={(m: number) => (m >= 12 ? `${Math.round(m / 12)}y` : `${m}m`)} />
+        <YAxis {...AXIS} width={66} tickFormatter={rupeesCompact} />
+        <ReferenceLine y={target} stroke={CHART.accent} strokeDasharray="5 4"
+                       label={{ value: "Target", position: "insideTopRight",
+                                fill: CHART.accent, fontSize: 11 }} />
+        <Tooltip
+          contentStyle={TOOLTIP_STYLE}
+          labelFormatter={(m: number) => `Month ${m}`}
+          content={({ payload, label }) => {
+            if (!payload?.length) return null;
+            const point = payload[0].payload as (typeof data)[number];
+            return (
+              <div style={TOOLTIP_STYLE} className="px-3 py-2">
+                <div className="mb-1 font-medium">Month {label}</div>
+                {([["p90", "Best 10%"], ["p75", "Upper quartile"], ["median", "Median"],
+                   ["p25", "Lower quartile"], ["p10", "Worst 10%"]] as const).map(([key, name]) => (
+                  <div key={key} className="tabular flex justify-between gap-6 text-[11.5px]">
+                    <span className="text-[var(--ink-secondary)]">{name}</span>
+                    <span>{rupeesCompact(point[key as keyof typeof point] as number)}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          }}
+        />
+        {/* The transparent base lifts the stack to the p10 line. */}
+        <Area dataKey="base" stackId="fan" stroke="none" fill="transparent" isAnimationActive={false} />
+        <Area dataKey="outer" stackId="fan" stroke="none"
+              fill={SERIES[0]} fillOpacity={0.14} isAnimationActive={false} />
+        <Area dataKey="inner" stackId="fan" stroke="none"
+              fill={SERIES[0]} fillOpacity={0.28} isAnimationActive={false} />
+        <Area dataKey="outerTop" stackId="fan" stroke="none"
+              fill={SERIES[0]} fillOpacity={0.14} isAnimationActive={false} />
+        <Area dataKey="median" stroke={SERIES[0]} strokeWidth={2} fill="none"
+              isAnimationActive={false} />
+        {deterministic && (
+          <Area dataKey="expected" stroke={CHART.inkMuted} strokeWidth={1.5}
+                strokeDasharray="4 3" fill="none" isAnimationActive={false} />
+        )}
+      </AreaChart>
     </Frame>
   );
 }

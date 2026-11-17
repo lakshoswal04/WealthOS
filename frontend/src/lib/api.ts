@@ -153,6 +153,15 @@ export const api = {
   forecast: (horizon = 12) => request<Forecast>(`${V1}/forecast?horizon=${horizon}`),
   modelStatus: () => request<ModelStatus>(`${V1}/models/status`),
 
+  // ---- research (public: no user data) ----
+  research: () => request<ResearchReports>(`${V1}/research/reports`),
+
+  // ---- scenario simulator ----
+  simulateGoal: (id: number, overrides: SimulationOverrides) =>
+    request<Simulation>(`${V1}/goals/${id}/simulate`, {
+      method: "POST", body: JSON.stringify(overrides),
+    }),
+
   // ---- copilot ----
   chat: (message: string, history: ChatTurn[]) =>
     request<CopilotReply>(`${V1}/copilot/chat`, {
@@ -343,4 +352,62 @@ export interface CopilotCapabilities {
   mode: string; model: string;
   tools: { name: string; description: string }[];
   grounding: string; limits: string[];
+}
+
+/* ──────────────── research & simulation types ──────────────── */
+
+/** Reports are rendered defensively: the pages read what they need and show
+ *  an explicit "not available" panel when a stage has not been run. Typing
+ *  every nested field would be a maintenance cost for no safety gain, so
+ *  each report is loosely typed with the fields the pages actually index. */
+export interface Report {
+  available: boolean;
+  reason?: string;
+  [key: string]: unknown;
+}
+
+export interface ResearchReports {
+  models: Record<string, Report>;
+  data: Record<string, Report>;
+}
+
+export interface ClusterMapPoint {
+  pc1: number; pc2: number; cluster: number;
+  cluster_name: string; archetype: string;
+}
+
+export interface SimulationOverrides {
+  monthly_contribution?: number;
+  annual_return?: number;
+  annual_volatility?: number;
+  months?: number;
+}
+
+export interface SimulationInputs {
+  monthly_contribution: number;
+  annual_return: number;
+  annual_volatility: number;
+  months: number;
+}
+
+export interface Simulation {
+  goal_id: number; name: string;
+  target_amount: number; current_amount: number; months: number;
+  inputs: SimulationInputs;
+  defaults: SimulationInputs;
+  bounds: Record<string, [number, number]>;
+  deterministic: { months: number[]; projected_value: number[]; final_value: number };
+  monte_carlo: {
+    months: number[];
+    percentiles: Record<string, number[]>;
+    final_values: Record<string, number>;
+    success_probability: number | null;
+    n_paths: number;
+    assumptions: Record<string, string | number>;
+  };
+  success_probability: number | null;
+  required_monthly_contribution: number;
+  funding_ratio: number;
+  on_track: boolean;
+  return_estimate: Record<string, unknown>;
 }
