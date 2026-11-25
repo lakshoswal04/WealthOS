@@ -170,6 +170,9 @@ Web on `:3000`, API on `:8000`. Unverified — expect to debug.
 | Insights panels say unavailable | Artifacts not in the image | Commit `ml/models/` or mount a disk |
 | Copilot answers but says fallback | No `ANTHROPIC_API_KEY` | Set it on Render; this is expected behaviour otherwise |
 | Build fails on `libxgboost.dylib` / OpenMP | Missing OpenMP | `libgomp1` is already in the Dockerfile; locally, `brew install libomp` |
+| `ModuleNotFoundError: No module named 'psycopg2'` | A driverless `postgresql://` URL, which SQLAlchemy reads as psycopg2; this project installs psycopg v3 | Already handled: `backend/app/core/config.py` rewrites `postgres://` and `postgresql://` to `postgresql+psycopg://`. If you see this, something is bypassing the settings object |
+| Model panels say unavailable although the artifacts are in the image | The `.pt` files unpickle classes from `ml/pipelines/`, so `ml` has to be importable | `PYTHONPATH=/app` is set in the Dockerfile. Verify with `/api/v1/models/status`, which names each artifact and its failure |
+| Deploy dies during startup, no error in the log | Out of memory | Measured idle footprint with all three models loaded is ~384 MB against the free tier's 512 MB. Load the artifacts lazily, or move to a 2 GB instance — note that Render's *starter* plan is also 512 MB, so paying $7 does not help here |
 | First request after idle is slow | Render free tier sleeps | Expected; warm it before a demonstration |
 | 401 on every call after a while | Token expired (24h default) | Sign in again, or raise `ACCESS_TOKEN_EXPIRE_MINUTES` |
 

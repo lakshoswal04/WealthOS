@@ -24,6 +24,10 @@ jobs:
 
     env:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/wealthos_test
+      # The runner's Postgres requires a password; a development machine
+      # authenticates the OS user with none. backend/tests/conftest.py reads
+      # this, and refuses any database whose name does not end in _test.
+      TEST_DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/wealthos_test
       JWT_SECRET_KEY: ci-only-secret-not-used-anywhere-else
 
     steps:
@@ -36,8 +40,14 @@ jobs:
           cache: pip
 
       - name: Install dependencies
+        # CPU torch first, from PyTorch's own index. The bare torch==2.8.0 pin
+        # resolves to the CUDA build on Linux and drags in ~2.5 GB of nvidia-*
+        # wheels this job can never use; `==2.8.0` matches 2.8.0+cpu, so
+        # requirements.txt then sees the pin as satisfied. Same reasoning as
+        # docker/Dockerfile.backend.
         run: |
           python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.8.0
           pip install -r requirements.txt
           pip install -e .
 

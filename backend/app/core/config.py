@@ -36,6 +36,28 @@ class Settings(BaseSettings):
         alias="DATABASE_URL",
     )
 
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def _normalise_database_url(cls, value: str) -> str:
+        """Force the psycopg v3 driver onto a driverless PostgreSQL URL.
+
+        Hosting platforms hand out ``postgresql://`` (Render, Neon) or the
+        older ``postgres://`` (Heroku-style). SQLAlchemy reads a bare
+        ``postgresql://`` as psycopg2, which this project does not install --
+        only psycopg v3 -- so the first database call dies with
+        ModuleNotFoundError. ``postgres://`` is not a dialect SQLAlchemy knows
+        at all and raises on load.
+
+        Rewriting here covers the app and Alembic together, since
+        ``alembic/env.py`` takes its URL from these settings. An explicit
+        driver (``postgresql+asyncpg://``, say) is left untouched.
+        """
+        if value.startswith("postgres://"):
+            return "postgresql+psycopg://" + value[len("postgres://"):]
+        if value.startswith("postgresql://"):
+            return "postgresql+psycopg://" + value[len("postgresql://"):]
+        return value
+
     # --- auth ---
     jwt_secret_key: str = Field(default="insecure-development-key", alias="JWT_SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")

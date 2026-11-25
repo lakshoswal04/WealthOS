@@ -16,7 +16,26 @@ import pytest
 
 # Point the application at the test database before any app module is
 # imported, since settings are read once at import time.
-os.environ["DATABASE_URL"] = "postgresql+psycopg://localhost:5432/wealthos_test"
+#
+# TEST_DATABASE_URL exists for environments where the default does not reach a
+# server: a CI runner's Postgres wants postgres:postgres credentials, while a
+# development machine authenticates the OS user with no password at all. It is
+# deliberately a separate variable from DATABASE_URL -- reading DATABASE_URL
+# here would let a shell that happens to export a development database send
+# the drop_all below at real data.
+_DEFAULT_TEST_DATABASE_URL = "postgresql+psycopg://localhost:5432/wealthos_test"
+_test_database_url = os.environ.get("TEST_DATABASE_URL") or _DEFAULT_TEST_DATABASE_URL
+
+# The guard that makes the override safe. Every fixture below drops and
+# recreates the whole schema, so a URL that is not unmistakably a test database
+# has to stop the run rather than empty something irreplaceable.
+if not _test_database_url.rsplit("/", 1)[-1].split("?")[0].endswith("_test"):
+    raise RuntimeError(
+        f"refusing to run tests against {_test_database_url!r}: the database "
+        "name must end with '_test', because every test drops the schema"
+    )
+
+os.environ["DATABASE_URL"] = _test_database_url
 os.environ["JWT_SECRET_KEY"] = "test-only-secret-not-used-anywhere-else"
 
 from fastapi.testclient import TestClient  # noqa: E402
