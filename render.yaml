@@ -11,10 +11,15 @@ services:
     plan: free
     healthCheckPath: /health
     # Migrations run before the server, so a fresh database comes up usable.
-    # Render injects PORT; bind it rather than a hard-coded 8000.
+    #
+    # Plain $PORT, never ${PORT:-8000}. Render interpolates this string itself
+    # before a shell sees it and does not understand bash default-value
+    # syntax: it substitutes the ${PORT part and leaves `:-8000}` as literal
+    # text, so uvicorn is handed `--port 10000:-8000}` and exits 2. Plain
+    # $PORT is correct whether Render expands it or the shell does.
     dockerCommand: >
       sh -c "alembic upgrade head &&
-             uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+             uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: DATABASE_URL
         fromDatabase: { name: wealthos-db, property: connectionString }
