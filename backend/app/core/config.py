@@ -6,11 +6,13 @@ by git) or from the deployment platform's environment.
 
 from __future__ import annotations
 
+import json
 from functools import lru_cache
 from pathlib import Path
+from typing import Annotated
 
-from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -46,9 +48,31 @@ class Settings(BaseSettings):
     copilot_model: str = Field(default="claude-opus-5-5", alias="COPILOT_MODEL")
 
     # --- CORS ---
-    cors_origins: list[str] = Field(
-        default=["http://localhost:3000", "http://127.0.0.1:3000"]
+    # NoDecode keeps pydantic-settings from JSON-decoding the env var before
+    # validation. Without it, CORS_ORIGINS=https://wealthos.vercel.app is a
+    # SettingsError at boot and the whole API fails to start -- which is the
+    # exact value a deployment runbook tells you to set.
+    cors_origins: Annotated[list[str], NoDecode] = Field(
+        default=["http://localhost:3000", "http://127.0.0.1:3000"],
+        alias="CORS_ORIGINS",
     )
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _parse_cors_origins(cls, value: object) -> object:
+        """Accept a JSON array, a comma-separated list, or a single origin.
+
+        Deployment platforms hand out plain strings, so all three forms have to
+        work. An empty value means "no cross-origin callers", not "all".
+        """
+        if not isinstance(value, str):
+            return value
+        text = value.strip()
+        if not text:
+            return []
+        if text.startswith("["):
+            return json.loads(text)
+        return [origin.strip() for origin in text.split(",") if origin.strip()]
 
     # --- paths ---
     project_root: Path = PROJECT_ROOT

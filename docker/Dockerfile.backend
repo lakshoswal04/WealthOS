@@ -1,8 +1,8 @@
 # WealthOS API.
 #
-# NOTE: Docker was not installed on the development machine, so this image
-# has not been built or run. Treat it as a starting point and verify before
-# relying on it.
+# NOTE: Docker is not installed on the development machine, so this image is
+# not built locally — Render builds it from this file. The first remote build
+# is the real verification.
 FROM python:3.12-slim AS base
 
 # XGBoost links against OpenMP; libpq is needed by psycopg.
@@ -13,7 +13,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_NO_CACHE_DIR=1
 WORKDIR /app
 
-# Dependencies first, so a code change does not reinstall torch.
+# CPU-only torch, installed FIRST and from PyTorch's own index.
+#
+# This line is load-bearing. On macOS `pip install torch==2.8.0` gives a CPU
+# wheel, but on Linux x86_64 the same pin pulls the CUDA build and ~2.5 GB of
+# nvidia-* dependencies that this service can never use. `==2.8.0` matches the
+# local version 2.8.0+cpu, so requirements.txt below sees torch as satisfied.
+RUN pip install --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cpu \
+        torch==2.8.0
+
+# Dependencies next, so a code change does not reinstall the world.
 COPY requirements.txt pyproject.toml ./
 COPY packages ./packages
 RUN pip install --no-cache-dir -r requirements.txt && pip install --no-cache-dir -e .
@@ -21,17 +31,21 @@ RUN pip install --no-cache-dir -r requirements.txt && pip install --no-cache-dir
 COPY backend ./backend
 COPY ml ./ml
 COPY data/reference ./data/reference
-# Trained artifacts. Build after `make models`, or mount them at runtime.
+# Trained artifacts. Force-added to git (they are gitignored by pattern), so a
+# clean clone still carries them; without them the API boots and reports
+# available: false on the model panels.
 COPY ml/models ./ml/models
 
 # A non-root user, so a container escape does not land as root.
 RUN useradd --create-home --uid 10001 wealthos && chown -R wealthos:wealthos /app
 USER wealthos
 
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app PORT=8000
 EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD curl -fsS http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl -fsS "http://localhost:${PORT}/health" || exit 1
 
 WORKDIR /app/backend
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Render overrides this with dockerCommand (which also runs migrations); this
+# form is what `docker compose` and a bare `docker run` get.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
