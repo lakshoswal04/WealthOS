@@ -1,0 +1,68 @@
+{
+  "generated_at": "2026-11-15T23:23:08.224506+00:00",
+  "split_boundaries": {
+    "train_end": "2022-12-31",
+    "validation_end": "2024-06-30"
+  },
+  "forecast_horizons": [
+    1,
+    3,
+    6,
+    12
+  ],
+  "clustering": {
+    "rows": 9743,
+    "columns": [
+      "investor_id",
+      "equity_allocation",
+      "etf_allocation",
+      "gold_allocation",
+      "debt_allocation",
+      "cash_allocation",
+      "allocation_volatility",
+      "turnover",
+      "trades_per_month",
+      "portfolio_volatility",
+      "max_drawdown",
+      "hhi",
+      "top_holding_weight",
+      "n_holdings",
+      "months_observed",
+      "contribution_consistency",
+      "contribution_rate",
+      "age",
+      "annual_income",
+      "monthly_savings",
+      "investment_horizon_years",
+      "risk_tolerance",
+      "archetype"
+    ]
+  },
+  "anomaly": {
+    "rows": 1243505,
+    "by_split": {
+      "test": {
+        "rows": 290000,
+        "anomalies": 1000
+      },
+      "train": {
+        "rows": 774093,
+        "anomalies": 1966
+      },
+      "validation": {
+        "rows": 179412,
+        "anomalies": 590
+      }
+    }
+  },
+  "forecast": {
+    "rows": 1143505,
+    "by_split_12m": {
+      "test": 169897,
+      "train": 675724,
+      "validation": 177884
+    },
+    "target": "excess_log_growth_{h}m = log(V_{t+h}) - log(V_t + h*contribution)",
+    "rationale": "Raw rupee value is dominated by current value plus deposits, so regressing on it yields a near-0.99 R-squared that measures scale rather than skill. The baseline absorbs that predictable part and leaves the model only the market-return component."
+  }
+}

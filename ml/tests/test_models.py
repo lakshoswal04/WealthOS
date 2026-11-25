@@ -130,15 +130,56 @@ class TestAnomalyDetector:
         # A detector that flags everything is useless however high its recall.
         assert metrics["false_positive_rate"] < 0.05
 
-    def test_the_known_weak_case_is_still_reported(self):
-        # Dormancy breaks are genuinely hard to separate from lumpy saving.
-        # The point is that the report says so rather than hiding it.
+    def test_every_anomaly_type_is_reported(self):
         by_type = _report("anomaly_detection")["by_anomaly_type"]
         assert set(by_type) >= {
             "allocation_shock", "concentration_spike", "turnover_spike",
             "panic_sell", "dormancy_break",
         }
         assert all(0.0 <= entry["recall"] <= 1.0 for entry in by_type.values())
+
+    def test_dormancy_recall_does_not_regress(self):
+        """A floor under the weakest anomaly type, so it cannot slip silently.
+
+        Set at the measured baseline of 0.4667 rather than at an aspiration.
+        Raise it as the detector improves -- that is the point of a ratchet.
+
+        The earlier comment here said dormancy breaks are "genuinely hard to
+        separate from lumpy saving". Measurement says otherwise: in the test
+        split, contribution_ratio for a dormancy break spans 0.30 to 0.79
+        while the maximum across 289,000 normal rows is 0.2006, so the two
+        classes do not overlap at all. The recall is low because the anomaly
+        score is a flat mean over 24 features, which dilutes a deviation that
+        appears in only two of them -- the class mean error lands at 5.842655
+        against a threshold of 5.84296525, straddling the cut by 0.0003.
+        """
+        by_type = _report("anomaly_detection")["by_anomaly_type"]
+        assert by_type["dormancy_break"]["recall"] >= 0.4667
+
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Known defect, fixed in the anomaly rework: dormancy_break sits "
+            "0.005% from the threshold. strict=True means this test FAILS "
+            "once the aggregation is fixed, which is the signal to delete "
+            "this marker rather than let the guard quietly stop guarding."
+        ),
+    )
+    def test_no_anomaly_type_sits_on_the_decision_threshold(self):
+        """A class whose mean error equals the threshold is a coin flip.
+
+        Separation is what makes a recall figure meaningful: if the mean
+        reconstruction error of a type lands within 1% of the cut, roughly
+        half its rows fall on each side for no reason the model understands.
+        """
+        report = _report("anomaly_detection")
+        threshold = report["threshold"]["value"]
+        for name, entry in report["by_anomaly_type"].items():
+            distance = abs(entry["mean_error"] - threshold) / threshold
+            assert distance > 0.01, (
+                f"{name} mean error {entry['mean_error']} sits on the "
+                f"threshold {threshold}; its recall is close to arbitrary"
+            )
 
 
 # --------------------------------------------------------------------------

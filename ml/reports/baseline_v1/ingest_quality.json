@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-11-15T22:40:11.789822+00:00",
+  "equity": {
+    "invalid_ohlc_rows": 8372,
+    "invalid_ohlc_pct": 0.1601,
+    "invalid_ohlc_symbols": 379,
+    "non_positive_open": 0,
+    "non_positive_high": 0,
+    "non_positive_low": 0,
+    "non_positive_close": 0,
+    "negative_volume": 0,
+    "zero_volume_rows": 0,
+    "duplicate_symbol_date": 0,
+    "missing_close": 0,
+    "rows": 5230852,
+    "symbols": 2096,
+    "files_read": 1720,
+    "files_skipped": 36
+  },
+  "index": {
+    "invalid_ohlc_rows": 3349,
+    "invalid_ohlc_pct": 1.6203,
+    "invalid_ohlc_symbols": 11,
+    "non_positive_open": 0,
+    "non_positive_high": 0,
+    "non_positive_low": 0,
+    "non_positive_close": 0,
+    "negative_volume": 0,
+    "zero_volume_rows": 3,
+    "duplicate_symbol_date": 0,
+    "missing_close": 0,
+    "rows": 206696,
+    "symbols": 54
+  },
+  "universe_coverage": {
+    "required": 51,
+    "found": 50,
+    "missing": [
+      "MM"
+    ]
+  }
+}

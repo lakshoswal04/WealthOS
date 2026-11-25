@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-11-25T07:31:33.859947+00:00",
+  "assets": 58,
+  "prices_inserted": 232287,
+  "db_assets": 58,
+  "db_prices": 232287,
+  "price_span": [
+    "2012-01-01",
+    "2026-11-13"
+  ]
+}

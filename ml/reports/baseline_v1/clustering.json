@@ -1,0 +1,546 @@
+{
+  "generated_at": "2026-11-17T04:07:53.268973+00:00",
+  "random_state": 42,
+  "features": [
+    "equity_allocation",
+    "etf_allocation",
+    "gold_allocation",
+    "debt_allocation",
+    "cash_allocation",
+    "allocation_volatility",
+    "turnover",
+    "trades_per_month",
+    "portfolio_volatility",
+    "max_drawdown",
+    "hhi",
+    "top_holding_weight",
+    "n_holdings",
+    "contribution_consistency",
+    "contribution_rate"
+  ],
+  "k_selection": [
+    {
+      "k": 2,
+      "inertia": 108598.57,
+      "silhouette": 0.309,
+      "davies_bouldin": 1.0274,
+      "calinski_harabasz": 3367.8
+    },
+    {
+      "k": 3,
+      "inertia": 87023.71,
+      "silhouette": 0.2727,
+      "davies_bouldin": 1.5114,
+      "calinski_harabasz": 3308.5
+    },
+    {
+      "k": 4,
+      "inertia": 68331.2,
+      "silhouette": 0.3357,
+      "davies_bouldin": 1.2653,
+      "calinski_harabasz": 3696.8
+    },
+    {
+      "k": 5,
+      "inertia": 58052.88,
+      "silhouette": 0.3338,
+      "davies_bouldin": 1.1977,
+      "calinski_harabasz": 3694.2
+    },
+    {
+      "k": 6,
+      "inertia": 50075.05,
+      "silhouette": 0.3631,
+      "davies_bouldin": 1.0823,
+      "calinski_harabasz": 3736.1
+    },
+    {
+      "k": 7,
+      "inertia": 47033.3,
+      "silhouette": 0.3707,
+      "davies_bouldin": 1.0796,
+      "calinski_harabasz": 3419.4
+    },
+    {
+      "k": 8,
+      "inertia": 44639.37,
+      "silhouette": 0.3666,
+      "davies_bouldin": 1.2197,
+      "calinski_harabasz": 3162.4
+    },
+    {
+      "k": 9,
+      "inertia": 43167.05,
+      "silhouette": 0.3121,
+      "davies_bouldin": 1.378,
+      "calinski_harabasz": 2902.6
+    },
+    {
+      "k": 10,
+      "inertia": 40603.81,
+      "silhouette": 0.2977,
+      "davies_bouldin": 1.3147,
+      "calinski_harabasz": 2811.0
+    }
+  ],
+  "chosen_k": 7,
+  "algorithm_comparison": {
+    "kmeans": {
+      "silhouette": 0.3707,
+      "davies_bouldin": 1.0796
+    },
+    "gaussian_mixture": {
+      "silhouette": 0.3356,
+      "davies_bouldin": 1.8253
+    },
+    "agglomerative": {
+      "silhouette": 0.3558,
+      "davies_bouldin": 1.1339,
+      "note": "fitted on a 4000-investor subsample for tractability"
+    }
+  },
+  "stability": {
+    "rounds": 20,
+    "mean_ari": 0.9573,
+    "std_ari": 0.0328,
+    "min_ari": 0.909
+  },
+  "archetype_recovery": {
+    "adjusted_rand_index": 0.9465,
+    "normalized_mutual_info": 0.9312,
+    "true_archetypes": 6,
+    "clusters_found": 7,
+    "note": "Measurable only because the cohort is synthetic. ARI corrects for chance agreement: 0 is random, 1 is a perfect match. Archetypes overlap by design, so a perfect score is neither expected nor desirable.",
+    "crosstab": {
+      "0": {
+        "active_trader": 11,
+        "aggressive_growth": 34,
+        "balanced_investor": 73,
+        "conservative_saver": 48,
+        "dormant_holder": 12,
+        "goal_focused_sip": 43
+      },
+      "1": {
+        "active_trader": 0,
+        "aggressive_growth": 8,
+        "balanced_investor": 0,
+        "conservative_saver": 0,
+        "dormant_holder": 656,
+        "goal_focused_sip": 0
+      },
+      "2": {
+        "active_trader": 1,
+        "aggressive_growth": 1874,
+        "balanced_investor": 11,
+        "conservative_saver": 0,
+        "dormant_holder": 0,
+        "goal_focused_sip": 0
+      },
+      "3": {
+        "active_trader": 0,
+        "aggressive_growth": 0,
+        "balanced_investor": 1,
+        "conservative_saver": 1740,
+        "dormant_holder": 0,
+        "goal_focused_sip": 0
+      },
+      "4": {
+        "active_trader": 0,
+        "aggressive_growth": 32,
+        "balanced_investor": 2448,
+        "conservative_saver": 6,
+        "dormant_holder": 0,
+        "goal_focused_sip": 11
+      },
+      "5": {
+        "active_trader": 0,
+        "aggressive_growth": 0,
+        "balanced_investor": 11,
+        "conservative_saver": 0,
+        "dormant_holder": 0,
+        "goal_focused_sip": 1558
+      },
+      "6": {
+        "active_trader": 1165,
+        "aggressive_growth": 0,
+        "balanced_investor": 0,
+        "conservative_saver": 0,
+        "dormant_holder": 0,
+        "goal_focused_sip": 0
+      }
+    }
+  },
+  "clusters": [
+    {
+      "cluster": 0,
+      "name": "Balanced investor",
+      "size": 221,
+      "share": 0.0227,
+      "centroid": {
+        "equity_allocation": 0.358,
+        "etf_allocation": 0.2368,
+        "gold_allocation": 0.1034,
+        "debt_allocation": 0.2061,
+        "cash_allocation": 0.0957,
+        "allocation_volatility": 0.0211,
+        "turnover": 0.4071,
+        "trades_per_month": 1.0999,
+        "portfolio_volatility": 0.2068,
+        "max_drawdown": -0.6765,
+        "hhi": 0.1614,
+        "top_holding_weight": 0.2759,
+        "n_holdings": 12.366,
+        "contribution_consistency": 0.7973,
+        "contribution_rate": 0.015
+      },
+      "distinguishing_traits": {
+        "highest": [
+          {
+            "feature": "portfolio_volatility",
+            "z": 1.86
+          },
+          {
+            "feature": "debt_allocation",
+            "z": 0.2
+          },
+          {
+            "feature": "contribution_consistency",
+            "z": 0.16
+          }
+        ],
+        "lowest": [
+          {
+            "feature": "max_drawdown",
+            "z": -4.14
+          },
+          {
+            "feature": "equity_allocation",
+            "z": -0.18
+          },
+          {
+            "feature": "turnover",
+            "z": -0.18
+          }
+        ]
+      }
+    },
+    {
+      "cluster": 1,
+      "name": "Passive holder",
+      "size": 664,
+      "share": 0.0682,
+      "centroid": {
+        "equity_allocation": 0.4361,
+        "etf_allocation": 0.2151,
+        "gold_allocation": 0.1089,
+        "debt_allocation": 0.1313,
+        "cash_allocation": 0.1086,
+        "allocation_volatility": 0.0495,
+        "turnover": 0.0393,
+        "trades_per_month": 1.0,
+        "portfolio_volatility": 0.1279,
+        "max_drawdown": -0.1913,
+        "hhi": 0.1453,
+        "top_holding_weight": 0.2322,
+        "n_holdings": 10.3183,
+        "contribution_consistency": 0.1256,
+        "contribution_rate": 0.0001
+      },
+      "distinguishing_traits": {
+        "highest": [
+          {
+            "feature": "allocation_volatility",
+            "z": 1.87
+          },
+          {
+            "feature": "portfolio_volatility",
+            "z": 0.19
+          },
+          {
+            "feature": "gold_allocation",
+            "z": 0.17
+          }
+        ],
+        "lowest": [
+          {
+            "feature": "contribution_consistency",
+            "z": -2.7
+          },
+          {
+            "feature": "contribution_rate",
+            "z": -1.28
+          },
+          {
+            "feature": "trades_per_month",
+            "z": -1.08
+          }
+        ]
+      }
+    },
+    {
+      "cluster": 2,
+      "name": "Growth-oriented investor",
+      "size": 1886,
+      "share": 0.1936,
+      "centroid": {
+        "equity_allocation": 0.7042,
+        "etf_allocation": 0.1698,
+        "gold_allocation": 0.0509,
+        "debt_allocation": 0.043,
+        "cash_allocation": 0.0321,
+        "allocation_volatility": 0.0298,
+        "turnover": 0.5816,
+        "trades_per_month": 1.0007,
+        "portfolio_volatility": 0.1692,
+        "max_drawdown": -0.2578,
+        "hhi": 0.1383,
+        "top_holding_weight": 0.2372,
+        "n_holdings": 12.4095,
+        "contribution_consistency": 0.7261,
+        "contribution_rate": 0.0161
+      },
+      "distinguishing_traits": {
+        "highest": [
+          {
+            "feature": "equity_allocation",
+            "z": 1.4
+          },
+          {
+            "feature": "portfolio_volatility",
+            "z": 1.06
+          },
+          {
+            "feature": "allocation_volatility",
+            "z": 0.57
+          }
+        ],
+        "lowest": [
+          {
+            "feature": "trades_per_month",
+            "z": -1.07
+          },
+          {
+            "feature": "debt_allocation",
+            "z": -1.02
+          },
+          {
+            "feature": "gold_allocation",
+            "z": -1.01
+          }
+        ]
+      }
+    },
+    {
+      "cluster": 3,
+      "name": "Capital preserver",
+      "size": 1741,
+      "share": 0.1787,
+      "centroid": {
+        "equity_allocation": 0.1528,
+        "etf_allocation": 0.0939,
+        "gold_allocation": 0.1146,
+        "debt_allocation": 0.4138,
+        "cash_allocation": 0.225,
+        "allocation_volatility": 0.0162,
+        "turnover": 0.1532,
+        "trades_per_month": 1.0907,
+        "portfolio_volatility": 0.0498,
+        "max_drawdown": -0.0545,
+        "hhi": 0.2569,
+        "top_holding_weight": 0.4153,
+        "n_holdings": 9.9154,
+        "contribution_consistency": 0.9162,
+        "contribution_rate": 0.0155
+      },
+      "distinguishing_traits": {
+        "highest": [
+          {
+            "feature": "debt_allocation",
+            "z": 1.74
+          },
+          {
+            "feature": "cash_allocation",
+            "z": 1.7
+          },
+          {
+            "feature": "hhi",
+            "z": 1.54
+          }
+        ],
+        "lowest": [
+          {
+            "feature": "portfolio_volatility",
+            "z": -1.47
+          },
+          {
+            "feature": "equity_allocation",
+            "z": -1.12
+          },
+          {
+            "feature": "etf_allocation",
+            "z": -0.95
+          }
+        ]
+      }
+    },
+    {
+      "cluster": 4,
+      "name": "Broadly diversified investor",
+      "size": 2497,
+      "share": 0.2563,
+      "centroid": {
+        "equity_allocation": 0.3614,
+        "etf_allocation": 0.2488,
+        "gold_allocation": 0.1263,
+        "debt_allocation": 0.1934,
+        "cash_allocation": 0.0701,
+        "allocation_volatility": 0.0211,
+        "turnover": 0.3331,
+        "trades_per_month": 1.0898,
+        "portfolio_volatility": 0.1076,
+        "max_drawdown": -0.1563,
+        "hhi": 0.117,
+        "top_holding_weight": 0.213,
+        "n_holdings": 15.3997,
+        "contribution_consistency": 0.8239,
+        "contribution_rate": 0.0161
+      },
+      "distinguishing_traits": {
+        "highest": [
+          {
+            "feature": "n_holdings",
+            "z": 0.8
+          },
+          {
+            "feature": "gold_allocation",
+            "z": 0.53
+          },
+          {
+            "feature": "contribution_consistency",
+            "z": 0.27
+          }
+        ],
+        "lowest": [
+          {
+            "feature": "hhi",
+            "z": -0.64
+          },
+          {
+            "feature": "top_holding_weight",
+            "z": -0.53
+          },
+          {
+            "feature": "cash_allocation",
+            "z": -0.33
+          }
+        ]
+      }
+    },
+    {
+      "cluster": 5,
+      "name": "Systematic index accumulator",
+      "size": 1569,
+      "share": 0.161,
+      "centroid": {
+        "equity_allocation": 0.1853,
+        "etf_allocation": 0.4837,
+        "gold_allocation": 0.1106,
+        "debt_allocation": 0.1661,
+        "cash_allocation": 0.0543,
+        "allocation_volatility": 0.0116,
+        "turnover": 0.1458,
+        "trades_per_month": 1.1726,
+        "portfolio_volatility": 0.1228,
+        "max_drawdown": -0.1844,
+        "hhi": 0.1874,
+        "top_holding_weight": 0.2984,
+        "n_holdings": 9.4584,
+        "contribution_consistency": 0.9596,
+        "contribution_rate": 0.0222
+      },
+      "distinguishing_traits": {
+        "highest": [
+          {
+            "feature": "etf_allocation",
+            "z": 1.86
+          },
+          {
+            "feature": "contribution_consistency",
+            "z": 0.85
+          },
+          {
+            "feature": "trades_per_month",
+            "z": 0.61
+          }
+        ],
+        "lowest": [
+          {
+            "feature": "equity_allocation",
+            "z": -0.97
+          },
+          {
+            "feature": "n_holdings",
+            "z": -0.86
+          },
+          {
+            "feature": "allocation_volatility",
+            "z": -0.64
+          }
+        ]
+      }
+    },
+    {
+      "cluster": 6,
+      "name": "High-turnover trader",
+      "size": 1165,
+      "share": 0.1196,
+      "centroid": {
+        "equity_allocation": 0.623,
+        "etf_allocation": 0.1238,
+        "gold_allocation": 0.0845,
+        "debt_allocation": 0.0639,
+        "cash_allocation": 0.1048,
+        "allocation_volatility": 0.0119,
+        "turnover": 2.3455,
+        "trades_per_month": 1.3381,
+        "portfolio_volatility": 0.14,
+        "max_drawdown": -0.2132,
+        "hhi": 0.0969,
+        "top_holding_weight": 0.1719,
+        "n_holdings": 15.9653,
+        "contribution_consistency": 0.5249,
+        "contribution_rate": 0.0093
+      },
+      "distinguishing_traits": {
+        "highest": [
+          {
+            "feature": "turnover",
+            "z": 2.45
+          },
+          {
+            "feature": "trades_per_month",
+            "z": 2.24
+          },
+          {
+            "feature": "equity_allocation",
+            "z": 1.02
+          }
+        ],
+        "lowest": [
+          {
+            "feature": "contribution_consistency",
+            "z": -1.0
+          },
+          {
+            "feature": "hhi",
+            "z": -0.95
+          },
+          {
+            "feature": "top_holding_weight",
+            "z": -0.94
+          }
+        ]
+      }
+    }
+  ]
+}

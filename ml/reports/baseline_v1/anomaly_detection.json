@@ -1,0 +1,252 @@
+{
+  "generated_at": "2026-11-15T23:27:40.770735+00:00",
+  "random_state": 42,
+  "features": [
+    "equity_allocation",
+    "etf_allocation",
+    "gold_allocation",
+    "debt_allocation",
+    "cash_allocation",
+    "delta_equity_allocation",
+    "delta_etf_allocation",
+    "delta_gold_allocation",
+    "delta_debt_allocation",
+    "delta_cash_allocation",
+    "allocation_shift",
+    "hhi",
+    "delta_hhi",
+    "top_holding_weight",
+    "delta_top_holding_weight",
+    "n_holdings",
+    "delta_n_holdings",
+    "turnover",
+    "turnover_ratio",
+    "n_trades",
+    "contribution_ratio",
+    "period_return",
+    "current_drawdown",
+    "volatility"
+  ],
+  "training": {
+    "epochs_run": 30,
+    "best_holdout_loss": 0.086468,
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 0.472521,
+        "holdout_loss": 0.234742
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.224088,
+        "holdout_loss": 0.162539
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.156021,
+        "holdout_loss": 0.139454
+      },
+      {
+        "epoch": 4,
+        "train_loss": 0.135847,
+        "holdout_loss": 0.131387
+      },
+      {
+        "epoch": 5,
+        "train_loss": 0.126017,
+        "holdout_loss": 0.119666
+      },
+      {
+        "epoch": 6,
+        "train_loss": 0.120484,
+        "holdout_loss": 0.114182
+      },
+      {
+        "epoch": 7,
+        "train_loss": 0.119721,
+        "holdout_loss": 0.11132
+      },
+      {
+        "epoch": 8,
+        "train_loss": 0.112728,
+        "holdout_loss": 0.110727
+      },
+      {
+        "epoch": 9,
+        "train_loss": 0.110153,
+        "holdout_loss": 0.106653
+      },
+      {
+        "epoch": 10,
+        "train_loss": 0.10768,
+        "holdout_loss": 0.10555
+      },
+      {
+        "epoch": 11,
+        "train_loss": 0.10538,
+        "holdout_loss": 0.103402
+      },
+      {
+        "epoch": 12,
+        "train_loss": 0.104307,
+        "holdout_loss": 0.100831
+      },
+      {
+        "epoch": 13,
+        "train_loss": 0.102199,
+        "holdout_loss": 0.10146
+      },
+      {
+        "epoch": 14,
+        "train_loss": 0.100821,
+        "holdout_loss": 0.107344
+      },
+      {
+        "epoch": 15,
+        "train_loss": 0.099851,
+        "holdout_loss": 0.09703
+      },
+      {
+        "epoch": 16,
+        "train_loss": 0.097672,
+        "holdout_loss": 0.09587
+      },
+      {
+        "epoch": 17,
+        "train_loss": 0.096469,
+        "holdout_loss": 0.094488
+      },
+      {
+        "epoch": 18,
+        "train_loss": 0.095812,
+        "holdout_loss": 0.093899
+      },
+      {
+        "epoch": 19,
+        "train_loss": 0.094905,
+        "holdout_loss": 0.093252
+      },
+      {
+        "epoch": 20,
+        "train_loss": 0.093399,
+        "holdout_loss": 0.091556
+      },
+      {
+        "epoch": 21,
+        "train_loss": 0.09259,
+        "holdout_loss": 0.092709
+      },
+      {
+        "epoch": 22,
+        "train_loss": 0.09261,
+        "holdout_loss": 0.090754
+      },
+      {
+        "epoch": 23,
+        "train_loss": 0.090705,
+        "holdout_loss": 0.089618
+      },
+      {
+        "epoch": 24,
+        "train_loss": 0.090703,
+        "holdout_loss": 0.090033
+      },
+      {
+        "epoch": 25,
+        "train_loss": 0.090088,
+        "holdout_loss": 0.088697
+      },
+      {
+        "epoch": 26,
+        "train_loss": 0.088997,
+        "holdout_loss": 0.087599
+      },
+      {
+        "epoch": 27,
+        "train_loss": 0.08894,
+        "holdout_loss": 0.089024
+      },
+      {
+        "epoch": 28,
+        "train_loss": 0.088081,
+        "holdout_loss": 0.088483
+      },
+      {
+        "epoch": 29,
+        "train_loss": 0.08828,
+        "holdout_loss": 0.086468
+      },
+      {
+        "epoch": 30,
+        "train_loss": 0.087199,
+        "holdout_loss": 0.087414
+      }
+    ]
+  },
+  "threshold": {
+    "value": 5.84296525,
+    "validation_f1": 0.9041,
+    "selected_on": "validation",
+    "note": "Chosen on validation and applied unchanged to test. Tuning it on test would inflate every reported figure."
+  },
+  "autoencoder": {
+    "precision": 0.7962,
+    "recall": 0.887,
+    "f1": 0.8392,
+    "false_positive_rate": 0.00079,
+    "roc_auc": 0.9995,
+    "pr_auc": 0.9355,
+    "flagged": 1114,
+    "actual_anomalies": 1000,
+    "rows": 289989
+  },
+  "isolation_forest": {
+    "precision": 0.1783,
+    "recall": 0.638,
+    "f1": 0.2787,
+    "false_positive_rate": 0.01018,
+    "roc_auc": 0.9734,
+    "pr_auc": 0.3255,
+    "flagged": 3579,
+    "actual_anomalies": 1000,
+    "rows": 289989
+  },
+  "autoencoder_vs_baseline": {
+    "pr_auc_improvement": 0.61,
+    "autoencoder_wins": true
+  },
+  "by_anomaly_type": {
+    "allocation_shock": {
+      "occurrences": 200,
+      "detected": 193,
+      "recall": 0.965,
+      "mean_error": 52.70837
+    },
+    "concentration_spike": {
+      "occurrences": 193,
+      "detected": 193,
+      "recall": 1.0,
+      "mean_error": 183.364029
+    },
+    "dormancy_break": {
+      "occurrences": 195,
+      "detected": 91,
+      "recall": 0.4667,
+      "mean_error": 5.842655
+    },
+    "panic_sell": {
+      "occurrences": 199,
+      "detected": 197,
+      "recall": 0.9899,
+      "mean_error": 118.770241
+    },
+    "turnover_spike": {
+      "occurrences": 213,
+      "detected": 213,
+      "recall": 1.0,
+      "mean_error": 425.787262
+    }
+  },
+  "normal_mean_error": 0.132295,
+  "caveat": "Anomalies are injected and deliberately unambiguous. These scores are an upper bound on performance against real, subtler behaviour."
+}
