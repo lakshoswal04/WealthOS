@@ -20,12 +20,24 @@ import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from wealthos_core import herfindahl_index, time_weighted_returns
+from wealthos_core import BENCHMARK_SYMBOL, herfindahl_index, time_weighted_returns
 from app.models import Transaction, TransactionType, User
 from app.services import portfolio_service
 from app.services.market_service import market_cache
 
 MONTHS_PER_YEAR = 12
+
+
+def _finite(value: object, default: float = 0.0) -> float:
+    """Coerce to a finite float, substituting ``default`` for NaN.
+
+    These two features previously used ``float(x or 0.0)``, which does not do
+    this: NaN is truthy in Python, so the fallback never fired and a NaN
+    reached the feature vector. A single-snapshot history makes
+    ``Series.std()`` NaN (ddof=1), so the case is reachable, not theoretical.
+    """
+    number = float(value)
+    return default if not np.isfinite(number) else number
 
 
 def monthly_history(db: Session, user: User) -> pd.DataFrame:
@@ -124,12 +136,12 @@ def monthly_history(db: Session, user: User) -> pd.DataFrame:
 
 def market_context(db: Session, dates: pd.DatetimeIndex) -> pd.DataFrame:
     """Market-regime features aligned to a set of month ends."""
-    panel = market_cache.price_history(db, ["NIFTY50", "GOLDBEES", "DEBT"])
-    if panel.empty or "NIFTY50" not in panel.columns:
+    panel = market_cache.price_history(db, [BENCHMARK_SYMBOL, "GOLDBEES", "DEBT"])
+    if panel.empty or BENCHMARK_SYMBOL not in panel.columns:
         return pd.DataFrame({"date": dates})
 
     monthly = panel.resample("ME").last().ffill()
-    benchmark = monthly["NIFTY50"]
+    benchmark = monthly[BENCHMARK_SYMBOL]
     returns = benchmark.pct_change()
 
     context = pd.DataFrame({
@@ -166,10 +178,10 @@ def behavioural_profile(history: pd.DataFrame, user: User) -> dict:
         "gold_allocation": float(history["gold_allocation"].mean()),
         "debt_allocation": float(history["debt_allocation"].mean()),
         "cash_allocation": float(history["cash_allocation"].mean()),
-        "allocation_volatility": float(history["equity_allocation"].std() or 0.0),
+        "allocation_volatility": _finite(history["equity_allocation"].std()),
         "turnover": float(history["turnover"].mean()),
         "trades_per_month": float(history["n_trades"].mean()),
-        "portfolio_volatility": float(history["volatility"].mean(skipna=True) or 0.0),
+        "portfolio_volatility": _finite(history["volatility"].mean(skipna=True)),
         "max_drawdown": float(history["max_drawdown"].min()),
         "hhi": float(history["hhi"].mean()),
         "top_holding_weight": float(history["top_holding_weight"].mean()),

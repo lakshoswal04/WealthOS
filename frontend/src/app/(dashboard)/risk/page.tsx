@@ -165,9 +165,11 @@ export default function RiskPage() {
           <Assumptions
             items={[
               ["Method", String(assumptions.method ?? "—")],
-              ["Benchmark", String(assumptions.benchmark ?? "—")],
+              ["Benchmark", assumptions.benchmark_name
+                ? `${assumptions.benchmark_name} (${assumptions.benchmark})`
+                : String(assumptions.benchmark ?? "—")],
               ["Risk-free rate", percent(Number(assumptions.risk_free_rate ?? 0), 2)],
-              ["Observations", String(assumptions.observations ?? "—")],
+              ["Observations", observationsLabel(assumptions)],
               ["Window", `${assumptions.start ?? "—"} to ${assumptions.end ?? "—"}`],
               ["Rebalancing", String(assumptions.rebalancing ?? "—")],
             ]}
@@ -182,4 +184,20 @@ export default function RiskPage() {
       </Card>
     </>
   );
+}
+
+/** Observation count, labelled when the window is too short to lean on.
+ *
+ * The API reports `window_reliability` as "provisional" below a full trading
+ * year. The volatility estimate's standard error is roughly sigma/sqrt(2n),
+ * so a quarter of data carries about twice the error of a year — a real
+ * measurement, but not one to read to two decimal places. Saying so costs a
+ * line; implying otherwise costs the reader's trust.
+ */
+function observationsLabel(assumptions: Record<string, unknown>): string {
+  const count = assumptions.observations;
+  if (count === undefined || count === null) return "—";
+  if (assumptions.window_reliability !== "provisional") return String(count);
+  const floor = assumptions.minimum_observations;
+  return `${count} — provisional, under a full year${floor ? ` (floor ${floor})` : ""}`;
 }

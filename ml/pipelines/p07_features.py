@@ -36,6 +36,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from wealthos_core import BENCHMARK_SYMBOL
+
 from .common import (
     silence_accelerate_matmul_warnings,
     PROCESSED_DIR,
@@ -251,7 +253,7 @@ def build_market_features(panel: pd.DataFrame) -> pd.DataFrame:
     no future market information enters an investor's feature row.
     """
     monthly = panel.resample("ME").last().ffill()
-    benchmark = monthly["NIFTY50"]
+    benchmark = monthly[BENCHMARK_SYMBOL]
     returns = benchmark.pct_change()
 
     market = pd.DataFrame({"date": monthly.index})

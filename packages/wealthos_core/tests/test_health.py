@@ -156,8 +156,16 @@ def test_liquidity_score_is_the_weighted_rating_itself():
 
 
 def test_an_empty_portfolio_scores_nothing_rather_than_zero():
+    """Both facts hold, so `or` was hiding whichever one broke.
+
+    On the dataclass the total stays NaN — that is the internal convention.
+    It becomes null at the serialisation boundary; see
+    tests/test_json_safety.py.
+    """
     score = compute_health_score(HealthInputs())
-    assert math.isnan(score.total) or score.grade == "Unknown"
+    assert math.isnan(score.total)
+    assert score.grade == "Unknown"
+    assert score.as_dict()["total"] is None
 
 
 def test_grades_follow_the_total():

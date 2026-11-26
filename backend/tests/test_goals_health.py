@@ -220,7 +220,11 @@ def test_empty_portfolio_is_not_graded_poor(client, auth):
     # An account with nothing in it has no data to judge, which is different
     # from having a bad portfolio.
     body = client.get("/api/v1/health-score", headers=auth).json()
-    assert body["grade"] == "Unknown" or body["total"] is None
+    # Both assertions hold, and they say different things: "Unknown" is the
+    # grade, null is the total. The `or` that used to join them meant either
+    # could regress unnoticed.
+    assert body["grade"] == "Unknown"
+    assert body["total"] is None
     assert "diversification" in body["missing_inputs"]
 
 

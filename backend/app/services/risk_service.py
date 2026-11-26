@@ -15,7 +15,12 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from wealthos_core import (
+    BENCHMARK_NAME,
+    BENCHMARK_SYMBOL,
     DEFAULT_RISK_FREE_RATE,
+    MIN_OBSERVATIONS_FOR_RISK,
+    MIN_SYMBOL_COVERAGE,
+    RELIABLE_OBSERVATIONS_FOR_RISK,
     TRADING_DAYS_PER_YEAR,
     annualized_return,
     annualized_volatility,
@@ -32,11 +37,11 @@ from app.models import User
 from app.services import portfolio_service
 from app.services.market_service import market_cache
 
-BENCHMARK_SYMBOL = "NIFTY50"
-
-# A year of daily observations is the minimum for a volatility or Sharpe
-# figure worth showing. Below this the statistic is too noisy to report.
-MIN_OBSERVATIONS_FOR_RISK = 60
+# BENCHMARK_SYMBOL, MIN_OBSERVATIONS_FOR_RISK, RELIABLE_OBSERVATIONS_FOR_RISK
+# and MIN_SYMBOL_COVERAGE are imported from wealthos_core above rather than
+# defined here. This module used to redefine the first two, and both copies
+# disagreed with the shared one: the symbol differed by a space, and the
+# comment claimed a one-year minimum above a constant of 60 days.
 
 LOOKBACK_WINDOWS = {"1m": 21, "3m": 63, "6m": 126, "1y": 252, "3y": 756, "5y": 1260}
 
@@ -70,7 +75,7 @@ def portfolio_return_series(
     if len(usable) < MIN_OBSERVATIONS_FOR_RISK:
         # Fall back to the assets that do have history, and report the gap.
         coverage = asset_returns.notna().mean()
-        keep = coverage[coverage > 0.9].index.tolist()
+        keep = coverage[coverage > MIN_SYMBOL_COVERAGE].index.tolist()
         if not keep:
             raise InsufficientHistory(
                 f"Only {len(usable)} overlapping observations across these holdings"
@@ -102,6 +107,15 @@ def portfolio_return_series(
         "end": str(portfolio_returns.index.max().date()) if len(portfolio_returns) else None,
         "risk_free_rate": DEFAULT_RISK_FREE_RATE,
         "benchmark": BENCHMARK_SYMBOL,
+        "benchmark_name": BENCHMARK_NAME,
+        # Above the floor but below a full year, the figures are real but
+        # noisy. Say so here rather than letting the reader assume otherwise.
+        "window_reliability": (
+            "provisional"
+            if len(portfolio_returns) < RELIABLE_OBSERVATIONS_FOR_RISK
+            else "full"
+        ),
+        "minimum_observations": MIN_OBSERVATIONS_FOR_RISK,
         "rebalancing": "daily (the weighted series assumes continuous rebalancing)",
     }
     return portfolio_returns, benchmark_returns, metadata

@@ -72,6 +72,11 @@ def _behaviour_metrics(db: Session, user: User, portfolio_value: float) -> dict:
     }
 
 
+def _or_nan(value: float | None) -> float:
+    """None means "not measured"; any float, including 0.0, is a measurement."""
+    return float("nan") if value is None else float(value)
+
+
 def build_health_inputs(db: Session, user: User) -> tuple[HealthInputs, dict]:
     """Gather every measurement the score needs."""
     context: dict = {}
@@ -108,8 +113,12 @@ def build_health_inputs(db: Session, user: User) -> tuple[HealthInputs, dict]:
         n_sectors=concentration.get("n_sectors", summary.n_sectors),
         n_asset_classes=len(asset_class_weights),
         hhi_normalized=concentration.get("hhi_normalized", float("nan")),
-        average_pairwise_correlation=(
-            concentration.get("average_pairwise_correlation") or float("nan")
+        # `or float("nan")` here would be wrong: 0.0 is falsy, and a mean
+        # pairwise correlation of exactly 0.0 is the *ideal* result — holdings
+        # that move independently. Treating it as unmeasurable dropped
+        # diversification's correlation term for the best portfolios.
+        average_pairwise_correlation=_or_nan(
+            concentration.get("average_pairwise_correlation")
         ),
         annualized_volatility=risk_summary.get("annualized_volatility", float("nan")),
         max_drawdown=risk_summary.get("max_drawdown", float("nan")),

@@ -15,6 +15,7 @@ from datetime import date
 import numpy as np
 
 from .constants import MONTHS_PER_YEAR
+from .jsonsafe import round_or_none
 
 __all__ = [
     "GoalProjection",
@@ -63,21 +64,26 @@ class GoalProjection:
     scenarios: dict
 
     def as_dict(self) -> dict:
+        # round_or_none, not round: a goal with a non-positive target leaves
+        # funding_ratio and progress_ratio NaN (see project_goal), and round()
+        # passes NaN straight through. The API rejects such a goal at the
+        # schema (`target_amount: float = Field(gt=0)`), so this is a guard on
+        # direct library callers rather than a live defect on the HTTP path.
         return {
             "goal_id": self.goal_id,
             "name": self.name,
-            "target_amount": round(self.target_amount, 2),
-            "current_amount": round(self.current_amount, 2),
-            "monthly_contribution": round(self.monthly_contribution, 2),
+            "target_amount": round_or_none(self.target_amount, 2),
+            "current_amount": round_or_none(self.current_amount, 2),
+            "monthly_contribution": round_or_none(self.monthly_contribution, 2),
             "target_date": str(self.target_date),
             "months_remaining": self.months_remaining,
-            "projected_value": round(self.projected_value, 2),
-            "funding_ratio": round(self.funding_ratio, 4),
-            "shortfall": round(self.shortfall, 2),
+            "projected_value": round_or_none(self.projected_value, 2),
+            "funding_ratio": round_or_none(self.funding_ratio, 4),
+            "shortfall": round_or_none(self.shortfall, 2),
             "on_track": self.on_track,
-            "progress_ratio": round(self.progress_ratio, 4),
-            "required_monthly_contribution": round(self.required_monthly_contribution, 2),
-            "contribution_gap": round(self.contribution_gap, 2),
+            "progress_ratio": round_or_none(self.progress_ratio, 4),
+            "required_monthly_contribution": round_or_none(self.required_monthly_contribution, 2),
+            "contribution_gap": round_or_none(self.contribution_gap, 2),
             "assumptions": self.assumptions,
             "scenarios": self.scenarios,
         }

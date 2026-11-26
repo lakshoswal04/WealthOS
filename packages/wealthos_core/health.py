@@ -31,6 +31,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from .constants import ASSET_CLASS_LIQUIDITY
+from .jsonsafe import round_or_none
 
 __all__ = [
     "HealthInputs",
@@ -124,17 +125,20 @@ class HealthScore:
     missing_inputs: list[str]
 
     def as_dict(self) -> dict:
+        # round_or_none, not round: an unscorable portfolio carries NaN in
+        # `total` and in every component score, and round() preserves NaN
+        # rather than rejecting it. See wealthos_core.jsonsafe.
         return {
-            "total": round(self.total, 1),
+            "total": round_or_none(self.total, 1),
             "grade": self.grade,
             "summary": self.summary,
             "missing_inputs": self.missing_inputs,
             "components": [
                 {
                     "name": c.name,
-                    "score": round(c.score, 1),
+                    "score": round_or_none(c.score, 1),
                     "weight": c.weight,
-                    "contribution": round(c.contribution, 2),
+                    "contribution": round_or_none(c.contribution, 2),
                     "inputs": c.inputs,
                     "reason": c.reason,
                 }
@@ -503,10 +507,8 @@ def _score_behaviour(data: HealthInputs) -> ComponentScore:
 
 def _clean(value: float) -> float | None:
     """JSON cannot carry NaN; absent values are reported as null."""
-    if value is None:
-        return None
     try:
-        return None if np.isnan(value) else round(float(value), 6)
+        return round_or_none(value, 6)
     except (TypeError, ValueError):
         return value
 
