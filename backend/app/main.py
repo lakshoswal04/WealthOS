@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.v1 import (
-    analytics, auth, copilot, goals, insights, portfolio, research,
+    alerts, analytics, auth, copilot, goals, insights, portfolio, research,
 )
 from app.core.config import settings
 from app.db.session import SessionLocal
@@ -148,5 +148,6 @@ app.include_router(portfolio.router, prefix=settings.api_v1_prefix)
 app.include_router(analytics.router, prefix=settings.api_v1_prefix)
 app.include_router(goals.router, prefix=settings.api_v1_prefix)
 app.include_router(insights.router, prefix=settings.api_v1_prefix)
+app.include_router(alerts.router, prefix=settings.api_v1_prefix)
 app.include_router(copilot.router, prefix=settings.api_v1_prefix)
 app.include_router(research.router, prefix=settings.api_v1_prefix)
