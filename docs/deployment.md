@@ -175,6 +175,7 @@ Web on `:3000`, API on `:8000`. Unverified — expect to debug.
 | Deploy dies during startup, no error in the log | Out of memory | Measured idle footprint with all three models loaded is ~384 MB against the free tier's 512 MB. Load the artifacts lazily, or move to a 2 GB instance — note that Render's *starter* plan is also 512 MB, so paying $7 does not help here |
 | First request after idle is slow | Render free tier sleeps | Expected; warm it before a demonstration |
 | 401 on every call after a while | Token expired (24h default) | Sign in again, or raise `ACCESS_TOKEN_EXPIRE_MINUTES` |
+| **Pages render unstyled in dev, or Playwright reports impossible layout failures** | `next build` was run while `next dev` was live. They share `.next`, and the build leaves the dev server serving a near-empty stylesheet — once measured at 9 bytes against the normal 79KB. Every layout assertion then fails, including a 1288px image overflow that does not exist | Stop the dev server, `rm -rf .next`, restart. Do not run a production build against a live dev server. This cost two rounds of chasing layout bugs that were not there, and `next build` stays green throughout, which is what makes it convincing |
 
 ---
 
