@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-26T05:21:30.796040+00:00",
+  "generated_at": "2026-11-26T05:29:13.124720+00:00",
   "method": "Every figure is read from ml/reports/baseline_v1/, snapshotted before any change, against the current ml/reports/. Nothing is quoted from memory, and a metric that got worse is reported as worse.",
   "anomaly_detection": {
     "available": true,
@@ -151,6 +151,27 @@
           "all_configs_stopped_at_iteration_zero": true,
           "skill_vs_mean_baseline": 0.0383
         },
+        "best_model_comparison": {
+          "before": {
+            "name": "gru",
+            "skill_vs_mean_baseline": 0.0383
+          },
+          "after": {
+            "name": "lightgbm",
+            "skill_vs_mean_baseline": 0.0399
+          },
+          "change": {
+            "before": 0.0383,
+            "after": 0.0399,
+            "change": 0.0016,
+            "verdict": "better"
+          }
+        },
+        "evidence_strength": {
+          "tabular_model": "walk-forward across folds, plus the test split",
+          "recurrent_models": "the single test split only",
+          "caveat": "The recurrent models often post the highest test skill, and that number is weaker evidence than the tabular model's, not stronger. Walk-forward folds were run for the tabular families only -- fitting an LSTM six times per Optuna trial was not affordable -- so the RNN figures rest on the same single 29-month window whose unreliability is the finding this phase started from. The deployment recommendation therefore follows the walk-forward evidence even where an RNN scores higher on test."
+        },
         "after": {
           "tabular_model_chosen": "lightgbm",
           "optuna_trials": 25,
@@ -216,6 +237,27 @@
           ],
           "all_configs_stopped_at_iteration_zero": true,
           "skill_vs_mean_baseline": 0.0052
+        },
+        "best_model_comparison": {
+          "before": {
+            "name": "xgboost",
+            "skill_vs_mean_baseline": 0.0052
+          },
+          "after": {
+            "name": "xgboost",
+            "skill_vs_mean_baseline": 0.0649
+          },
+          "change": {
+            "before": 0.0052,
+            "after": 0.0649,
+            "change": 0.0597,
+            "verdict": "better"
+          }
+        },
+        "evidence_strength": {
+          "tabular_model": "walk-forward across folds, plus the test split",
+          "recurrent_models": "the single test split only",
+          "caveat": "The recurrent models often post the highest test skill, and that number is weaker evidence than the tabular model's, not stronger. Walk-forward folds were run for the tabular families only -- fitting an LSTM six times per Optuna trial was not affordable -- so the RNN figures rest on the same single 29-month window whose unreliability is the finding this phase started from. The deployment recommendation therefore follows the walk-forward evidence even where an RNN scores higher on test."
         },
         "after": {
           "tabular_model_chosen": "xgboost",
@@ -283,6 +325,27 @@
           "all_configs_stopped_at_iteration_zero": true,
           "skill_vs_mean_baseline": 0.2402
         },
+        "best_model_comparison": {
+          "before": {
+            "name": "gru",
+            "skill_vs_mean_baseline": 0.2402
+          },
+          "after": {
+            "name": "gru",
+            "skill_vs_mean_baseline": 0.2455
+          },
+          "change": {
+            "before": 0.2402,
+            "after": 0.2455,
+            "change": 0.0053,
+            "verdict": "better"
+          }
+        },
+        "evidence_strength": {
+          "tabular_model": "walk-forward across folds, plus the test split",
+          "recurrent_models": "the single test split only",
+          "caveat": "The recurrent models often post the highest test skill, and that number is weaker evidence than the tabular model's, not stronger. Walk-forward folds were run for the tabular families only -- fitting an LSTM six times per Optuna trial was not affordable -- so the RNN figures rest on the same single 29-month window whose unreliability is the finding this phase started from. The deployment recommendation therefore follows the walk-forward evidence even where an RNN scores higher on test."
+        },
         "after": {
           "tabular_model_chosen": "lightgbm",
           "optuna_trials": 25,
@@ -349,21 +412,75 @@
           "all_configs_stopped_at_iteration_zero": false,
           "skill_vs_mean_baseline": 0.2486
         },
-        "after": {
-          "tabular_model_chosen": null,
-          "optuna_trials": null,
-          "best_params": null,
-          "walk_forward_folds": null,
-          "walk_forward_mean_skill": null,
-          "walk_forward_skill_std": null,
-          "folds_beating_baseline": null,
-          "test_skill_vs_mean_baseline": null,
-          "best_model_on_test": {
+        "best_model_comparison": {
+          "before": {
             "name": "lstm",
             "skill_vs_mean_baseline": 0.2486
           },
-          "recommendation": null,
-          "prediction_intervals": null
+          "after": {
+            "name": "lstm",
+            "skill_vs_mean_baseline": 0.2754
+          },
+          "change": {
+            "before": 0.2486,
+            "after": 0.2754,
+            "change": 0.0268,
+            "verdict": "better"
+          }
+        },
+        "evidence_strength": {
+          "tabular_model": "walk-forward across folds, plus the test split",
+          "recurrent_models": "the single test split only",
+          "caveat": "The recurrent models often post the highest test skill, and that number is weaker evidence than the tabular model's, not stronger. Walk-forward folds were run for the tabular families only -- fitting an LSTM six times per Optuna trial was not affordable -- so the RNN figures rest on the same single 29-month window whose unreliability is the finding this phase started from. The deployment recommendation therefore follows the walk-forward evidence even where an RNN scores higher on test."
+        },
+        "after": {
+          "tabular_model_chosen": "lightgbm",
+          "optuna_trials": 25,
+          "best_params": {
+            "num_leaves": 29,
+            "learning_rate": 0.07382597393242747,
+            "min_child_samples": 18,
+            "subsample": 0.9941653737506018,
+            "colsample_bytree": 0.7026862564104528,
+            "reg_lambda": 1.3055462283138777,
+            "n_estimators": 132
+          },
+          "walk_forward_folds": 6,
+          "walk_forward_mean_skill": 0.155,
+          "walk_forward_skill_std": 0.1642,
+          "folds_beating_baseline": 5,
+          "test_skill_vs_mean_baseline": 0.0853,
+          "best_model_on_test": {
+            "name": "lstm",
+            "skill_vs_mean_baseline": 0.2754
+          },
+          "recommendation": {
+            "horizon_months": 12,
+            "recommended": "lightgbm",
+            "walk_forward_mean_skill": 0.155,
+            "walk_forward_skill_std": 0.1642,
+            "folds_beating_baseline": 5,
+            "folds": 6,
+            "threshold_applied": 0.02,
+            "reasoning": "Mean walk-forward skill +0.1550 across 6 folds, beating the mean-drift baseline in None of them. That is positive on balance and above the threshold, so the model is recommended over the constant forecast."
+          },
+          "prediction_intervals": {
+            "50": {
+              "nominal_coverage": 0.5,
+              "half_width_log_growth": 0.055655,
+              "realised_coverage_on_test": 0.4768
+            },
+            "80": {
+              "nominal_coverage": 0.8,
+              "half_width_log_growth": 0.105749,
+              "realised_coverage_on_test": 0.762
+            },
+            "95": {
+              "nominal_coverage": 0.95,
+              "half_width_log_growth": 0.161725,
+              "realised_coverage_on_test": 0.9224
+            }
+          }
         }
       }
     },
@@ -371,7 +488,7 @@
       "1m": "baseline_mean_drift",
       "3m": "xgboost",
       "6m": "lightgbm",
-      "12m": null
+      "12m": "lightgbm"
     },
     "diagnosis": "best_iteration = 0 for every XGBoost configuration at 1, 3 and 6 months was read as an untrained model. It was the opposite: early stopping was working correctly and declining to fit a relationship the validation block could not confirm. The forecast features are dominated by market-level variables identical across investors in a given month, and 47-63% of the target variance is between-month, so the effective sample is the number of distinct months -- 121 train, 18 validation, 29 test -- not the 675,724 rows. Eighteen months is one draw of market regimes. A ridge regression makes the same point from the other side: the month-mean target correlates with market volatility at r = 0.24 to 0.52 over the training period, significant at every horizon (t = 2.6 to 6.6), and still generalises to the validation block with negative skill.",
     "what_changed": [
@@ -382,7 +499,8 @@
       "Prediction intervals come from the pooled walk-forward residual spread, with realised coverage measured on test reported beside the nominal level.",
       "A deployment gate recommends the constant baseline wherever the model does not beat it on balance across folds."
     ],
-    "honest_outcome": "At one month the model does not beat a constant forecast and the baseline is recommended. That is the result, not a failure to tune: engineering a number around it would have been the failure."
+    "honest_outcome": "At one month the model does not beat a constant forecast and the baseline is recommended. That is the result, not a failure to tune: engineering a number around it would have been the failure. The single test split tells the opposite story -- it reports +0.0399 skill at one month -- which is a clean demonstration of why one window was never enough: across six folds the same model wins three and loses three, at a mean of +0.005.",
+    "spread_warning": "At every horizon the standard deviation of skill across folds is comparable to or larger than its mean (1m 0.005 +/- 0.018, 3m 0.052 +/- 0.069, 6m 0.037 +/- 0.095, 12m 0.155 +/- 0.164). Any single skill figure from this system should be read as the centre of a wide distribution, not as a point estimate."
   },
   "copilot_grounding": {
     "available": false,

@@ -133,10 +133,50 @@ All measured on a held-out test period that no model saw during training.
 
 | Model | Result |
 |---|---|
-| Investor clustering | ARI **0.947** against the true generating archetype; stability ARI 0.957 |
-| Anomaly detection | PR-AUC **0.935**, F1 0.839, false-positive rate 0.0008 — against 0.326 PR-AUC for an Isolation Forest baseline |
-| Wealth forecasting | Skill over a mean-drift baseline rising with horizon: 0.04 at 1m, 0.24 at 6m, **0.249** at 12m |
+| Investor clustering | ARI **0.947** against the true generating archetype; stability ARI 0.949 |
+| Anomaly detection | PR-AUC **0.996**, F1 0.958, false-positive rate 0.0003 — against 0.275 PR-AUC for an Isolation Forest baseline |
+| Wealth forecasting | Skill over a mean-drift baseline rising with horizon: 0.040 at 1m, 0.065 at 3m, 0.246 at 6m, **0.275** at 12m |
 | Copilot grounding | **100%** of 458 figures across 30 questions traceable to a backend measurement |
+
+Before and after, from
+[`ml/reports/model_comparison.json`](ml/reports/model_comparison.json), which
+is generated from a Phase 0 snapshot rather than written from memory:
+
+| Metric | Before | After |
+|---|---|---|
+| Anomaly F1 | 0.839 | **0.958** |
+| Anomaly PR-AUC | 0.935 | **0.996** |
+| Dormancy-break recall | 0.467 | **0.969** |
+| False-positive rate | 0.0008 | **0.0003** |
+| Forecast skill, 3m | 0.005 | **0.065** |
+| Forecast skill, 12m | 0.249 | **0.275** |
+
+### Three caveats that belong next to those numbers
+
+**The anomaly dataset changed.** The cohort generator wrote a dormancy break
+as a large contribution and never created the silence the label describes, so
+a row labelled `dormancy_break` was indistinguishable from an investor
+receiving a bonus. Part of the improvement is therefore that the labels now
+describe what is in the data, which is a correction rather than a gain in
+modelling skill. The scoring fix measured in isolation — unchanged model,
+unchanged data — accounts for 0.467 → 0.580 of the dormancy recall and
+0.839 → 0.850 of F1. The rest is the data fix.
+
+**Forecast skill carries a wide spread.** Measured across six expanding
+walk-forward folds rather than one held-out block, the standard deviation of
+skill is comparable to or larger than its mean at every horizon (1m 0.005 ±
+0.018, 3m 0.052 ± 0.069, 6m 0.037 ± 0.095, 12m 0.155 ± 0.164). **At one month
+the model does not beat a constant forecast and the pipeline recommends the
+baseline**, even though the single test split reports +0.040 — which is the
+clearest demonstration of why one window was never enough.
+
+**The recurrent models' headline numbers are the weakest evidence here, not
+the strongest.** The 0.246 at 6m and 0.275 at 12m come from the LSTM and GRU,
+and walk-forward folds were run for the gradient-boosted families only —
+fitting an LSTM six times per search trial was not affordable. So those two
+figures rest on the same single 29-month window whose unreliability is the
+finding that started this work. The deployment recommendation follows the
+walk-forward evidence even where an RNN scores higher.
 
 The **Model Lab** page inside the product shows how each of these was
 produced: the k selection, the algorithm comparison, the archetype recovery

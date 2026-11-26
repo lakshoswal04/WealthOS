@@ -79,7 +79,13 @@ def test_model_reports_carry_the_fields_the_page_renders(client, name):
     expected = {
         "clustering": {"chosen_k", "k_selection", "archetype_recovery", "clusters"},
         "anomaly_detection": {"autoencoder", "isolation_forest", "by_anomaly_type"},
-        "forecast_12m": {"results", "best_model", "xgboost_feature_importance"},
+        # Renamed in Phase 3b: the tabular family is chosen between XGBoost
+        # and LightGBM on walk-forward evidence, so the key cannot name one.
+        "forecast_12m": {
+            "results", "best_model", "tabular_feature_importance",
+            "tabular_chosen", "tabular_search", "walk_forward_design",
+            "deployment_recommendation", "prediction_intervals",
+        },
     }[name]
     assert expected <= set(report)
 

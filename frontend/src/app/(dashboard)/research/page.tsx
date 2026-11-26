@@ -329,14 +329,25 @@ function ForecastSection({ reports }: { reports: Record<string, Report> }) {
 
   const results = record(twelve, "results");
   const best = str(twelve, "best_model.name");
+  // Renamed from `xgboost_feature_importance` in Phase 3b: the tabular
+  // family is now chosen between XGBoost and LightGBM on walk-forward
+  // evidence, so the key cannot name one of them. The old key is read as a
+  // fallback so an artifact trained before the rename still renders.
   const importances = list<{ feature: string; importance: number }>(
-    twelve, "xgboost_feature_importance");
+    twelve, "tabular_feature_importance",
+  );
+  const importancesLegacy = list<{ feature: string; importance: number }>(
+    twelve, "xgboost_feature_importance",
+  );
+  const featureImportances = importances.length ? importances : importancesLegacy;
+  const tabularModel = str(twelve, "tabular_chosen") || "xgboost";
 
   const modelOrder = [
     ["baseline_contributions", "Baseline — contributions only"],
     ["baseline_mean_drift", "Baseline — mean drift"],
     ["baseline_drift", "Baseline — trailing drift"],
     ["xgboost", "XGBoost"],
+    ["lightgbm", "LightGBM"],
     ["lstm", "LSTM"],
     ["gru", "GRU"],
   ] as const;
@@ -409,13 +420,20 @@ function ForecastSection({ reports }: { reports: Record<string, Report> }) {
         </Card>
       </div>
 
-      {importances.length > 0 && (
+      {featureImportances.length > 0 && (
         <Card className="mt-5">
-          <CardHeader title="What the model leans on"
-                      subtitle="XGBoost feature importance at the twelve-month horizon." />
+          <CardHeader
+            title="What the model leans on"
+            subtitle={
+              `${titleCase(tabularModel)} feature importance at the ` +
+              "twelve-month horizon. The tabular family is chosen between " +
+              "XGBoost and LightGBM on walk-forward skill, so the label says " +
+              "which one this is rather than assuming."
+            }
+          />
           <CardBody>
             <MagnitudeBars
-              items={importances.slice(0, 10).map((row) => ({
+              items={featureImportances.slice(0, 10).map((row) => ({
                 label: titleCase(row.feature), value: row.importance,
               }))}
               format={(v) => v.toFixed(3)}

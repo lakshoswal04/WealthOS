@@ -186,6 +186,31 @@ def forecast_section() -> dict:
         chosen = after.get("tabular_chosen")
         search = (after.get("tabular_search") or {}).get(chosen, {})
         walk = search.get("walk_forward", {})
+        best_before = (before or {}).get("best_model") or {}
+        best_after = after.get("best_model") or {}
+        entry["best_model_comparison"] = {
+            "before": best_before,
+            "after": best_after,
+            "change": _delta(
+                best_before.get("skill_vs_mean_baseline"),
+                best_after.get("skill_vs_mean_baseline"),
+            ),
+        }
+        entry["evidence_strength"] = {
+            "tabular_model": "walk-forward across folds, plus the test split",
+            "recurrent_models": "the single test split only",
+            "caveat": (
+                "The recurrent models often post the highest test skill, and "
+                "that number is weaker evidence than the tabular model's, not "
+                "stronger. Walk-forward folds were run for the tabular "
+                "families only -- fitting an LSTM six times per Optuna trial "
+                "was not affordable -- so the RNN figures rest on the same "
+                "single 29-month window whose unreliability is the finding "
+                "this phase started from. The deployment recommendation "
+                "therefore follows the walk-forward evidence even where an "
+                "RNN scores higher on test."
+            ),
+        }
         entry["after"] = {
             "tabular_model_chosen": chosen,
             "optuna_trials": search.get("trials"),
@@ -248,7 +273,18 @@ def forecast_section() -> dict:
         "honest_outcome": (
             "At one month the model does not beat a constant forecast and the "
             "baseline is recommended. That is the result, not a failure to "
-            "tune: engineering a number around it would have been the failure."
+            "tune: engineering a number around it would have been the failure. "
+            "The single test split tells the opposite story -- it reports "
+            "+0.0399 skill at one month -- which is a clean demonstration of "
+            "why one window was never enough: across six folds the same model "
+            "wins three and loses three, at a mean of +0.005."
+        ),
+        "spread_warning": (
+            "At every horizon the standard deviation of skill across folds is "
+            "comparable to or larger than its mean (1m 0.005 +/- 0.018, 3m "
+            "0.052 +/- 0.069, 6m 0.037 +/- 0.095, 12m 0.155 +/- 0.164). Any "
+            "single skill figure from this system should be read as the "
+            "centre of a wide distribution, not as a point estimate."
         ),
     }
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-16T01:20:36.954634+00:00",
+  "generated_at": "2026-11-26T05:02:34.323378+00:00",
   "horizon_months": 3,
   "target": "excess_log_growth_3m",
   "random_state": 42,
@@ -9,91 +9,356 @@
     "validation": 177884,
     "test": 259897
   },
-  "xgboost_search": [
-    {
-      "max_depth": 3,
-      "learning_rate": 0.02,
-      "min_child_weight": 50,
-      "validation_rmse": 0.056788,
-      "best_iteration": 0
+  "walk_forward_design": {
+    "folds": [
+      {
+        "fold": 0,
+        "train_through": "2021-06-30",
+        "scored_from": "2021-07-01",
+        "scored_to": "2021-12-31",
+        "train_months": 103,
+        "scored_months": 6
+      },
+      {
+        "fold": 1,
+        "train_through": "2021-12-31",
+        "scored_from": "2022-01-01",
+        "scored_to": "2022-06-30",
+        "train_months": 109,
+        "scored_months": 6
+      },
+      {
+        "fold": 2,
+        "train_through": "2022-06-30",
+        "scored_from": "2022-07-01",
+        "scored_to": "2022-12-31",
+        "train_months": 115,
+        "scored_months": 6
+      },
+      {
+        "fold": 3,
+        "train_through": "2022-12-31",
+        "scored_from": "2023-01-01",
+        "scored_to": "2023-06-30",
+        "train_months": 121,
+        "scored_months": 6
+      },
+      {
+        "fold": 4,
+        "train_through": "2023-06-30",
+        "scored_from": "2023-07-01",
+        "scored_to": "2023-12-31",
+        "train_months": 127,
+        "scored_months": 6
+      },
+      {
+        "fold": 5,
+        "train_through": "2023-12-31",
+        "scored_from": "2024-01-01",
+        "scored_to": "2024-06-30",
+        "train_months": 133,
+        "scored_months": 6
+      }
+    ],
+    "score_months_per_fold": 6,
+    "distinct_months": {
+      "train": 121,
+      "validation": 18,
+      "test": 26
     },
-    {
-      "max_depth": 4,
-      "learning_rate": 0.02,
-      "min_child_weight": 100,
-      "validation_rmse": 0.057221,
-      "best_iteration": 0
-    },
-    {
-      "max_depth": 4,
-      "learning_rate": 0.05,
-      "min_child_weight": 50,
-      "validation_rmse": 0.058251,
-      "best_iteration": 0
-    },
-    {
-      "max_depth": 6,
-      "learning_rate": 0.05,
-      "min_child_weight": 5,
-      "validation_rmse": 0.058673,
-      "best_iteration": 0
-    }
-  ],
-  "xgboost_best_params": {
-    "max_depth": 3,
-    "learning_rate": 0.02,
-    "min_child_weight": 50
+    "search_sample_investors": 2000,
+    "rationale": "The forecast features are dominated by market-level variables identical across investors in a given month, so the effective sample is the number of distinct months, not the number of rows. The validation block holds eighteen months; early stopping against it stopped every XGBoost configuration at iteration 0. Folds give several regime draws instead of one, and their spread is the error bar on any skill claim made from them."
   },
-  "xgboost_feature_importance": [
+  "tabular_search": {
+    "xgboost": {
+      "trials": 25,
+      "best_params": {
+        "max_depth": 6,
+        "learning_rate": 0.019251049533196722,
+        "min_child_weight": 22,
+        "subsample": 0.736463138144189,
+        "colsample_bytree": 0.693692745264241,
+        "reg_lambda": 14.09258993838722,
+        "n_estimators": 65
+      },
+      "best_objective": 0.01466,
+      "objective": "mean walk-forward skill against the training-window mean, minus half its standard deviation across folds",
+      "walk_forward": {
+        "folds": 6,
+        "usable": true,
+        "mean_skill_vs_mean": 0.0517,
+        "median_skill_vs_mean": 0.0846,
+        "std_skill_vs_mean": 0.0691,
+        "worst_fold_skill": -0.0653,
+        "best_fold_skill": 0.1159,
+        "folds_beating_mean_baseline": 4,
+        "beats_baseline_consistently": false,
+        "beats_baseline_on_balance": true,
+        "pooled_residual_std": 0.04632,
+        "per_fold": [
+          {
+            "fold": 0,
+            "train_through": "2021-06-30",
+            "scored_from": "2021-07-01",
+            "scored_to": "2021-12-31",
+            "train_months": 103,
+            "scored_months": 6,
+            "rows_scored": 56031,
+            "model_rmse": 0.046094,
+            "mean_baseline_rmse": 0.045186,
+            "skill_vs_mean": -0.0201,
+            "residual_std": 0.038415
+          },
+          {
+            "fold": 1,
+            "train_through": "2021-12-31",
+            "scored_from": "2022-01-01",
+            "scored_to": "2022-06-30",
+            "train_months": 109,
+            "scored_months": 6,
+            "rows_scored": 57165,
+            "model_rmse": 0.058995,
+            "mean_baseline_rmse": 0.064816,
+            "skill_vs_mean": 0.0898,
+            "residual_std": 0.058876
+          },
+          {
+            "fold": 2,
+            "train_through": "2022-06-30",
+            "scored_from": "2022-07-01",
+            "scored_to": "2022-12-31",
+            "train_months": 115,
+            "scored_months": 6,
+            "rows_scored": 58127,
+            "model_rmse": 0.057001,
+            "mean_baseline_rmse": 0.06409,
+            "skill_vs_mean": 0.1106,
+            "residual_std": 0.052608
+          },
+          {
+            "fold": 3,
+            "train_through": "2022-12-31",
+            "scored_from": "2023-01-01",
+            "scored_to": "2023-06-30",
+            "train_months": 121,
+            "scored_months": 6,
+            "rows_scored": 58847,
+            "model_rmse": 0.044997,
+            "mean_baseline_rmse": 0.048878,
+            "skill_vs_mean": 0.0794,
+            "residual_std": 0.04173
+          },
+          {
+            "fold": 4,
+            "train_through": "2023-06-30",
+            "scored_from": "2023-07-01",
+            "scored_to": "2023-12-31",
+            "train_months": 127,
+            "scored_months": 6,
+            "rows_scored": 59352,
+            "model_rmse": 0.066382,
+            "mean_baseline_rmse": 0.062312,
+            "skill_vs_mean": -0.0653,
+            "residual_std": 0.048191
+          },
+          {
+            "fold": 5,
+            "train_through": "2023-12-31",
+            "scored_from": "2024-01-01",
+            "scored_to": "2024-06-30",
+            "train_months": 133,
+            "scored_months": 6,
+            "rows_scored": 59685,
+            "model_rmse": 0.047849,
+            "mean_baseline_rmse": 0.054119,
+            "skill_vs_mean": 0.1159,
+            "residual_std": 0.033162
+          }
+        ]
+      }
+    },
+    "lightgbm": {
+      "trials": 25,
+      "best_params": {
+        "num_leaves": 10,
+        "learning_rate": 0.007370137187628822,
+        "min_child_samples": 308,
+        "subsample": 0.5075106058128437,
+        "colsample_bytree": 0.607810284883426,
+        "reg_lambda": 5.093933371991504,
+        "n_estimators": 51
+      },
+      "best_objective": -0.003355,
+      "objective": "mean walk-forward skill against the training-window mean, minus half its standard deviation across folds",
+      "walk_forward": {
+        "folds": 6,
+        "usable": true,
+        "mean_skill_vs_mean": 0.0127,
+        "median_skill_vs_mean": 0.0155,
+        "std_skill_vs_mean": 0.0209,
+        "worst_fold_skill": -0.0291,
+        "best_fold_skill": 0.0406,
+        "folds_beating_mean_baseline": 5,
+        "beats_baseline_consistently": false,
+        "beats_baseline_on_balance": true,
+        "pooled_residual_std": 0.049319,
+        "per_fold": [
+          {
+            "fold": 0,
+            "train_through": "2021-06-30",
+            "scored_from": "2021-07-01",
+            "scored_to": "2021-12-31",
+            "train_months": 103,
+            "scored_months": 6,
+            "rows_scored": 56031,
+            "model_rmse": 0.044615,
+            "mean_baseline_rmse": 0.045186,
+            "skill_vs_mean": 0.0126,
+            "residual_std": 0.03938
+          },
+          {
+            "fold": 1,
+            "train_through": "2021-12-31",
+            "scored_from": "2022-01-01",
+            "scored_to": "2022-06-30",
+            "train_months": 109,
+            "scored_months": 6,
+            "rows_scored": 57165,
+            "model_rmse": 0.06372,
+            "mean_baseline_rmse": 0.064816,
+            "skill_vs_mean": 0.0169,
+            "residual_std": 0.062798
+          },
+          {
+            "fold": 2,
+            "train_through": "2022-06-30",
+            "scored_from": "2022-07-01",
+            "scored_to": "2022-12-31",
+            "train_months": 115,
+            "scored_months": 6,
+            "rows_scored": 58127,
+            "model_rmse": 0.061486,
+            "mean_baseline_rmse": 0.06409,
+            "skill_vs_mean": 0.0406,
+            "residual_std": 0.057256
+          },
+          {
+            "fold": 3,
+            "train_through": "2022-12-31",
+            "scored_from": "2023-01-01",
+            "scored_to": "2023-06-30",
+            "train_months": 121,
+            "scored_months": 6,
+            "rows_scored": 58847,
+            "model_rmse": 0.048188,
+            "mean_baseline_rmse": 0.048878,
+            "skill_vs_mean": 0.0141,
+            "residual_std": 0.041895
+          },
+          {
+            "fold": 4,
+            "train_through": "2023-06-30",
+            "scored_from": "2023-07-01",
+            "scored_to": "2023-12-31",
+            "train_months": 127,
+            "scored_months": 6,
+            "rows_scored": 59352,
+            "model_rmse": 0.064125,
+            "mean_baseline_rmse": 0.062312,
+            "skill_vs_mean": -0.0291,
+            "residual_std": 0.050866
+          },
+          {
+            "fold": 5,
+            "train_through": "2023-12-31",
+            "scored_from": "2024-01-01",
+            "scored_to": "2024-06-30",
+            "train_months": 133,
+            "scored_months": 6,
+            "rows_scored": 59685,
+            "model_rmse": 0.052965,
+            "mean_baseline_rmse": 0.054119,
+            "skill_vs_mean": 0.0213,
+            "residual_std": 0.038457
+          }
+        ]
+      }
+    }
+  },
+  "tabular_chosen": "xgboost",
+  "tabular_feature_importance": [
     {
       "feature": "market_volatility_12m",
-      "importance": 0.23698
+      "importance": 0.22374
     },
     {
       "feature": "market_return_12m",
-      "importance": 0.11941
+      "importance": 0.08808
     },
     {
       "feature": "month_of_year",
-      "importance": 0.10896
-    },
-    {
-      "feature": "return_3m",
-      "importance": 0.10222
+      "importance": 0.0849
     },
     {
       "feature": "market_drawdown",
-      "importance": 0.07887
+      "importance": 0.05803
     },
     {
       "feature": "market_return_3m",
-      "importance": 0.05206
+      "importance": 0.05515
+    },
+    {
+      "feature": "return_3m",
+      "importance": 0.04707
+    },
+    {
+      "feature": "cumulative_return",
+      "importance": 0.04237
+    },
+    {
+      "feature": "annual_income",
+      "importance": 0.04191
+    },
+    {
+      "feature": "monthly_savings",
+      "importance": 0.04157
     },
     {
       "feature": "max_drawdown",
-      "importance": 0.04479
-    },
-    {
-      "feature": "volatility",
-      "importance": 0.04372
-    },
-    {
-      "feature": "equity_allocation",
-      "importance": 0.04056
-    },
-    {
-      "feature": "return_1m",
-      "importance": 0.03953
+      "importance": 0.04115
     },
     {
       "feature": "market_return_1m",
-      "importance": 0.03625
+      "importance": 0.03682
     },
     {
-      "feature": "return_6m",
-      "importance": 0.03494
+      "feature": "volatility",
+      "importance": 0.0356
     }
   ],
+  "prediction_intervals": {
+    "source": "pooled walk-forward residual standard deviation",
+    "residual_std": 0.04632,
+    "distribution_assumed": "normal",
+    "caveat": "Residuals are fat-tailed, so nominal coverage understates the tails. The realised coverage measured on the test split is the honest figure.",
+    "levels": {
+      "50": {
+        "nominal_coverage": 0.5,
+        "half_width_log_growth": 0.031243,
+        "realised_coverage_on_test": 0.4743
+      },
+      "80": {
+        "nominal_coverage": 0.8,
+        "half_width_log_growth": 0.059364,
+        "realised_coverage_on_test": 0.7507
+      },
+      "95": {
+        "nominal_coverage": 0.95,
+        "half_width_log_growth": 0.090787,
+        "realised_coverage_on_test": 0.9047
+      }
+    }
+  },
   "sequences": {
     "length": 24,
     "features": 14,
@@ -104,25 +369,35 @@
   },
   "best_model": {
     "name": "xgboost",
-    "skill_vs_mean_baseline": 0.0052
+    "skill_vs_mean_baseline": 0.0649
+  },
+  "deployment_recommendation": {
+    "horizon_months": 3,
+    "recommended": "xgboost",
+    "walk_forward_mean_skill": 0.0517,
+    "walk_forward_skill_std": 0.0691,
+    "folds_beating_baseline": 4,
+    "folds": 6,
+    "threshold_applied": 0.02,
+    "reasoning": "Mean walk-forward skill +0.0517 across 6 folds, beating the mean-drift baseline in None of them. That is positive on balance and above the threshold, so the model is recommended over the constant forecast."
   },
   "results": {
     "baseline_contributions": {
       "growth": {
         "label": "excess log growth",
         "n": 259897,
-        "mae": 0.04221,
-        "rmse": 0.05615,
+        "mae": 0.042324,
+        "rmse": 0.056584,
         "mape_pct": 100.0,
-        "r2": -0.052062
+        "r2": -0.050498
       },
       "value": {
         "label": "rupee value",
         "n": 259897,
-        "mae": 258859.751582,
-        "rmse": 617030.293677,
-        "mape_pct": 4.203,
-        "r2": 0.990726
+        "mae": 260600.996571,
+        "rmse": 665564.714744,
+        "mape_pct": 4.218,
+        "r2": 0.98921
       },
       "skill_vs_zero_baseline": 0.0,
       "skill_vs_mean_baseline": null
@@ -131,84 +406,84 @@
       "growth": {
         "label": "excess log growth",
         "n": 259897,
-        "mae": 0.042165,
-        "rmse": 0.057253,
-        "mape_pct": 753.622,
-        "r2": -0.093807
+        "mae": 0.042309,
+        "rmse": 0.057767,
+        "mape_pct": 755.694,
+        "r2": -0.094896
       },
       "value": {
         "label": "rupee value",
         "n": 259897,
-        "mae": 264240.716677,
-        "rmse": 645968.436013,
-        "mape_pct": 4.32,
-        "r2": 0.989836
+        "mae": 266319.017222,
+        "rmse": 699288.048347,
+        "mape_pct": 4.338,
+        "r2": 0.988089
       },
-      "skill_vs_zero_baseline": -0.0397,
+      "skill_vs_zero_baseline": -0.0423,
       "skill_vs_mean_baseline": 0.0,
-      "train_mean_excess_log_growth": 0.029257
+      "train_mean_excess_log_growth": 0.029413
     },
     "baseline_drift": {
       "growth": {
         "label": "excess log growth",
         "n": 259897,
-        "mae": 0.055775,
-        "rmse": 0.075005,
-        "mape_pct": 963.239,
-        "r2": -0.877257
+        "mae": 0.055922,
+        "rmse": 0.075297,
+        "mape_pct": 958.485,
+        "r2": -0.860189
       },
       "value": {
         "label": "rupee value",
         "n": 259897,
-        "mae": 353905.077408,
-        "rmse": 894852.302531,
-        "mape_pct": 5.754,
-        "r2": 0.980495
+        "mae": 355516.011343,
+        "rmse": 912406.979461,
+        "mape_pct": 5.77,
+        "r2": 0.979722
       },
-      "skill_vs_zero_baseline": -0.7844,
-      "skill_vs_mean_baseline": -0.7163
+      "skill_vs_zero_baseline": -0.7708,
+      "skill_vs_mean_baseline": -0.699
     },
     "xgboost": {
       "growth": {
         "label": "excess log growth",
         "n": 259897,
-        "mae": 0.042033,
-        "rmse": 0.057105,
-        "mape_pct": 748.349,
-        "r2": -0.088171
+        "mae": 0.042616,
+        "rmse": 0.055862,
+        "mape_pct": 877.883,
+        "r2": -0.023861
       },
       "value": {
         "label": "rupee value",
         "n": 259897,
-        "mae": 263384.900709,
-        "rmse": 644416.646924,
-        "mape_pct": 4.306,
-        "r2": 0.989885
+        "mae": 268620.459304,
+        "rmse": 658969.862796,
+        "mape_pct": 4.369,
+        "r2": 0.989423
       },
-      "skill_vs_zero_baseline": -0.0343,
-      "skill_vs_mean_baseline": 0.0052,
-      "best_iteration": 0
+      "skill_vs_zero_baseline": 0.0254,
+      "skill_vs_mean_baseline": 0.0649,
+      "walk_forward_skill": 0.0517
     },
     "lstm": {
       "growth": {
         "label": "excess log growth",
         "n": 255958,
-        "mae": 0.050845,
-        "rmse": 0.069487,
-        "mape_pct": 868.804,
-        "r2": -0.614568
+        "mae": 0.055645,
+        "rmse": 0.075909,
+        "mape_pct": 968.976,
+        "r2": -0.894221
       },
       "value": {
         "label": "rupee value",
         "n": 255958,
-        "mae": 331224.515093,
-        "rmse": 809333.917075,
-        "mape_pct": 5.054,
-        "r2": 0.984152
+        "mae": 362226.352768,
+        "rmse": 875548.884027,
+        "mape_pct": 5.596,
+        "r2": 0.981452
       },
-      "skill_vs_zero_baseline": -0.5343,
-      "skill_vs_mean_baseline": -0.4761,
-      "epochs_run": 7,
+      "skill_vs_zero_baseline": -0.8028,
+      "skill_vs_mean_baseline": -0.73,
+      "epochs_run": 20,
       "evaluated_on_subset": true,
       "subset_rows": 255958
     },
@@ -216,22 +491,22 @@
       "growth": {
         "label": "excess log growth",
         "n": 255958,
-        "mae": 0.059285,
-        "rmse": 0.077131,
-        "mape_pct": 1112.598,
-        "r2": -0.98935
+        "mae": 0.04493,
+        "rmse": 0.057712,
+        "mape_pct": 821.813,
+        "r2": -0.094926
       },
       "value": {
         "label": "rupee value",
         "n": 255958,
-        "mae": 372227.889451,
-        "rmse": 830873.489606,
-        "mape_pct": 5.865,
-        "r2": 0.983297
+        "mae": 286325.576851,
+        "rmse": 686969.642017,
+        "mape_pct": 4.561,
+        "r2": 0.988582
       },
-      "skill_vs_zero_baseline": -0.8904,
-      "skill_vs_mean_baseline": -0.8188,
-      "epochs_run": 8,
+      "skill_vs_zero_baseline": -0.0421,
+      "skill_vs_mean_baseline": 0.0,
+      "epochs_run": 36,
       "evaluated_on_subset": true,
       "subset_rows": 255958
     }

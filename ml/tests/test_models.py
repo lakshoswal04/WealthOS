@@ -208,11 +208,28 @@ class TestForecasting:
         import joblib
         return joblib.load(path)
 
-    def test_the_xgboost_slot_holds_an_xgboost_model(self, artifact):
-        # A variable-shadowing bug once stored the GRU under this key, so the
-        # type is asserted rather than assumed.
+    def test_the_tabular_slot_holds_the_model_the_artifact_names(self, artifact):
+        """The slot and the label must agree.
+
+        A variable-shadowing bug once stored the GRU under this key, so the
+        type is asserted rather than assumed. Since Phase 3b the family is
+        chosen between XGBoost and LightGBM on walk-forward evidence, so the
+        assertion is consistency between `tabular_model` and what is actually
+        stored -- a stronger check than naming one family, because it catches
+        a mislabelled artifact as well as a mistyped one.
+
+        The key stays "xgboost" for backward compatibility with artifacts the
+        serving path already loads.
+        """
+        import lightgbm as lgb
         import xgboost as xgb
-        assert isinstance(artifact["xgboost"], xgb.XGBRegressor)
+
+        families = {"xgboost": xgb.XGBRegressor, "lightgbm": lgb.LGBMRegressor}
+        named = artifact.get("tabular_model", "xgboost")
+        assert named in families, named
+        assert isinstance(artifact["xgboost"], families[named]), (
+            f"artifact says {named} but holds {type(artifact['xgboost']).__name__}"
+        )
 
     def test_artifact_carries_both_feature_contracts(self, artifact):
         assert artifact["tabular_features"]
@@ -262,7 +279,9 @@ class TestForecasting:
         # leads with, so it must exist.
         report = _report("forecast_12m")
         assert "baseline_mean_drift" in report["results"]
-        assert "skill_vs_mean_baseline" in report["results"]["xgboost"]
+        # The tabular model is keyed by its chosen family, not by "xgboost".
+        chosen = report["tabular_chosen"]
+        assert "skill_vs_mean_baseline" in report["results"][chosen]
         assert "skill_vs_mean_baseline" in report["best_model"]
 
     def test_the_best_model_actually_beats_the_baseline(self):
@@ -274,7 +293,8 @@ class TestForecasting:
     def test_scale_inflated_and_honest_metrics_are_both_reported(self):
         # Reporting only the rupee-value R-squared would overstate the result
         # by an order of magnitude.
-        results = _report("forecast_12m")["results"]["xgboost"]
+        report = _report("forecast_12m")
+        results = report["results"][report["tabular_chosen"]]
         assert results["value"]["r2"] > 0.9       # scale-dominated, as expected
         assert results["growth"]["r2"] < 0.9      # the real measure, far lower
         assert {"mae", "rmse", "mape_pct", "r2"} <= set(results["growth"])
