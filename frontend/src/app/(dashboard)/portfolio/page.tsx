@@ -6,7 +6,7 @@ import { useApi } from "@/lib/auth";
 import { percent, rupees, rupeesCompact, titleCase, toneFor } from "@/lib/format";
 import {
   Badge, Button, Card, CardBody, CardHeader, Empty, ErrorNote, Field,
-  inputClass, Spinner,
+  inputClass, LoadingRegion, SkeletonStats, SkeletonTable,
 } from "@/components/ui";
 import { PageHead } from "@/components/ui/shell";
 import { AllocationDonut, SectorBar } from "@/components/charts";
@@ -52,7 +52,14 @@ export default function PortfolioPage() {
     setRefreshKey((k) => k + 1);
   }
 
-  if (holdings.loading) return <Spinner label="Loading holdings…" />;
+  if (holdings.loading) {
+    return (
+      <LoadingRegion label="Loading holdings">
+        <SkeletonStats count={3} />
+        <div className="mt-5"><SkeletonTable rows={8} columns={6} /></div>
+      </LoadingRegion>
+    );
+  }
   if (holdings.error) return <ErrorNote message={holdings.error} />;
 
   const rows = [...(holdings.data ?? [])].sort((a, b) => {
@@ -144,7 +151,7 @@ export default function PortfolioPage() {
               subtitle={summary.data ? `${rupees(summary.data.total_value)} total` : undefined}
               action={
                 <select
-                  className="rounded-[7px] border border-[var(--hairline)] bg-[var(--surface-1)] px-2 py-1.5 text-[12px] text-[var(--ink-secondary)]"
+                  className="rounded-[7px] border border-[var(--hairline)] bg-[var(--surface-1)] px-2 py-1.5 text-small text-[var(--ink-secondary)]"
                   value={sortKey}
                   onChange={(e) => setSortKey(e.target.value as SortKey)}
                 >
@@ -156,9 +163,12 @@ export default function PortfolioPage() {
               }
             />
             <div className="overflow-x-auto">
-              <table className="w-full text-[13px]">
+              <table className="w-full text-body">
+                <caption className="sr-only">
+                  Your holdings, with quantity, cost, market value and unrealised gain
+                </caption>
                 <thead>
-                  <tr className="border-b border-[var(--hairline)] text-left text-[11px] uppercase tracking-[0.07em] text-[var(--ink-muted)]">
+                  <tr className="border-b border-[var(--hairline)] text-left text-caption uppercase tracking-[0.07em] text-[var(--ink-muted)]">
                     <th className="px-5 py-2.5 font-medium">Holding</th>
                     <th className="px-3 py-2.5 text-right font-medium">Qty</th>
                     <th className="px-3 py-2.5 text-right font-medium">Avg cost</th>
@@ -174,7 +184,7 @@ export default function PortfolioPage() {
                     <tr key={holding.id} className="border-b border-[var(--hairline)] last:border-0 hover:bg-[var(--surface-3)]/40">
                       <td className="px-5 py-2.5">
                         <div className="font-medium text-[var(--ink-primary)]">{holding.symbol}</div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-[var(--ink-muted)]">
+                        <div className="flex items-center gap-1.5 text-caption text-[var(--ink-muted)]">
                           <span className="truncate">{holding.name}</span>
                           <Badge tone="neutral">{titleCase(holding.asset_class)}</Badge>
                         </div>
@@ -190,12 +200,12 @@ export default function PortfolioPage() {
                       </td>
                       <td className={`tabular px-3 py-2.5 text-right ${toneFor(holding.unrealized_gain_pct)}`}>
                         {percent(holding.unrealized_gain_pct ?? 0, 1, true)}
-                        <div className="text-[10.5px] opacity-70">{rupeesCompact(holding.unrealized_gain)}</div>
+                        <div className="text-micro opacity-70">{rupeesCompact(holding.unrealized_gain)}</div>
                       </td>
                       <td className="px-5 py-2.5 text-right">
                         <button
                           onClick={() => remove(holding)}
-                          className="text-[11.5px] text-[var(--ink-muted)] hover:text-[#ff8f8f]"
+                          className="text-caption text-[var(--ink-muted)] hover:text-[#ff8f8f]"
                           aria-label={`Remove ${holding.symbol}`}
                         >
                           Remove
@@ -206,7 +216,7 @@ export default function PortfolioPage() {
                 </tbody>
               </table>
             </div>
-            <div className="border-t border-[var(--hairline)] px-5 py-3 text-[11.5px] text-[var(--ink-muted)]">
+            <div className="border-t border-[var(--hairline)] px-5 py-3 text-caption text-[var(--ink-muted)]">
               Purchase dates shown where recorded. Prices are corporate-action
               adjusted, so a cost basis entered at a pre-bonus price will
               understate your gain — the importer flags that case.

@@ -6,7 +6,7 @@ import { percent, ratio, titleCase } from "@/lib/format";
 import { isAvailable, list, num, numberRecord, reasonFor, record, str } from "@/lib/reports";
 import {
   Badge, Card, CardBody, CardHeader, ErrorNote, MetricRow, Note, Section,
-  Spinner, Stat, Unavailable,
+  LoadingRegion, SkeletonChart, SkeletonStats, Stat, Unavailable,
 } from "@/components/ui";
 import { PageHead } from "@/components/ui/shell";
 import { MagnitudeBars, MetricComparisonBars } from "@/components/charts";
@@ -14,7 +14,14 @@ import { MagnitudeBars, MetricComparisonBars } from "@/components/charts";
 export default function DataQualityPage() {
   const reports = useApi(() => api.research(), []);
 
-  if (reports.loading) return <Spinner label="Loading data pipeline evidence…" />;
+  if (reports.loading) {
+    return (
+      <LoadingRegion label="Loading data pipeline evidence">
+        <SkeletonStats count={4} />
+        <div className="mt-5"><SkeletonChart height={240} /></div>
+      </LoadingRegion>
+    );
+  }
   if (reports.error) return <ErrorNote message={reports.error} />;
 
   const data = reports.data?.data ?? {};
@@ -89,13 +96,13 @@ function SourcesSection({ seed, priors }: { seed?: Report; priors?: Report }) {
         ].map((source) => (
           <div key={source.name} className="bg-[var(--surface-2)] p-5">
             <div className="flex items-start justify-between gap-3">
-              <h3 className="text-[13.5px] font-medium text-[var(--ink-primary)]">{source.name}</h3>
+              <h3 className="text-body font-medium text-[var(--ink-primary)]">{source.name}</h3>
               <Badge tone={source.kind === "Simulated" ? "warning" : "good"}>{source.kind}</Badge>
             </div>
-            <p className="mt-2 text-[12.5px] leading-relaxed text-[var(--ink-secondary)]">
+            <p className="mt-2 text-small leading-relaxed text-[var(--ink-secondary)]">
               {source.role}
             </p>
-            <p className="mt-2 text-[11.5px] leading-relaxed text-[var(--ink-muted)]">
+            <p className="mt-2 text-caption leading-relaxed text-[var(--ink-muted)]">
               {source.caveat}
             </p>
           </div>
@@ -142,15 +149,15 @@ function AdjustmentSection({ report }: { report?: Report }) {
     >
       <Card tone="accent">
         <CardBody>
-          <p className="max-w-3xl text-[14px] leading-relaxed text-[var(--ink-primary)]">
+          <p className="max-w-3xl text-body-lg leading-relaxed text-[var(--ink-primary)]">
             The Kaggle NSE closing prices are <strong>not adjusted for corporate
             actions</strong>. A 1:1 bonus issue halves the raw price overnight, so
             the series records a 50% crash that never happened — RELIANCE reads
             −50.3% on 2017-09-07, TCS −50.5% on 2018-05-31.
           </p>
-          <p className="mt-3 max-w-3xl text-[13px] leading-relaxed text-[var(--ink-secondary)]">
+          <p className="mt-3 max-w-3xl text-body leading-relaxed text-[var(--ink-secondary)]">
             Every one of those numbers would have looked entirely plausible on a
-            dashboard. The source&rsquo;s own <code className="text-[11.5px]">Prev Close</code> column
+            dashboard. The source&rsquo;s own <code className="text-caption">Prev Close</code> column
             was checked as a possible fix and carries no adjustment information.
           </p>
         </CardBody>
@@ -202,9 +209,12 @@ function AdjustmentSection({ report }: { report?: Report }) {
                       subtitle="The same symbols, computed from each series." />
           <CardBody>
             <div className="overflow-x-auto">
-              <table className="w-full text-[12px]">
+              <table className="w-full text-small">
+                <caption className="sr-only">
+                  Data pipeline validation checks, with the result of each
+                </caption>
                 <thead>
-                  <tr className="border-b border-[var(--hairline)] text-left text-[10px] uppercase tracking-[0.07em] text-[var(--ink-muted)]">
+                  <tr className="border-b border-[var(--hairline)] text-left text-micro uppercase tracking-[0.07em] text-[var(--ink-muted)]">
                     <th className="py-2 pr-3 font-medium">Symbol</th>
                     <th className="py-2 pr-3 text-right font-medium">Max drawdown</th>
                     <th className="py-2 text-right font-medium">Sharpe</th>
@@ -307,7 +317,7 @@ function SpliceSection({ report }: { report?: Report }) {
             subtitle="Only reverting round trips are repaired, so a genuine one-way jump still fails the build."
           />
           <CardBody>
-            <p className="mb-3 text-[12.5px] leading-relaxed text-[var(--ink-secondary)]">
+            <p className="mb-3 text-small leading-relaxed text-[var(--ink-secondary)]">
               NIFTYBEES, BANKBEES and GOLDBEES each sit at a tenth of their price —
               a hundredth for GOLDBEES — for exactly two sessions in December 2019,
               then snap back. A real split does not revert.
@@ -317,7 +327,7 @@ function SpliceSection({ report }: { report?: Report }) {
                 <Badge key={symbol} tone="neutral">{symbol}</Badge>
               ))}
             </div>
-            <p className="mt-3 text-[11.5px] text-[var(--ink-muted)]">
+            <p className="mt-3 text-caption text-[var(--ink-muted)]">
               Panel: {num({ p: panel }, "p.trading_days").toLocaleString("en-IN")} trading
               days × {num({ p: panel }, "p.assets")} assets, {str({ p: panel }, "p.start")} to{" "}
               {str({ p: panel }, "p.end")}.

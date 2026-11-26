@@ -56,7 +56,14 @@ export default function ImportPage() {
         <Card className="rise">
           <CardHeader title="Upload" />
           <CardBody>
-            <div
+            {/* A button, not a div.
+                This was a click-only <div>, so the one control on the import
+                page -- the page a new user lands on first -- could not be
+                reached by keyboard at all. Drag and drop stays on the
+                element; the button role is what makes the click target real
+                for anyone not using a mouse. */}
+            <button
+              type="button"
               onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
               onDragLeave={() => setDragging(false)}
               onDrop={(e) => {
@@ -66,7 +73,12 @@ export default function ImportPage() {
                 if (dropped) setFile(dropped);
               }}
               onClick={() => inputRef.current?.click()}
-              className={`cursor-pointer rounded-[10px] border-2 border-dashed px-6 py-12 text-center transition-colors ${
+              aria-label={
+                file
+                  ? `Chosen file ${file.name}. Activate to choose a different CSV.`
+                  : "Choose a CSV file to import, or drop one here"
+              }
+              className={`w-full cursor-pointer rounded-[10px] border-2 border-dashed px-6 py-12 text-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                 dragging
                   ? "border-[var(--accent)] bg-[color-mix(in_oklab,var(--accent)_7%,transparent)]"
                   : "border-[var(--hairline)] hover:border-[var(--surface-3)]"
@@ -74,26 +86,27 @@ export default function ImportPage() {
             >
               <input
                 ref={inputRef} type="file" accept=".csv" className="hidden"
+                tabIndex={-1}
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
               {file ? (
                 <>
-                  <p className="text-[14px] text-[var(--ink-primary)]">{file.name}</p>
-                  <p className="mt-1 text-[12px] text-[var(--ink-muted)]">
+                  <p className="text-body-lg text-[var(--ink-primary)]">{file.name}</p>
+                  <p className="mt-1 text-small text-[var(--ink-muted)]">
                     {(file.size / 1024).toFixed(1)} KB · click to choose another
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-[14px] text-[var(--ink-primary)]">
+                  <p className="text-body-lg text-[var(--ink-primary)]">
                     Drop a CSV here, or click to choose
                   </p>
-                  <p className="mt-1 text-[12px] text-[var(--ink-muted)]">Up to 2 MB</p>
+                  <p className="mt-1 text-small text-[var(--ink-muted)]">Up to 2 MB</p>
                 </>
               )}
-            </div>
+            </button>
 
-            <label className="mt-4 flex items-center gap-2.5 text-[12.5px] text-[var(--ink-secondary)]">
+            <label className="mt-4 flex items-center gap-2.5 text-small text-[var(--ink-secondary)]">
               <input
                 type="checkbox" checked={replaceExisting}
                 onChange={(e) => setReplaceExisting(e.target.checked)}
@@ -118,17 +131,17 @@ export default function ImportPage() {
           <Card className="rise">
             <CardHeader title="File format" />
             <CardBody>
-              <p className="text-[12.5px] leading-relaxed text-[var(--ink-secondary)]">
+              <p className="text-small leading-relaxed text-[var(--ink-secondary)]">
                 Required columns: <code className="text-[var(--accent)]">symbol</code>,{" "}
                 <code className="text-[var(--accent)]">quantity</code>,{" "}
                 <code className="text-[var(--accent)]">average_price</code>. Optional:{" "}
                 <code className="text-[var(--accent)]">asset_type</code>,{" "}
                 <code className="text-[var(--accent)]">purchase_date</code>.
               </p>
-              <pre className="tabular mt-3 overflow-x-auto rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] p-3 text-[10.5px] leading-relaxed text-[var(--ink-secondary)]">
+              <pre className="tabular mt-3 overflow-x-auto rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] p-3 text-micro leading-relaxed text-[var(--ink-secondary)]">
 {TEMPLATE}
               </pre>
-              <ul className="mt-3 space-y-1.5 text-[11.5px] leading-relaxed text-[var(--ink-muted)]">
+              <ul className="mt-3 space-y-1.5 text-caption leading-relaxed text-[var(--ink-muted)]">
                 <li>Dates accept 2022-03-15, 15-03-2022, 15/03/2022 or 15-Mar-2022.</li>
                 <li>Quantities and prices must be above zero.</li>
                 <li>A symbol outside the supported universe rejects the whole file.</li>
@@ -140,13 +153,13 @@ export default function ImportPage() {
           <Card className="rise">
             <CardHeader title="A note on cost basis" />
             <CardBody>
-              <p className="text-[12.5px] leading-relaxed text-[var(--ink-secondary)]">
+              <p className="text-small leading-relaxed text-[var(--ink-secondary)]">
                 Prices here are adjusted for splits and bonus issues. If you enter
                 the rupee price you actually paid before such an event, the gain
                 will be misreported — HDFCBANK bought in 2021 is a live example,
                 since its 2025 bonus halved the adjusted price.
               </p>
-              <p className="mt-2 text-[12.5px] leading-relaxed text-[var(--ink-secondary)]">
+              <p className="mt-2 text-small leading-relaxed text-[var(--ink-secondary)]">
                 The importer compares each cost against the adjusted price on your
                 stated purchase date and warns when the two cannot be reconciled.
               </p>
@@ -165,7 +178,7 @@ function ImportOutcome({ result }: { result: ImportResult }) {
         <Badge tone={result.accepted ? "good" : "critical"}>
           {result.accepted ? "Imported" : "Rejected"}
         </Badge>
-        <span className="text-[12.5px] text-[var(--ink-secondary)]">
+        <span className="text-small text-[var(--ink-secondary)]">
           {result.rows_read} rows read
           {result.accepted &&
             ` · ${result.holdings_created} created, ${result.holdings_updated} updated`}
@@ -174,12 +187,15 @@ function ImportOutcome({ result }: { result: ImportResult }) {
 
       {result.errors.length > 0 && (
         <div className="mt-3 overflow-hidden rounded-[8px] border border-[color-mix(in_oklab,var(--critical)_35%,transparent)]">
-          <div className="bg-[color-mix(in_oklab,var(--critical)_10%,transparent)] px-3 py-2 text-[12px] text-[#ffb3b3]">
+          <div className="bg-[color-mix(in_oklab,var(--critical)_10%,transparent)] px-3 py-2 text-small text-[#ffb3b3]">
             Nothing was saved. Fix these rows and upload again.
           </div>
-          <table className="w-full text-[12px]">
+          <table className="w-full text-small">
+            <caption className="sr-only">
+              Rows rejected by the import, with the reason for each
+            </caption>
             <thead>
-              <tr className="border-b border-[var(--hairline)] text-left text-[10.5px] uppercase tracking-[0.07em] text-[var(--ink-muted)]">
+              <tr className="border-b border-[var(--hairline)] text-left text-micro uppercase tracking-[0.07em] text-[var(--ink-muted)]">
                 <th className="px-3 py-1.5 font-medium">Row</th>
                 <th className="px-3 py-1.5 font-medium">Field</th>
                 <th className="px-3 py-1.5 font-medium">Value</th>
@@ -206,7 +222,7 @@ function ImportOutcome({ result }: { result: ImportResult }) {
         <ul className="mt-3 space-y-1.5">
           {result.warnings.map((warning, i) => (
             <li key={i}
-                className="rounded-[7px] border border-[color-mix(in_oklab,var(--warning)_35%,transparent)] bg-[color-mix(in_oklab,var(--warning)_8%,transparent)] px-3 py-2 text-[11.5px] leading-relaxed text-[#e8b84b]">
+                className="rounded-[7px] border border-[color-mix(in_oklab,var(--warning)_35%,transparent)] bg-[color-mix(in_oklab,var(--warning)_8%,transparent)] px-3 py-2 text-caption leading-relaxed text-[#e8b84b]">
               {warning}
             </li>
           ))}
@@ -215,7 +231,7 @@ function ImportOutcome({ result }: { result: ImportResult }) {
 
       {result.accepted && (
         <a href="/overview"
-           className="mt-4 inline-block rounded-[8px] bg-[var(--accent)] px-3.5 py-2 text-[13px] font-medium text-[var(--accent-ink)] hover:bg-[#f0b254]">
+           className="mt-4 inline-block rounded-[8px] bg-[var(--accent)] px-3.5 py-2 text-body font-medium text-[var(--accent-ink)] hover:bg-[#f0b254]">
           See your dashboard
         </a>
       )}

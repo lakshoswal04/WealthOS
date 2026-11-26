@@ -26,7 +26,7 @@ export function PublicHeader() {
       }
     >
       <div className="mx-auto flex w-full max-w-[1180px] items-center gap-6 px-5 py-4">
-        <Link href="/" className="display shrink-0 text-[20px] leading-none tracking-tight">
+        <Link href="/" className="display shrink-0 text-h2 leading-none tracking-tight">
           Wealth<span className="metal">OS</span>
         </Link>
 
@@ -37,7 +37,7 @@ export function PublicHeader() {
             ["Results", "#results"],
           ].map(([label, href]) => (
             <a key={href} href={href}
-               className="text-[13px] text-[var(--ink-secondary)] transition-colors hover:text-[var(--ink-primary)]">
+               className="text-body text-[var(--ink-secondary)] transition-colors hover:text-[var(--ink-primary)]">
               {label}
             </a>
           ))}
@@ -49,7 +49,7 @@ export function PublicHeader() {
           ) : (
             <>
               <Link href="/login"
-                    className="px-2.5 py-1.5 text-[13px] text-[var(--ink-secondary)] transition-colors hover:text-[var(--ink-primary)]">
+                    className="px-2.5 py-1.5 text-body text-[var(--ink-secondary)] transition-colors hover:text-[var(--ink-primary)]">
                 Sign in
               </Link>
               <LinkButton href="/register" size="sm">Get started</LinkButton>
@@ -67,10 +67,10 @@ export function PublicFooter() {
       <div className="mx-auto w-full max-w-[1180px] px-5 py-12">
         <div className="flex flex-wrap items-start justify-between gap-8">
           <div className="max-w-sm">
-            <div className="display text-[19px] leading-none tracking-tight">
+            <div className="display text-h3 leading-none tracking-tight">
               Wealth<span className="metal">OS</span>
             </div>
-            <p className="mt-3 text-[12.5px] leading-relaxed text-[var(--ink-secondary)]">
+            <p className="mt-3 text-small leading-relaxed text-[var(--ink-secondary)]">
               Portfolio analytics, risk, goal forecasting and a grounded AI
               copilot, built on fifteen years of Indian market history.
             </p>
@@ -78,24 +78,24 @@ export function PublicFooter() {
 
           <div className="flex gap-12">
             <div>
-              <div className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+              <div className="mb-2.5 text-micro font-semibold uppercase tracking-[0.16em] text-[var(--ink-faint)]">
                 Product
               </div>
               {[["Sign in", "/login"], ["Create account", "/register"]].map(([l, h]) => (
                 <Link key={h} href={h}
-                      className="mb-1.5 block text-[12.5px] text-[var(--ink-secondary)] hover:text-[var(--accent)]">
+                      className="mb-1.5 block text-small text-[var(--ink-secondary)] hover:text-[var(--accent)]">
                   {l}
                 </Link>
               ))}
             </div>
             <div>
-              <div className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-faint)]">
+              <div className="mb-2.5 text-micro font-semibold uppercase tracking-[0.16em] text-[var(--ink-faint)]">
                 Project
               </div>
-              <span className="mb-1.5 block text-[12.5px] text-[var(--ink-secondary)]">
+              <span className="mb-1.5 block text-small text-[var(--ink-secondary)]">
                 Polaris School of Technology
               </span>
-              <span className="mb-1.5 block text-[12.5px] text-[var(--ink-secondary)]">
+              <span className="mb-1.5 block text-small text-[var(--ink-secondary)]">
                 Advanced Data Science, OJT
               </span>
             </div>
@@ -105,7 +105,7 @@ export function PublicFooter() {
         <hr className="rule-fade my-8" />
 
         {/* The disclaimer is prominent, not buried in small print. */}
-        <p className="text-[11.5px] leading-relaxed text-[var(--ink-muted)]">
+        <p className="text-caption leading-relaxed text-[var(--ink-muted)]">
           <strong className="text-[var(--ink-secondary)]">
             WealthOS is an academic research prototype, not a regulated financial
             advisory service.

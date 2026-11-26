@@ -6,7 +6,7 @@ import { percent, ratio, titleCase } from "@/lib/format";
 import { isAvailable, list, num, numberRecord, reasonFor, record, str } from "@/lib/reports";
 import {
   Card, CardBody, CardHeader, ErrorNote, MetricRow, Note, Section,
-  Spinner, Stat, Unavailable,
+  LoadingRegion, SkeletonChart, SkeletonStats, Stat, Unavailable,
 } from "@/components/ui";
 import { PageHead } from "@/components/ui/shell";
 import {
@@ -19,7 +19,14 @@ const HORIZONS = ["1m", "3m", "6m", "12m"] as const;
 export default function ModelLabPage() {
   const reports = useApi(() => api.research(), []);
 
-  if (reports.loading) return <Spinner label="Loading training evidence…" />;
+  if (reports.loading) {
+    return (
+      <LoadingRegion label="Loading training evidence">
+        <SkeletonStats count={4} />
+        <div className="mt-5"><SkeletonChart height={240} /></div>
+      </LoadingRegion>
+    );
+  }
   if (reports.error) return <ErrorNote message={reports.error} />;
 
   const models = reports.data?.models ?? {};
@@ -122,7 +129,7 @@ function ClusteringSection({ report, map }: { report?: Report; map?: Report }) {
                 note={name === "kmeans" ? "selected" : undefined}
               />
             ))}
-            <p className="mt-3 text-[11.5px] text-[var(--ink-muted)]">
+            <p className="mt-3 text-caption text-[var(--ink-muted)]">
               Silhouette, higher is better. Agglomerative was fitted on a subsample
               for tractability.
             </p>
@@ -165,19 +172,19 @@ function ClusteringSection({ report, map }: { report?: Report; map?: Report }) {
               <div key={cluster.cluster}
                    className="rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[13px] font-medium text-[var(--ink-primary)]">
+                  <span className="text-body font-medium text-[var(--ink-primary)]">
                     {cluster.name}
                   </span>
-                  <span className="tabular text-[11.5px] text-[var(--ink-muted)]">
+                  <span className="tabular text-caption text-[var(--ink-muted)]">
                     {percent(cluster.share, 1)}
                   </span>
                 </div>
-                <div className="tabular mt-1 text-[11px] text-[var(--ink-faint)]">
+                <div className="tabular mt-1 text-caption text-[var(--ink-faint)]">
                   {cluster.size.toLocaleString("en-IN")} investors
                 </div>
                 <ul className="mt-2.5 space-y-0.5">
                   {(cluster.distinguishing_traits?.highest ?? []).slice(0, 3).map((trait) => (
-                    <li key={trait.feature} className="text-[11px] text-[var(--ink-secondary)]">
+                    <li key={trait.feature} className="text-caption text-[var(--ink-secondary)]">
                       ↑ {titleCase(trait.feature)}
                     </li>
                   ))}
@@ -355,7 +362,7 @@ function ForecastSection({ reports }: { reports: Record<string, Report> }) {
           />
           <CardBody>
             <SkillByHorizon rows={skillRows} />
-            <p className="mt-3 text-[12px] leading-relaxed text-[var(--ink-secondary)]">
+            <p className="mt-3 text-small leading-relaxed text-[var(--ink-secondary)]">
               Skill rising with horizon is the substantive finding. Short-horizon
               growth is dominated by market noise; longer horizons carry a larger
               predictable component through contribution compounding and regime
@@ -379,14 +386,14 @@ function ForecastSection({ reports }: { reports: Record<string, Report> }) {
                   <div key={key}
                        className={`rounded-[var(--radius-sm)] px-3 py-2 ${isBest ? "bg-[var(--accent-wash)]" : ""}`}>
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className={`text-[12.5px] ${isBest ? "text-[var(--accent)]" : "text-[var(--ink-secondary)]"}`}>
+                      <span className={`text-small ${isBest ? "text-[var(--accent)]" : "text-[var(--ink-secondary)]"}`}>
                         {label}{isBest && " · best"}
                       </span>
-                      <span className="tabular text-[12.5px] text-[var(--ink-primary)]">
+                      <span className="tabular text-small text-[var(--ink-primary)]">
                         {key.startsWith("baseline_mean") ? "—" : ratio(skill)}
                       </span>
                     </div>
-                    <div className="tabular mt-0.5 flex gap-4 text-[10.5px] text-[var(--ink-faint)]">
+                    <div className="tabular mt-0.5 flex gap-4 text-micro text-[var(--ink-faint)]">
                       <span>value R² {value.toFixed(3)}</span>
                       <span>growth R² {growth.toFixed(3)}</span>
                     </div>
@@ -394,7 +401,7 @@ function ForecastSection({ reports }: { reports: Record<string, Report> }) {
                 );
               })}
             </div>
-            <p className="mt-3 text-[11.5px] leading-relaxed text-[var(--ink-muted)]">
+            <p className="mt-3 text-caption leading-relaxed text-[var(--ink-muted)]">
               Note how little the value R² column separates anything — every row,
               including the zero-return baseline, lands near 0.97.
             </p>
@@ -511,7 +518,7 @@ function SplitsSection({ report }: { report?: Report }) {
           <div className="mt-3">
             <MetricRow label="Anomaly rows" value={num({ a: anomaly }, "a.rows").toLocaleString("en-IN")} />
             <MetricRow label="Forecast rows" value={num({ f: forecast }, "f.rows").toLocaleString("en-IN")} />
-            <MetricRow label="Target" value={<code className="text-[11px]">{str(report, "forecast.target")}</code>} />
+            <MetricRow label="Target" value={<code className="text-caption">{str(report, "forecast.target")}</code>} />
           </div>
         </CardBody>
       </Card>

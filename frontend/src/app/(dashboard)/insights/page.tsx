@@ -5,7 +5,8 @@ import { api } from "@/lib/api";
 import { useApi } from "@/lib/auth";
 import { percent, rupeesCompact, scoreColor, shortDate, titleCase } from "@/lib/format";
 import {
-  Badge, Card, CardBody, CardHeader, ErrorNote, Meter, Spinner, Stat, Unavailable,
+  Badge, Card, CardBody, CardHeader, ErrorNote, LoadingRegion, Meter,
+  SkeletonChart, SkeletonStats, SkeletonText, Stat, Unavailable,
 } from "@/components/ui";
 import { PageHead } from "@/components/ui/shell";
 import { AnomalyTimeline, ClusterComparison, HealthBreakdown } from "@/components/charts";
@@ -36,7 +37,12 @@ export default function InsightsPage() {
           )}
         />
         <CardBody>
-          {health.loading && <Spinner />}
+          {health.loading && (
+            <LoadingRegion label="Loading the portfolio health score">
+              <SkeletonChart height={180} title={false} />
+              <SkeletonText lines={4} />
+            </LoadingRegion>
+          )}
           {health.error && <ErrorNote message={health.error} />}
           {health.data && (
             <>
@@ -47,10 +53,10 @@ export default function InsightsPage() {
                   <div key={component.name}
                        className="rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3">
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="text-[13px] font-medium text-[var(--ink-primary)]">
+                      <span className="text-body font-medium text-[var(--ink-primary)]">
                         {titleCase(component.name)}
                       </span>
-                      <span className="tabular text-[12px] text-[var(--ink-secondary)]">
+                      <span className="tabular text-small text-[var(--ink-secondary)]">
                         {component.score === null
                           ? "not measured"
                           : `${component.score.toFixed(1)} / 100 · ${component.contribution.toFixed(1)} of ${component.weight} pts`}
@@ -63,7 +69,7 @@ export default function InsightsPage() {
                         <Meter value={component.score} color={scoreColor(component.score)} />
                       </div>
                     )}
-                    <p className="mt-2 text-[11.5px] leading-relaxed text-[var(--ink-secondary)]">
+                    <p className="mt-2 text-caption leading-relaxed text-[var(--ink-secondary)]">
                       {component.reason}
                     </p>
                   </div>
@@ -72,19 +78,19 @@ export default function InsightsPage() {
 
               {health.data.sensitivity && health.data.sensitivity.length > 0 && (
                 <div className="mt-5">
-                  <h3 className="text-[12px] font-medium uppercase tracking-[0.08em] text-[var(--ink-muted)]">
+                  <h3 className="text-small font-medium uppercase tracking-[0.08em] text-[var(--ink-muted)]">
                     What moves the score
                   </h3>
-                  <p className="mt-1 text-[11.5px] text-[var(--ink-secondary)]">
+                  <p className="mt-1 text-caption text-[var(--ink-secondary)]">
                     Each input nudged 10% up and down; the swing is how many points the total moves.
                   </p>
                   <ul className="mt-3 space-y-1.5">
                     {health.data.sensitivity.slice(0, 6).map((row) => (
-                      <li key={row.input} className="flex items-center justify-between gap-3 text-[12px]">
+                      <li key={row.input} className="flex items-center justify-between gap-3 text-small">
                         <span className="text-[var(--ink-secondary)]">{titleCase(row.input)}</span>
                         <span className="flex items-center gap-2">
                           <span className="tabular text-[var(--ink-primary)]">±{row.swing.toFixed(2)} pts</span>
-                          <span className="text-[11px] text-[var(--ink-muted)]">{row.direction}</span>
+                          <span className="text-caption text-[var(--ink-muted)]">{row.direction}</span>
                         </span>
                       </li>
                     ))}
@@ -92,7 +98,7 @@ export default function InsightsPage() {
                 </div>
               )}
 
-              <p className="mt-5 border-t border-[var(--hairline)] pt-3 text-[11.5px] leading-relaxed text-[var(--ink-muted)]">
+              <p className="mt-5 border-t border-[var(--hairline)] pt-3 text-caption leading-relaxed text-[var(--ink-muted)]">
                 {health.data.methodology}
               </p>
             </>
@@ -110,7 +116,12 @@ export default function InsightsPage() {
           )}
         />
         <CardBody>
-          {profile.loading && <Spinner />}
+          {profile.loading && (
+            <LoadingRegion label="Loading your investor profile">
+              <SkeletonStats count={3} />
+              <div className="mt-5"><SkeletonChart height={220} title={false} /></div>
+            </LoadingRegion>
+          )}
           {profile.data && !profile.data.available && <Unavailable reason={profile.data.reason} />}
           {profile.data?.available && (
             <>
@@ -126,7 +137,7 @@ export default function InsightsPage() {
 
               {profile.data.largest_differences_from_cluster && (
                 <div className="mt-5">
-                  <h3 className="mb-2 text-[12px] font-medium uppercase tracking-[0.08em] text-[var(--ink-muted)]">
+                  <h3 className="mb-2 text-small font-medium uppercase tracking-[0.08em] text-[var(--ink-muted)]">
                     Where you differ most from the group
                   </h3>
                   <ClusterComparison rows={profile.data.largest_differences_from_cluster} />
@@ -134,7 +145,7 @@ export default function InsightsPage() {
               )}
 
               {profile.data.caveat && (
-                <p className="mt-4 text-[11.5px] leading-relaxed text-[var(--ink-muted)]">
+                <p className="mt-4 text-caption leading-relaxed text-[var(--ink-muted)]">
                   {profile.data.caveat}
                 </p>
               )}
@@ -155,7 +166,11 @@ export default function InsightsPage() {
           )}
         />
         <CardBody>
-          {anomalies.loading && <Spinner />}
+          {anomalies.loading && (
+            <LoadingRegion label="Checking for unusual months">
+              <SkeletonChart height={160} title={false} />
+            </LoadingRegion>
+          )}
           {anomalies.data && !anomalies.data.available && <Unavailable reason={anomalies.data.reason} />}
           {anomalies.data?.available && (
             <>
@@ -169,25 +184,25 @@ export default function InsightsPage() {
                     <li key={anomaly.date}
                         className="rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-[13px] text-[var(--ink-primary)]">{shortDate(anomaly.date)}</span>
+                        <span className="text-body text-[var(--ink-primary)]">{shortDate(anomaly.date)}</span>
                         <Badge tone={anomaly.severity === "critical" ? "critical"
                           : anomaly.severity === "warning" ? "warning" : "neutral"}>
                           {anomaly.severity}
                         </Badge>
                       </div>
-                      <p className="mt-1.5 text-[11.5px] text-[var(--ink-secondary)]">
+                      <p className="mt-1.5 text-caption text-[var(--ink-secondary)]">
                         Driven by {anomaly.contributing_features.map((f) => titleCase(f.feature)).join(", ")}.
                       </p>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-4 text-center text-[13px] text-[var(--ink-secondary)]">
+                <p className="mt-4 text-center text-body text-[var(--ink-secondary)]">
                   Nothing unusual found in the months examined.
                 </p>
               )}
               {anomalies.data.caveat && (
-                <p className="mt-4 text-[11.5px] leading-relaxed text-[var(--ink-muted)]">
+                <p className="mt-4 text-caption leading-relaxed text-[var(--ink-muted)]">
                   {anomalies.data.caveat}
                 </p>
               )}
@@ -202,12 +217,20 @@ export default function InsightsPage() {
           title="Wealth forecast"
           subtitle="Projected value from the trained models, against a baseline that assumes zero market return."
           action={
-            <div className="flex gap-1">
+            /* A tablist, so the selected horizon is announced rather than
+               conveyed by colour alone. Without aria-selected a screen
+               reader hears four identical buttons and no indication which
+               one the chart is showing. */
+            <div role="tablist" aria-label="Forecast horizon" className="flex gap-1">
               {[1, 3, 6, 12].map((h) => (
                 <button
                   key={h}
+                  role="tab"
+                  type="button"
+                  aria-selected={horizon === h}
+                  aria-label={`${h} month forecast`}
                   onClick={() => setHorizon(h)}
-                  className={`rounded-[6px] border px-2.5 py-1 text-[11.5px] transition-colors ${
+                  className={`rounded-[6px] border px-2.5 py-1 text-caption transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                     horizon === h
                       ? "border-[var(--accent-dim)] bg-[color-mix(in_oklab,var(--accent)_14%,transparent)] text-[var(--accent)]"
                       : "border-[var(--hairline)] text-[var(--ink-secondary)] hover:bg-[var(--surface-3)]"
@@ -220,7 +243,12 @@ export default function InsightsPage() {
           }
         />
         <CardBody>
-          {forecast.loading && <Spinner />}
+          {forecast.loading && (
+            <LoadingRegion label="Loading the wealth forecast">
+              <SkeletonStats count={3} />
+              <div className="mt-5"><SkeletonChart height={240} title={false} /></div>
+            </LoadingRegion>
+          )}
           {forecast.data && !forecast.data.available && <Unavailable reason={forecast.data.reason} />}
           {forecast.data?.available && (
             <>
@@ -234,11 +262,11 @@ export default function InsightsPage() {
 
               {forecast.data.projection_range && (
                 <div className="mt-5 rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
-                  <div className="flex items-baseline justify-between text-[12px]">
+                  <div className="flex items-baseline justify-between text-small">
                     <span className="tabular text-[var(--ink-secondary)]">
                       {rupeesCompact(forecast.data.projection_range.low)}
                     </span>
-                    <span className="text-[11px] uppercase tracking-[0.08em] text-[var(--ink-muted)]">
+                    <span className="text-caption uppercase tracking-[0.08em] text-[var(--ink-muted)]">
                       model range
                     </span>
                     <span className="tabular text-[var(--ink-secondary)]">
@@ -248,7 +276,7 @@ export default function InsightsPage() {
                   <div className="relative mt-2 h-1.5 rounded-full bg-[var(--surface-3)]">
                     <div className="absolute inset-y-0 rounded-full bg-[var(--series-1)]" style={{ left: 0, right: 0 }} />
                   </div>
-                  <p className="mt-2.5 text-[11.5px] text-[var(--ink-secondary)]">
+                  <p className="mt-2.5 text-caption text-[var(--ink-secondary)]">
                     {forecast.data.projection_range.agreement}.
                   </p>
                 </div>
@@ -257,7 +285,7 @@ export default function InsightsPage() {
               {forecast.data.model_predictions && (
                 <ul className="mt-4 space-y-1.5">
                   {Object.entries(forecast.data.model_predictions).map(([model, prediction]) => (
-                    <li key={model} className="flex items-center justify-between gap-3 text-[12.5px]">
+                    <li key={model} className="flex items-center justify-between gap-3 text-small">
                       <span className="uppercase tracking-wide text-[var(--ink-secondary)]">{model}</span>
                       <span className="tabular text-[var(--ink-primary)]">
                         {rupeesCompact(prediction.projected_value)}
@@ -268,7 +296,7 @@ export default function InsightsPage() {
               )}
 
               {forecast.data.assumptions && (
-                <p className="mt-4 rounded-[7px] border border-[var(--accent-dim)] bg-[color-mix(in_oklab,var(--accent)_8%,transparent)] px-3 py-2 text-[11.5px] leading-relaxed text-[var(--accent)]">
+                <p className="mt-4 rounded-[7px] border border-[var(--accent-dim)] bg-[color-mix(in_oklab,var(--accent)_8%,transparent)] px-3 py-2 text-caption leading-relaxed text-[var(--accent)]">
                   {forecast.data.assumptions.note}
                 </p>
               )}

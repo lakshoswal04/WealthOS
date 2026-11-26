@@ -59,7 +59,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   if (loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-[13px] text-[var(--ink-secondary)]">
+      <div className="flex min-h-screen items-center justify-center text-body text-[var(--ink-secondary)]">
         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[var(--surface-3)] border-t-[var(--accent)]" />
         <span className="ml-3">Loading your portfolio…</span>
       </div>
@@ -70,6 +70,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[246px_1fr]">
+      {/* The first tab stop on every page. Without it, reaching the content
+          past the sidebar means tabbing through every navigation link, on
+          every page, every time. */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-[var(--radius-sm)] focus:border focus:border-[var(--accent-dim)] focus:bg-[var(--surface-2)] focus:px-4 focus:py-2 focus:text-body focus:text-[var(--ink-primary)]"
+      >
+        Skip to content
+      </a>
+
       {/* ── sidebar ── */}
       <aside
         className={clsx(
@@ -81,10 +91,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div className="flex h-full flex-col">
           <div className="border-b border-[var(--hairline)] px-5 py-5">
             <Link href="/" className="block">
-              <div className="display text-[21px] leading-none tracking-tight">
+              <div className="display text-h2 leading-none tracking-tight">
                 Wealth<span className="metal">OS</span>
               </div>
-              <div className="mt-2 text-[9.5px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
+              <div className="mt-2 text-micro uppercase tracking-[0.2em] text-[var(--ink-faint)]">
                 Wealth Intelligence
               </div>
             </Link>
@@ -93,7 +103,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <nav className="flex-1 overflow-y-auto px-3 py-4">
             {NAV_GROUPS.map((group) => (
               <div key={group.label} className="mb-5 last:mb-0">
-                <div className="px-3 pb-1.5 text-[9.5px] font-semibold uppercase tracking-[0.17em] text-[var(--ink-faint)]">
+                <div className="px-3 pb-1.5 text-micro font-semibold uppercase tracking-[0.17em] text-[var(--ink-faint)]">
                   {group.label}
                 </div>
                 {group.items.map((item) => {
@@ -114,8 +124,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
                       {active && (
                         <span className="absolute inset-y-1.5 left-0 w-[2px] rounded-full bg-[var(--accent)]" />
                       )}
-                      <span className="block text-[13.5px] font-medium">{item.label}</span>
-                      <span className="block text-[10.5px] leading-snug text-[var(--ink-faint)]">
+                      <span className="block text-body font-medium">{item.label}</span>
+                      <span className="block text-micro leading-snug text-[var(--ink-faint)]">
                         {item.hint}
                       </span>
                     </Link>
@@ -127,16 +137,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
           <div className="border-t border-[var(--hairline)] p-3">
             <div className="flex items-center gap-2.5 rounded-[var(--radius-sm)] bg-[var(--surface-2)] px-3 py-2.5">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[var(--accent-bright)] to-[var(--accent-dim)] text-[11px] font-semibold text-[var(--accent-ink)]">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[var(--accent-bright)] to-[var(--accent-dim)] text-caption font-semibold text-[var(--accent-ink)]">
                 {(user.full_name || user.email).slice(0, 1).toUpperCase()}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[12.5px] text-[var(--ink-primary)]">
+                <div className="truncate text-small text-[var(--ink-primary)]">
                   {user.full_name || user.email.split("@")[0]}
                 </div>
                 <button
                   onClick={signOut}
-                  className="text-[10.5px] text-[var(--ink-muted)] transition-colors hover:text-[var(--accent)]"
+                  className="text-micro text-[var(--ink-muted)] transition-colors hover:text-[var(--accent)]"
                 >
                   Sign out
                 </button>
@@ -155,13 +165,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <div className="min-w-0">
         <TopBar title={current?.label} onMenu={() => setOpen((v) => !v)} />
 
-        <main className="mx-auto w-full max-w-[1220px] px-4 py-7 sm:px-7 lg:py-9">
+        <main
+          id="main"
+          className="mx-auto w-full max-w-[1220px] px-4 py-7 sm:px-7 lg:py-9"
+        >
           {children}
         </main>
 
         <footer className="mx-auto w-full max-w-[1220px] px-4 pb-12 sm:px-7">
           <hr className="rule-fade mb-4" />
-          <p className="text-[11px] leading-relaxed text-[var(--ink-faint)]">
+          <p className="text-caption leading-relaxed text-[var(--ink-faint)]">
             WealthOS is an academic research prototype built for the Polaris School
             of Technology OJT programme. It explains computed portfolio metrics and
             does not provide investment advice. Investor-level data in
@@ -185,33 +198,33 @@ function TopBar({ title, onMenu }: { title?: string; onMenu: () => void }) {
         <button
           onClick={onMenu}
           aria-label="Toggle navigation"
-          className="rounded-[var(--radius-sm)] border border-[var(--hairline-strong)] px-2.5 py-1.5 text-[12px] text-[var(--ink-secondary)] lg:hidden"
+          className="rounded-[var(--radius-sm)] border border-[var(--hairline-strong)] px-2.5 py-1.5 text-small text-[var(--ink-secondary)] lg:hidden"
         >
           Menu
         </button>
-        <span className="display text-[16px] lg:hidden">
+        <span className="display text-body-lg lg:hidden">
           Wealth<span className="metal">OS</span>
         </span>
 
-        <span className="hidden text-[12.5px] text-[var(--ink-muted)] lg:inline">{title}</span>
+        <span className="hidden text-small text-[var(--ink-muted)] lg:inline">{title}</span>
 
         <div className="ml-auto flex items-center gap-5">
           {summary.data && summary.data.n_holdings > 0 && (
             <>
               <div className="text-right">
-                <div className="text-[9.5px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
+                <div className="text-micro uppercase tracking-[0.14em] text-[var(--ink-faint)]">
                   Portfolio
                 </div>
-                <div className="tabular text-[14px] leading-tight text-[var(--ink-primary)]">
+                <div className="tabular text-body-lg leading-tight text-[var(--ink-primary)]">
                   {rupeesCompact(summary.data.total_value)}
                 </div>
               </div>
               <div className="hidden text-right sm:block">
-                <div className="text-[9.5px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
+                <div className="text-micro uppercase tracking-[0.14em] text-[var(--ink-faint)]">
                   Gain
                 </div>
                 <div className={clsx(
-                  "tabular text-[14px] leading-tight",
+                  "tabular text-body-lg leading-tight",
                   summary.data.unrealized_gain >= 0
                     ? "text-[var(--good-ink)]" : "text-[var(--critical-ink)]",
                 )}>
@@ -235,15 +248,15 @@ export function PageHead({ title, lede, aside, eyebrow }: {
     <div className="rise mb-7 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {eyebrow && (
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
+          <div className="mb-2 text-micro font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
             {eyebrow}
           </div>
         )}
-        <h1 className="display text-[32px] leading-none tracking-tight text-[var(--ink-primary)]">
+        <h1 className="display text-display leading-none tracking-tight text-[var(--ink-primary)]">
           {title}
         </h1>
         {lede && (
-          <p className="mt-2.5 max-w-2xl text-[13.5px] leading-relaxed text-[var(--ink-secondary)]">
+          <p className="mt-2.5 max-w-2xl text-body leading-relaxed text-[var(--ink-secondary)]">
             {lede}
           </p>
         )}

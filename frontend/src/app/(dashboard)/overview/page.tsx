@@ -5,7 +5,8 @@ import { api } from "@/lib/api";
 import { useApi } from "@/lib/auth";
 import { percent, rupees, rupeesCompact, shortDate, toneFor } from "@/lib/format";
 import {
-  Badge, Card, CardBody, CardHeader, Empty, ErrorNote, Meter, Spinner, Stat,
+  Badge, Card, CardBody, CardHeader, Empty, ErrorNote, LoadingRegion, Meter,
+  SkeletonChart, SkeletonStats, SkeletonText, Stat,
 } from "@/components/ui";
 import { PageHead } from "@/components/ui/shell";
 import { AllocationDonut, CumulativeReturnChart } from "@/components/charts";
@@ -16,7 +17,20 @@ export default function OverviewPage() {
   const analytics = useApi(() => api.analytics().catch(() => null), []);
   const goals = useApi(() => api.goals(), []);
 
-  if (portfolio.loading) return <Spinner label="Valuing your portfolio…" />;
+  // Skeletons rather than a spinner: this page is four stat tiles above two
+  // charts, and collapsing all of it to a dot moved the scroll position and
+  // then slammed the layout back in.
+  if (portfolio.loading) {
+    return (
+      <LoadingRegion label="Valuing your portfolio">
+        <SkeletonStats count={4} />
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <SkeletonChart height={260} />
+          <SkeletonChart height={260} />
+        </div>
+      </LoadingRegion>
+    );
+  }
   if (portfolio.error) return <ErrorNote message={portfolio.error} />;
 
   const summary = portfolio.data;
@@ -110,15 +124,19 @@ export default function OverviewPage() {
             title="Cumulative return"
             subtitle="Current holdings valued back through history, against the NIFTY 50."
             action={
-              <Link href="/risk" className="text-[12px] text-[var(--accent)] underline-offset-2 hover:underline">
+              <Link href="/risk" className="text-small text-[var(--accent)] underline-offset-2 hover:underline">
                 Risk detail
               </Link>
             }
           />
           <CardBody>
-            {analytics.loading && <Spinner />}
+            {analytics.loading && (
+              <LoadingRegion label="Loading performance against the benchmark">
+                <SkeletonChart height={280} title={false} />
+              </LoadingRegion>
+            )}
             {!analytics.loading && !analytics.data && (
-              <p className="py-10 text-center text-[13px] text-[var(--ink-secondary)]">
+              <p className="py-10 text-center text-body text-[var(--ink-secondary)]">
                 Not enough overlapping price history across these holdings yet.
               </p>
             )}
@@ -138,9 +156,12 @@ export default function OverviewPage() {
         <Card className="rise">
           <CardHeader title="Largest holdings" subtitle="By current market value." />
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-body">
+              <caption className="sr-only">
+                Your largest holdings by market value
+              </caption>
               <thead>
-                <tr className="border-b border-[var(--hairline)] text-left text-[11px] uppercase tracking-[0.07em] text-[var(--ink-muted)]">
+                <tr className="border-b border-[var(--hairline)] text-left text-caption uppercase tracking-[0.07em] text-[var(--ink-muted)]">
                   <th className="px-5 py-2.5 font-medium">Symbol</th>
                   <th className="px-3 py-2.5 text-right font-medium">Value</th>
                   <th className="px-3 py-2.5 text-right font-medium">Weight</th>
@@ -152,7 +173,7 @@ export default function OverviewPage() {
                   <tr key={holding.id} className="border-b border-[var(--hairline)] last:border-0 hover:bg-[var(--surface-3)]/40">
                     <td className="px-5 py-2.5">
                       <div className="font-medium text-[var(--ink-primary)]">{holding.symbol}</div>
-                      <div className="text-[11px] text-[var(--ink-muted)]">{holding.sector ?? holding.asset_class}</div>
+                      <div className="text-caption text-[var(--ink-muted)]">{holding.sector ?? holding.asset_class}</div>
                     </td>
                     <td className="tabular px-3 py-2.5 text-right">{rupeesCompact(holding.market_value)}</td>
                     <td className="tabular px-3 py-2.5 text-right text-[var(--ink-secondary)]">
@@ -173,15 +194,19 @@ export default function OverviewPage() {
             title="Goals"
             subtitle={activeGoals.length ? "Progress toward each target." : undefined}
             action={
-              <Link href="/goals" className="text-[12px] text-[var(--accent)] underline-offset-2 hover:underline">
+              <Link href="/goals" className="text-small text-[var(--accent)] underline-offset-2 hover:underline">
                 All goals
               </Link>
             }
           />
           <CardBody className="space-y-4">
-            {goals.loading && <Spinner />}
+            {goals.loading && (
+              <LoadingRegion label="Loading your goals">
+                <SkeletonText lines={3} />
+              </LoadingRegion>
+            )}
             {!goals.loading && activeGoals.length === 0 && (
-              <p className="py-6 text-center text-[13px] text-[var(--ink-secondary)]">
+              <p className="py-6 text-center text-body text-[var(--ink-secondary)]">
                 No goals set. Adding one lets the platform judge the portfolio
                 against what it is actually for.
               </p>
@@ -197,20 +222,20 @@ export default function OverviewPage() {
               return (
                 <div key={goal.id}>
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="truncate text-[13px] text-[var(--ink-primary)]">{goal.name}</span>
-                    <span className="tabular shrink-0 text-[12px] text-[var(--ink-secondary)]">
+                    <span className="truncate text-body text-[var(--ink-primary)]">{goal.name}</span>
+                    <span className="tabular shrink-0 text-small text-[var(--ink-secondary)]">
                       {percent(progress, 0)}
                     </span>
                   </div>
                   <div className="mt-1.5">
                     <Meter value={progress * 100} color="var(--series-3)" />
                   </div>
-                  <div className="tabular mt-1 text-[11px] text-[var(--ink-muted)]">
+                  <div className="tabular mt-1 text-caption text-[var(--ink-muted)]">
                     {rupeesCompact(saved)} of {rupeesCompact(goal.target_amount)}
                     {" · by "}{shortDate(goal.target_date)}
                   </div>
                   {goal.current_amount === 0 && (
-                    <div className="mt-0.5 text-[10.5px] text-[var(--ink-muted)]">
+                    <div className="mt-0.5 text-micro text-[var(--ink-muted)]">
                       measured against the whole portfolio
                     </div>
                   )}
@@ -233,14 +258,14 @@ export default function OverviewPage() {
                 .map((component) => (
                   <li key={component.name} className="rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] p-3">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-[12.5px] font-medium capitalize text-[var(--ink-primary)]">
+                      <span className="text-small font-medium capitalize text-[var(--ink-primary)]">
                         {component.name.replace(/_/g, " ")}
                       </span>
-                      <span className="tabular text-[12.5px] text-[var(--ink-secondary)]">
+                      <span className="tabular text-small text-[var(--ink-secondary)]">
                         {component.score?.toFixed(0)}/100
                       </span>
                     </div>
-                    <p className="mt-1.5 text-[11.5px] leading-relaxed text-[var(--ink-secondary)]">
+                    <p className="mt-1.5 text-caption leading-relaxed text-[var(--ink-secondary)]">
                       {component.reason}
                     </p>
                   </li>

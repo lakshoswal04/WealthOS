@@ -4,7 +4,8 @@ import { api } from "@/lib/api";
 import { useApi } from "@/lib/auth";
 import { percent, ratio, shortDate } from "@/lib/format";
 import {
-  Assumptions, Badge, Card, CardBody, CardHeader, Empty, Spinner, Stat,
+  Assumptions, Badge, Card, CardBody, CardHeader, Empty, LoadingRegion,
+  SkeletonChart, SkeletonStats, Stat,
 } from "@/components/ui";
 import { PageHead } from "@/components/ui/shell";
 import { CorrelationHeatmap, DrawdownChart, RiskReturnScatter } from "@/components/charts";
@@ -13,7 +14,15 @@ export default function RiskPage() {
   const risk = useApi(() => api.risk(), []);
   const concentration = useApi(() => api.concentration(), []);
 
-  if (risk.loading) return <Spinner label="Computing risk metrics…" />;
+  if (risk.loading) {
+    return (
+      <LoadingRegion label="Computing risk metrics">
+        <SkeletonStats count={4} />
+        <div className="mt-5"><SkeletonChart height={220} /></div>
+        <div className="mt-5"><SkeletonChart height={260} /></div>
+      </LoadingRegion>
+    );
+  }
   if (risk.error) {
     return (
       <>
@@ -123,7 +132,7 @@ export default function RiskPage() {
             {correlation?.symbols?.length ? (
               <CorrelationHeatmap symbols={correlation.symbols} matrix={correlation.matrix} />
             ) : (
-              <p className="py-8 text-center text-[13px] text-[var(--ink-secondary)]">
+              <p className="py-8 text-center text-body text-[var(--ink-secondary)]">
                 At least two holdings with overlapping history are needed.
               </p>
             )}
@@ -148,7 +157,7 @@ export default function RiskPage() {
             </div>
             <ul className="mt-5 space-y-2">
               {conc.interpretation.map((note) => (
-                <li key={note} className="flex gap-2.5 text-[13px] leading-relaxed text-[var(--ink-secondary)]">
+                <li key={note} className="flex gap-2.5 text-body leading-relaxed text-[var(--ink-secondary)]">
                   <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-[var(--accent)]" />
                   {note}
                 </li>
@@ -175,7 +184,7 @@ export default function RiskPage() {
             ]}
           />
           {Array.isArray(assumptions.symbols_excluded) && assumptions.symbols_excluded.length > 0 && (
-            <p className="mt-3 text-[11.5px] text-[var(--ink-muted)]">
+            <p className="mt-3 text-caption text-[var(--ink-muted)]">
               Excluded for insufficient overlapping history:{" "}
               {(assumptions.symbols_excluded as string[]).join(", ")}
             </p>

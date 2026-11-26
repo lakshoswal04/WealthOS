@@ -119,7 +119,7 @@ export default function ProfilePage() {
 
               <div className="flex items-center gap-3 sm:col-span-2">
                 <Button type="submit" disabled={busy}>{busy ? "Saving…" : "Save changes"}</Button>
-                {saved && <span className="text-[12.5px] text-[var(--good)]">Saved.</span>}
+                {saved && <span className="text-small text-[var(--good)]">Saved.</span>}
               </div>
             </form>
           </CardBody>
@@ -129,14 +129,14 @@ export default function ProfilePage() {
           <Card className="rise">
             <CardHeader title="Account" />
             <CardBody className="space-y-4">
-              <Stat label="Email" value={<span className="text-[15px]">{user.email}</span>} />
-              <Stat label="Joined" value={<span className="text-[15px]">{shortDate(user.joined_on ?? user.created_at)}</span>} />
+              <Stat label="Email" value={<span className="text-body-lg">{user.email}</span>} />
+              <Stat label="Joined" value={<span className="text-body-lg">{shortDate(user.joined_on ?? user.created_at)}</span>} />
               <Stat label="Risk tolerance"
-                    value={<span className="text-[15px]">{titleCase(user.risk_tolerance ?? "not set")}</span>}
+                    value={<span className="text-body-lg">{titleCase(user.risk_tolerance ?? "not set")}</span>}
                     sub={RISK_BANDS[user.risk_tolerance ?? ""] ?? undefined} />
               {user.monthly_savings != null && (
                 <Stat label="Monthly savings"
-                      value={<span className="text-[15px]">{rupees(user.monthly_savings)}</span>} />
+                      value={<span className="text-body-lg">{rupees(user.monthly_savings)}</span>} />
               )}
             </CardBody>
           </Card>
@@ -152,7 +152,7 @@ export default function ProfilePage() {
                 <ul className="space-y-2">
                   {Object.entries(models.data.available).map(([name, loaded]) => (
                     <li key={name} className="flex items-center justify-between gap-3">
-                      <span className="text-[12.5px] text-[var(--ink-secondary)]">{titleCase(name)}</span>
+                      <span className="text-small text-[var(--ink-secondary)]">{titleCase(name)}</span>
                       <Badge tone={loaded ? "good" : "warning"}>
                         {loaded ? "loaded" : "unavailable"}
                       </Badge>

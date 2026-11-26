@@ -51,7 +51,7 @@ export default function LandingPage() {
 
           <div className="mx-auto w-full max-w-[1180px] px-5 pb-16 pt-20 lg:pt-28">
             <div className="stagger max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--hairline-strong)] bg-[var(--surface-2)] px-3 py-1.5 text-[11.5px] text-[var(--ink-secondary)]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--hairline-strong)] bg-[var(--surface-2)] px-3 py-1.5 text-caption text-[var(--ink-secondary)]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
                 Academic research prototype · Polaris School of Technology
               </div>
@@ -62,7 +62,7 @@ export default function LandingPage() {
                 for <span className="metal">personal wealth</span>.
               </h1>
 
-              <p className="mt-6 max-w-2xl text-[16px] leading-relaxed text-[var(--ink-secondary)]">
+              <p className="mt-6 max-w-2xl text-body-lg leading-relaxed text-[var(--ink-secondary)]">
                 Most investors can tell you what they own. Far fewer can tell you
                 how risky it is, whether it is genuinely diversified, or whether
                 it will actually reach the goals it exists for. WealthOS measures
@@ -108,10 +108,10 @@ export default function LandingPage() {
               ["8 tools", "the AI copilot may call — and nothing else"],
             ].map(([value, label]) => (
               <div key={label} className="px-2 py-8 sm:px-6">
-                <div className="tabular text-[22px] leading-none text-[var(--ink-primary)]">
+                <div className="tabular text-h2 leading-none text-[var(--ink-primary)]">
                   {value}
                 </div>
-                <div className="mt-2.5 text-[12px] leading-snug text-[var(--ink-muted)]">
+                <div className="mt-2.5 text-small leading-snug text-[var(--ink-muted)]">
                   {label}
                 </div>
               </div>
@@ -134,8 +134,8 @@ export default function LandingPage() {
               ["Goals sit apart from the portfolio", "Retirement, a home, education — each tracked on a spreadsheet beside the investments meant to fund them."],
             ].map(([title, body]) => (
               <div key={title} className="bg-[var(--surface-2)] p-7">
-                <h3 className="text-[15px] font-medium text-[var(--ink-primary)]">{title}</h3>
-                <p className="mt-2.5 text-[13px] leading-relaxed text-[var(--ink-secondary)]">{body}</p>
+                <h3 className="text-body-lg font-medium text-[var(--ink-primary)]">{title}</h3>
+                <p className="mt-2.5 text-body leading-relaxed text-[var(--ink-secondary)]">{body}</p>
               </div>
             ))}
           </div>
@@ -144,7 +144,7 @@ export default function LandingPage() {
         {/* ───────────────────── capabilities ───────────────────── */}
         <section id="capabilities" className="border-t border-[var(--hairline)] bg-[var(--surface-1)]">
           <div className="mx-auto w-full max-w-[1180px] px-5 py-24">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
+            <div className="text-micro font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
               Capabilities
             </div>
             <h2 className="display mt-3 max-w-2xl text-[clamp(1.8rem,3.6vw,2.6rem)] leading-[1.12] tracking-[-0.02em]">
@@ -176,11 +176,11 @@ export default function LandingPage() {
               ].map((item, index) => (
                 <div key={item.n} className="grid items-start gap-8 lg:grid-cols-[1fr_1.05fr]">
                   <div className={index % 2 === 1 ? "lg:order-2" : ""}>
-                    <div className="tabular text-[12px] text-[var(--accent)]">{item.n}</div>
-                    <h3 className="display mt-2 text-[24px] leading-tight text-[var(--ink-primary)]">
+                    <div className="tabular text-small text-[var(--accent)]">{item.n}</div>
+                    <h3 className="display mt-2 text-h2 leading-tight text-[var(--ink-primary)]">
                       {item.title}
                     </h3>
-                    <p className="mt-4 text-[14px] leading-relaxed text-[var(--ink-secondary)]">
+                    <p className="mt-4 text-body-lg leading-relaxed text-[var(--ink-secondary)]">
                       {item.body}
                     </p>
                   </div>
@@ -189,7 +189,7 @@ export default function LandingPage() {
                     (index % 2 === 1 ? "lg:order-1" : "")
                   }>
                     {item.points.map((point) => (
-                      <li key={point} className="flex items-center gap-3 bg-[var(--surface-2)] px-5 py-4 text-[13px] text-[var(--ink-secondary)]">
+                      <li key={point} className="flex items-center gap-3 bg-[var(--surface-2)] px-5 py-4 text-body text-[var(--ink-secondary)]">
                         <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--accent)]" />
                         {point}
                       </li>
@@ -203,13 +203,13 @@ export default function LandingPage() {
 
         {/* ───────────────────── results ───────────────────── */}
         <section id="results" className="mx-auto w-full max-w-[1180px] px-5 py-24">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
+          <div className="text-micro font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
             Measured results
           </div>
           <h2 className="display mt-3 max-w-2xl text-[clamp(1.8rem,3.6vw,2.6rem)] leading-[1.12] tracking-[-0.02em]">
             Scored on a held-out period the models never saw.
           </h2>
-          <p className="mt-4 max-w-2xl text-[13.5px] leading-relaxed text-[var(--ink-secondary)]">
+          <p className="mt-4 max-w-2xl text-body leading-relaxed text-[var(--ink-secondary)]">
             These figures are read live from the pipeline reports, not typed into
             this page. The Model Lab inside the product shows how each one was
             produced.
@@ -235,20 +235,20 @@ export default function LandingPage() {
               },
             ].map((metric) => (
               <div key={metric.label} className="bg-[var(--surface-2)] p-7">
-                <div className="tabular text-[34px] leading-none text-[var(--accent)]">
+                <div className="tabular text-display leading-none text-[var(--accent)]">
                   {metric.value}
                 </div>
-                <div className="mt-3 text-[13px] font-medium text-[var(--ink-primary)]">
+                <div className="mt-3 text-body font-medium text-[var(--ink-primary)]">
                   {metric.label}
                 </div>
-                <div className="mt-2 text-[11.5px] leading-relaxed text-[var(--ink-muted)]">
+                <div className="mt-2 text-caption leading-relaxed text-[var(--ink-muted)]">
                   {metric.note}
                 </div>
               </div>
             ))}
           </div>
 
-          <p className="mt-6 max-w-3xl text-[12px] leading-relaxed text-[var(--ink-muted)]">
+          <p className="mt-6 max-w-3xl text-small leading-relaxed text-[var(--ink-muted)]">
             Forecast skill is quoted against a mean-drift baseline rather than a
             zero-return one. Markets drifted upward over the sample, so a
             zero-return baseline is biased low and flatters every model — the
@@ -260,7 +260,7 @@ export default function LandingPage() {
         {/* ───────────────────── method ───────────────────── */}
         <section id="method" className="border-y border-[var(--hairline)] bg-[var(--surface-1)]">
           <div className="mx-auto w-full max-w-[1180px] px-5 py-24">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
+            <div className="text-micro font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
               How it works
             </div>
             <h2 className="display mt-3 text-[clamp(1.8rem,3.6vw,2.6rem)] leading-[1.12] tracking-[-0.02em]">
@@ -276,11 +276,11 @@ export default function LandingPage() {
                 ["Ask", "The copilot narrates the result, and every number it quotes is checked against the backend."],
               ].map(([title, body], index) => (
                 <li key={title} className="bg-[var(--surface-2)] p-6">
-                  <div className="tabular text-[12px] text-[var(--accent)]">
+                  <div className="tabular text-small text-[var(--accent)]">
                     {String(index + 1).padStart(2, "0")}
                   </div>
-                  <h3 className="mt-2 text-[14px] font-medium text-[var(--ink-primary)]">{title}</h3>
-                  <p className="mt-2 text-[12px] leading-relaxed text-[var(--ink-secondary)]">{body}</p>
+                  <h3 className="mt-2 text-body-lg font-medium text-[var(--ink-primary)]">{title}</h3>
+                  <p className="mt-2 text-small leading-relaxed text-[var(--ink-secondary)]">{body}</p>
                 </li>
               ))}
             </ol>
@@ -294,7 +294,7 @@ export default function LandingPage() {
             <br />
             <span className="metal">actually doing</span>.
           </h2>
-          <p className="mx-auto mt-5 max-w-xl text-[14px] leading-relaxed text-[var(--ink-secondary)]">
+          <p className="mx-auto mt-5 max-w-xl text-body-lg leading-relaxed text-[var(--ink-secondary)]">
             Import a portfolio and every page fills in: allocation, risk,
             concentration, goals, behavioural profile and a health score you can
             interrogate component by component.
@@ -306,7 +306,7 @@ export default function LandingPage() {
               <>
                 <LinkButton href="/register" size="lg">Create your account</LinkButton>
                 <Link href="/login"
-                      className="inline-flex items-center px-4 py-2.5 text-[14px] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]">
+                      className="inline-flex items-center px-4 py-2.5 text-body-lg text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]">
                   Or sign in
                 </Link>
               </>

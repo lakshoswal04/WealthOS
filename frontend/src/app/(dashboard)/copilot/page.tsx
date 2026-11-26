@@ -70,10 +70,10 @@ export default function CopilotPage() {
           <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
             {messages.length === 0 && (
               <div className="py-10 text-center">
-                <p className="display text-[18px] text-[var(--ink-primary)]">
+                <p className="display text-h3 text-[var(--ink-primary)]">
                   What would you like to understand?
                 </p>
-                <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-[var(--ink-secondary)]">
+                <p className="mx-auto mt-2 max-w-md text-body leading-relaxed text-[var(--ink-secondary)]">
                   The assistant reads only the measurements this platform computed
                   for your portfolio. It will say so when a figure is unavailable,
                   rather than producing one.
@@ -83,7 +83,7 @@ export default function CopilotPage() {
                     <button
                       key={suggestion}
                       onClick={() => void send(suggestion)}
-                      className="rounded-full border border-[var(--hairline)] px-3 py-1.5 text-[12px] text-[var(--ink-secondary)] transition-colors hover:border-[var(--accent-dim)] hover:text-[var(--accent)]"
+                      className="rounded-full border border-[var(--hairline)] px-3 py-1.5 text-small text-[var(--ink-secondary)] transition-colors hover:border-[var(--accent-dim)] hover:text-[var(--accent)]"
                     >
                       {suggestion}
                     </button>
@@ -95,12 +95,12 @@ export default function CopilotPage() {
             {messages.map((message, index) => (
               <div key={index} className={message.role === "user" ? "flex justify-end" : ""}>
                 {message.role === "user" ? (
-                  <div className="max-w-[80%] rounded-[12px] rounded-br-[4px] bg-[var(--surface-3)] px-4 py-2.5 text-[13.5px] text-[var(--ink-primary)]">
+                  <div className="max-w-[80%] rounded-[12px] rounded-br-[4px] bg-[var(--surface-3)] px-4 py-2.5 text-body text-[var(--ink-primary)]">
                     {message.content}
                   </div>
                 ) : (
                   <div className="max-w-[92%]">
-                    <div className="whitespace-pre-wrap rounded-[12px] rounded-bl-[4px] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 text-[13.5px] leading-relaxed text-[var(--ink-primary)]">
+                    <div className="whitespace-pre-wrap rounded-[12px] rounded-bl-[4px] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 text-body leading-relaxed text-[var(--ink-primary)]">
                       {message.content}
                     </div>
                     {message.meta && <ReplyMeta meta={message.meta} />}
@@ -110,7 +110,11 @@ export default function CopilotPage() {
             ))}
 
             {busy && (
-              <div className="flex items-center gap-2.5 text-[13px] text-[var(--ink-secondary)]">
+              <div
+                role="status"
+                aria-live="polite"
+                className="flex items-center gap-2.5 text-body text-[var(--ink-secondary)]"
+              >
                 <span className="h-3 w-3 animate-spin rounded-full border-2 border-[var(--surface-3)] border-t-[var(--accent)]" />
                 Reading your portfolio…
               </div>
@@ -138,12 +142,12 @@ export default function CopilotPage() {
           <Card className="rise">
             <CardHeader title="How it answers" />
             <CardBody>
-              <p className="text-[12.5px] leading-relaxed text-[var(--ink-secondary)]">
+              <p className="text-small leading-relaxed text-[var(--ink-secondary)]">
                 {capabilities.data?.grounding}
               </p>
               <ul className="mt-4 space-y-2">
                 {(capabilities.data?.limits ?? []).map((limit) => (
-                  <li key={limit} className="flex gap-2 text-[12px] leading-relaxed text-[var(--ink-muted)]">
+                  <li key={limit} className="flex gap-2 text-small leading-relaxed text-[var(--ink-muted)]">
                     <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-[var(--ink-muted)]" />
                     {limit}
                   </li>
@@ -159,8 +163,8 @@ export default function CopilotPage() {
               <ul className="space-y-2">
                 {(capabilities.data?.tools ?? []).map((tool) => (
                   <li key={tool.name}>
-                    <code className="text-[11.5px] text-[var(--accent)]">{tool.name}</code>
-                    <p className="mt-0.5 text-[11px] leading-snug text-[var(--ink-muted)]">
+                    <code className="text-caption text-[var(--accent)]">{tool.name}</code>
+                    <p className="mt-0.5 text-caption leading-snug text-[var(--ink-muted)]">
                       {tool.description.split(". ")[0]}.
                     </p>
                   </li>
@@ -186,13 +190,13 @@ function ReplyMeta({ meta }: { meta: CopilotReply }) {
           : `${grounding.numbers_verified}/${grounding.numbers_checked} figures verified`}
       </Badge>
       {meta.tools_called.map((tool) => (
-        <span key={tool} className="rounded-full bg-[var(--surface-3)] px-2 py-[2px] text-[10.5px] text-[var(--ink-muted)]">
+        <span key={tool} className="rounded-full bg-[var(--surface-3)] px-2 py-[2px] text-micro text-[var(--ink-muted)]">
           {tool}
         </span>
       ))}
-      <span className="text-[10.5px] text-[var(--ink-muted)]">{meta.latency_ms.toFixed(0)}ms</span>
+      <span className="text-micro text-[var(--ink-muted)]">{meta.latency_ms.toFixed(0)}ms</span>
       {!grounding.is_grounded && (
-        <span className="w-full text-[11px] text-[var(--warning)]">
+        <span className="w-full text-caption text-[var(--warning)]">
           Unverified: {grounding.unverified_numbers.join(", ")} — these could not be
           matched to a backend measurement.
         </span>

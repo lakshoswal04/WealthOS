@@ -47,8 +47,8 @@ export default function RegisterPage() {
 
   return (
     <div className="rise">
-      <h1 className="display text-[26px] leading-tight">Create your account</h1>
-      <p className="mt-1.5 text-[13px] text-[var(--ink-secondary)]">
+      <h1 className="display text-h1 leading-tight">Create your account</h1>
+      <p className="mt-1.5 text-body text-[var(--ink-secondary)]">
         Your profile shapes the risk bands and goal projections, so it is worth
         filling in.
       </p>
@@ -101,7 +101,7 @@ export default function RegisterPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-[12.5px] text-[var(--ink-secondary)]">
+      <p className="mt-6 text-small text-[var(--ink-secondary)]">
         Already registered?{" "}
         <Link href="/login" className="text-[var(--accent)] underline-offset-2 hover:underline">
           Sign in

@@ -195,3 +195,43 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Type scale
+
+   The app used 23 distinct arbitrary font sizes across 233 declarations,
+   including 11px beside 11.5px, 12px beside 12.5px, 13px beside 13.5px and
+   17px beside 17.5px. Differences that small are not design decisions, they
+   are the residue of tuning each component on its own, and they make two
+   labels that should match look subtly misaligned.
+
+   Nine steps, each set to the most-used value in its cluster so the
+   migration moved existing text as little as possible. Half-pixel steps are
+   kept at the small end deliberately: this is a dense figures interface and
+   11.5px against 12.5px is a real distinction at that size.
+   ────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --text-micro: 10px;      /* units, footnote markers, axis overflow */
+  --text-caption: 11.5px;  /* captions, table meta, chart furniture */
+  --text-small: 12.5px;    /* dense table cells, secondary body */
+  --text-body: 13px;       /* default reading size */
+  --text-body-lg: 15px;    /* lead paragraphs, card values */
+  --text-h3: 18px;         /* panel titles */
+  --text-h2: 22px;         /* section headings */
+  --text-h1: 26px;         /* page headings */
+  --text-display: 34px;    /* a single hero figure per page */
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+}
+
+.text-micro    { font-size: var(--text-micro);    line-height: var(--leading-normal); }
+.text-caption  { font-size: var(--text-caption);  line-height: var(--leading-normal); }
+.text-small    { font-size: var(--text-small);    line-height: var(--leading-normal); }
+.text-body     { font-size: var(--text-body);     line-height: var(--leading-normal); }
+.text-body-lg  { font-size: var(--text-body-lg);  line-height: var(--leading-normal); }
+.text-h3       { font-size: var(--text-h3);       line-height: var(--leading-tight); }
+.text-h2       { font-size: var(--text-h2);       line-height: var(--leading-tight); }
+.text-h1       { font-size: var(--text-h1);       line-height: var(--leading-tight); }
+.text-display  { font-size: var(--text-display);  line-height: var(--leading-tight); }

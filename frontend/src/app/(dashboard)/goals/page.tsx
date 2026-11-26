@@ -6,7 +6,8 @@ import { useApi } from "@/lib/auth";
 import { percent, rupees, rupeesCompact, shortDate, titleCase } from "@/lib/format";
 import {
   Assumptions, Badge, Button, Card, CardBody, CardHeader, Empty, ErrorNote,
-  Field, inputClass, Meter, Spinner, Stat,
+  Field, inputClass, LoadingRegion, Meter, SkeletonChart, SkeletonStats,
+  SkeletonText, Stat,
 } from "@/components/ui";
 import { PageHead } from "@/components/ui/shell";
 import { GoalProjectionChart } from "@/components/charts";
@@ -80,7 +81,14 @@ export default function GoalsPage() {
     setRefreshKey((k) => k + 1);
   }
 
-  if (goals.loading) return <Spinner label="Loading goals…" />;
+  if (goals.loading) {
+    return (
+      <LoadingRegion label="Loading goals">
+        <SkeletonStats count={3} />
+        <div className="mt-5"><SkeletonText lines={4} /></div>
+      </LoadingRegion>
+    );
+  }
   if (goals.error) return <ErrorNote message={goals.error} />;
 
   const rows = goals.data ?? [];
@@ -154,25 +162,38 @@ export default function GoalsPage() {
             {rows.map((goal) => (
               <Card
                 key={goal.id}
-                className={`cursor-pointer transition-colors ${
+                className={`transition-colors ${
                   selected === goal.id ? "border-[var(--accent-dim)]" : "hover:border-[var(--surface-3)]"
                 }`}
-                onClick={() => setSelected(goal.id)}
               >
                 <CardBody>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="truncate text-[14px] font-medium text-[var(--ink-primary)]">
+                      {/* The goal name is the control that selects the goal.
+                          The card itself used to carry the onClick, so
+                          selecting a goal was mouse-only and the Delete
+                          button inside it had to stopPropagation to avoid
+                          selecting what it was deleting. A button around the
+                          name is reachable by keyboard and removes the need
+                          for that. */}
+                      <button
+                        type="button"
+                        onClick={() => setSelected(goal.id)}
+                        aria-pressed={selected === goal.id}
+                        className="block max-w-full truncate text-left text-body-lg font-medium text-[var(--ink-primary)] hover:text-[var(--accent-bright)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+                      >
                         {goal.name}
-                      </div>
-                      <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--ink-muted)]">
+                      </button>
+                      <div className="mt-0.5 flex items-center gap-2 text-caption text-[var(--ink-muted)]">
                         <Badge tone="neutral">{titleCase(goal.goal_type)}</Badge>
                         <span>by {shortDate(goal.target_date)}</span>
                       </div>
                     </div>
                     <button
-                      onClick={(e) => { e.stopPropagation(); void removeGoal(goal.id); }}
-                      className="shrink-0 text-[11px] text-[var(--ink-muted)] hover:text-[#ff8f8f]"
+                      type="button"
+                      aria-label={`Delete the goal ${goal.name}`}
+                      onClick={() => void removeGoal(goal.id)}
+                      className="shrink-0 text-caption text-[var(--ink-muted)] hover:text-[#ff8f8f]"
                     >
                       Delete
                     </button>
@@ -180,7 +201,7 @@ export default function GoalsPage() {
                   <div className="mt-3">
                     <Meter value={progressOf(goal, portfolioValue) * 100} color="var(--series-3)" />
                   </div>
-                  <div className="tabular mt-1.5 flex justify-between text-[11.5px] text-[var(--ink-secondary)]">
+                  <div className="tabular mt-1.5 flex justify-between text-caption text-[var(--ink-secondary)]">
                     <span>
                       {rupeesCompact(savedToward(goal, portfolioValue))} of {rupeesCompact(goal.target_amount)}
                     </span>
@@ -189,7 +210,7 @@ export default function GoalsPage() {
                 </CardBody>
               </Card>
             ))}
-            <p className="px-1 text-[11.5px] text-[var(--ink-muted)]">
+            <p className="px-1 text-caption text-[var(--ink-muted)]">
               Select a goal to see its projection.
             </p>
           </div>
@@ -199,7 +220,14 @@ export default function GoalsPage() {
               <Card><Empty title="Pick a goal"
                            body="Its projection, scenario range and required contribution will appear here." /></Card>
             )}
-            {selected && forecast.loading && <Card><CardBody><Spinner /></CardBody></Card>}
+            {selected && forecast.loading && (
+              <Card><CardBody>
+                <LoadingRegion label="Projecting this goal">
+                  <SkeletonStats count={3} />
+                  <div className="mt-5"><SkeletonChart height={240} title={false} /></div>
+                </LoadingRegion>
+              </CardBody></Card>
+            )}
             {selected && forecast.error && <ErrorNote message={forecast.error} />}
             {forecast.data && <GoalDetail forecast={forecast.data} />}
           </div>
@@ -285,16 +313,16 @@ function GoalDetail({ forecast }: { forecast: GoalForecast }) {
               <div key={label}
                    className="flex items-center justify-between gap-3 rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] px-3.5 py-2.5">
                 <div>
-                  <div className="text-[12.5px] capitalize text-[var(--ink-primary)]">{label}</div>
-                  <div className="tabular text-[11px] text-[var(--ink-muted)]">
+                  <div className="text-small capitalize text-[var(--ink-primary)]">{label}</div>
+                  <div className="tabular text-caption text-[var(--ink-muted)]">
                     {percent(scenario.annual_return, 2)} a year
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="tabular text-[13.5px] text-[var(--ink-primary)]">
+                  <div className="tabular text-body text-[var(--ink-primary)]">
                     {rupeesCompact(scenario.projected_value)}
                   </div>
-                  <div className="tabular text-[11px] text-[var(--ink-muted)]">
+                  <div className="tabular text-caption text-[var(--ink-muted)]">
                     {scenario.funding_ratio !== null ? percent(scenario.funding_ratio, 0) : "—"} funded
                   </div>
                 </div>
@@ -318,12 +346,12 @@ function GoalDetail({ forecast }: { forecast: GoalForecast }) {
             ]}
           />
           {typeof estimate?.note === "string" && (
-            <p className="mt-3 text-[11.5px] leading-relaxed text-[var(--ink-muted)]">{estimate.note}</p>
+            <p className="mt-3 text-caption leading-relaxed text-[var(--ink-muted)]">{estimate.note}</p>
           )}
-          <p className="mt-3 text-[11.5px] leading-relaxed text-[var(--ink-muted)]">
+          <p className="mt-3 text-caption leading-relaxed text-[var(--ink-muted)]">
             {String(forecast.assumptions.current_amount_source ?? "")}
           </p>
-          <p className="mt-3 rounded-[7px] border border-[var(--accent-dim)] bg-[color-mix(in_oklab,var(--accent)_8%,transparent)] px-3 py-2 text-[11.5px] leading-relaxed text-[var(--accent)]">
+          <p className="mt-3 rounded-[7px] border border-[var(--accent-dim)] bg-[color-mix(in_oklab,var(--accent)_8%,transparent)] px-3 py-2 text-caption leading-relaxed text-[var(--accent)]">
             {String(forecast.assumptions.note ?? "")}
           </p>
         </CardBody>
