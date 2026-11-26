@@ -111,6 +111,18 @@ def test_sensitivity_still_works_alongside_both_versions(client, funded):
         assert {"input", "swing", "direction", "saturated"} <= set(entry)
 
 
+def test_v2_sensitivity_uses_v2_scoring(client, funded, seeded_db):
+    from app.models import User
+    from app.services.health_service import build_health_inputs
+    from wealthos_core.health import sensitivity_analysis
+    from wealthos_core.health_v2 import compute_health_score_v2
+
+    body = client.get("/api/v1/health-score?methodology=v2&sensitivity=true", headers=funded).json()
+    user = seeded_db.query(User).filter_by(email="investor@example.com").one()
+    inputs, _ = build_health_inputs(seeded_db, user)
+    assert body["sensitivity"] == sensitivity_analysis(inputs, compute=compute_health_score_v2)
+
+
 # --------------------------------------------------------------------------
 # allocation_drift: hardcoded NaN until Phase 2
 # --------------------------------------------------------------------------

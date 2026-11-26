@@ -92,7 +92,7 @@ export default function OverviewPage() {
         </CardBody></Card>
 
         <Card><CardBody>
-          {score ? (
+          {score && score.total !== null ? (
             <>
               <Stat
                 label="Health score"

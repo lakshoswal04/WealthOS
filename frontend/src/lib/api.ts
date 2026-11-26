@@ -147,6 +147,22 @@ export const api = {
   healthScore: (sensitivity = false) =>
     request<HealthScore>(`${V1}/health-score?sensitivity=${sensitivity}`),
 
+  // ---- decision support ----
+  alerts: () => request<{ alerts: PortfolioAlert[]; unread: number }>(`${V1}/alerts`),
+  generateAlerts: () => request<AlertGeneration>(`${V1}/alerts/generate`, { method: "POST" }),
+  readAlert: (id: number) => request<PortfolioAlert>(`${V1}/alerts/${id}/read`, { method: "POST" }),
+  dismissAlert: (id: number) => request<void>(`${V1}/alerts/${id}`, { method: "DELETE" }),
+
+  // ---- simulated broker connections ----
+  linkedAccounts: () => request<{ accounts: LinkedAccount[]; simulation_notice: string }>(`${V1}/linked-accounts`),
+  linkSandbox: (provider: string, accountReference: string) =>
+    request<LinkedAccount>(`${V1}/linked-accounts`, {
+      method: "POST", body: JSON.stringify({ provider, code: "wealthos-demo-code", account_reference: accountReference }),
+    }),
+  syncAccount: (id: number) => request<{ run: SyncRun; simulation_notice: string }>(`${V1}/linked-accounts/${id}/sync`, { method: "POST" }),
+  syncHistory: (id: number) => request<{ runs: SyncRun[]; simulation_notice: string }>(`${V1}/linked-accounts/${id}/syncs`),
+  disconnectAccount: (id: number) => request<void>(`${V1}/linked-accounts/${id}`, { method: "DELETE" }),
+
   // ---- models ----
   investorProfile: () => request<InvestorProfile>(`${V1}/investor-profile`),
   anomalies: () => request<AnomalyReport>(`${V1}/anomalies`),
@@ -171,6 +187,26 @@ export const api = {
 };
 
 /* ──────────────── types ──────────────── */
+
+export interface PortfolioAlert {
+  id: number; title: string; message: string; severity: string; alert_type: string;
+  metric_value: number | null; threshold: number | null; is_read: boolean; created_at: string | null;
+  details: Record<string, unknown>;
+}
+export interface AlertGeneration {
+  generated_count: number; suppressed_as_already_open: string[]; rejected: { rule: string; reason: string }[];
+  measurement_failures: Record<string, string>;
+}
+export interface LinkedAccount {
+  id: number; display_name: string; provider: string; account_reference: string;
+  status: string; last_successful_sync_at: string | null; last_sync_error: string | null;
+  simulation_notice: string; is_simulated: boolean;
+}
+export interface SyncRun {
+  id: number; status: string; started_at: string | null; holdings_created: number;
+  holdings_updated: number; transactions_created: number; duplicates_skipped: number;
+  error_message: string | null;
+}
 
 export interface UserProfile {
   id: number; email: string; full_name: string | null; age: number | null;
@@ -287,7 +323,7 @@ export interface HealthComponent {
   contribution: number; inputs: Record<string, unknown>; reason: string;
 }
 export interface HealthScore {
-  total: number; grade: string; summary: string; missing_inputs: string[];
+  total: number | null; grade: string; summary: string; missing_inputs: string[];
   components: HealthComponent[]; methodology: string;
   weights: Record<string, number>;
   sensitivity?: {
@@ -295,6 +331,8 @@ export interface HealthScore {
     direction: string; saturated?: boolean;
   }[];
   context: Record<string, unknown>;
+  methodology_version?: string;
+  version_comparison?: { v1_total: number | null; v2_total: number | null; difference: number | null; note: string };
 }
 
 export interface InvestorProfile {
@@ -305,6 +343,11 @@ export interface InvestorProfile {
   investor_features?: Record<string, number>;
   largest_differences_from_cluster?: { feature: string; investor: number; cluster_average: number }[];
   stated_risk_tolerance?: string | null; method?: string; caveat?: string;
+  feature_provenance?: {
+    sources: Record<string, "observed" | "reconstructed" | "unavailable">;
+    confidence: number; confidence_basis: string; note: string;
+    observed_feature_count: number; observable_feature_count: number;
+  };
 }
 
 export interface AnomalyReport {
@@ -327,6 +370,10 @@ export interface Forecast {
   model_predictions?: Record<string, { excess_log_growth: number; projected_value: number }>;
   models_used?: string[];
   assumptions?: Record<string, string>;
+  recommendation?: {
+    recommended_source: string; model_beats_baseline: boolean;
+    walk_forward_mean_skill: number | null; note: string;
+  };
 }
 
 export interface ModelStatus {

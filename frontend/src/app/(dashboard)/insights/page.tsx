@@ -10,6 +10,7 @@ import {
 } from "@/components/ui";
 import { PageHead } from "@/components/ui/shell";
 import { AnomalyTimeline, ClusterComparison, HealthBreakdown } from "@/components/charts";
+import { AlertsPanel } from "@/components/ui/alerts";
 
 export default function InsightsPage() {
   const [horizon, setHorizon] = useState(12);
@@ -25,12 +26,14 @@ export default function InsightsPage() {
         lede="What the models see: your behavioural profile, unusual months, and where the portfolio may be heading."
       />
 
+      <AlertsPanel />
+
       {/* ── health score ── */}
       <Card className="rise">
         <CardHeader
           title="Portfolio Health Score"
           subtitle={health.data?.summary}
-          action={health.data && (
+          action={health.data && health.data.total !== null && (
             <Badge tone={health.data.total >= 70 ? "good" : health.data.total >= 55 ? "warning" : "serious"}>
               {health.data.total.toFixed(0)} / 100 · {health.data.grade}
             </Badge>
@@ -46,7 +49,11 @@ export default function InsightsPage() {
           {health.error && <ErrorNote message={health.error} />}
           {health.data && (
             <>
-              <HealthBreakdown components={health.data.components} />
+              {health.data.total === null ? (
+                <Unavailable reason="A health score is not available yet. Import holdings or add the missing portfolio information to begin measuring it." />
+              ) : (
+                <HealthBreakdown components={health.data.components} />
+              )}
 
               <div className="mt-5 space-y-2.5">
                 {health.data.components.map((component) => (
@@ -98,6 +105,17 @@ export default function InsightsPage() {
                 </div>
               )}
 
+              {health.data.version_comparison && (
+                <div className="mt-5 rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
+                  <h3 className="text-small font-medium text-[var(--ink-primary)]">Methodology comparison</h3>
+                  <p className="mt-2 text-small text-[var(--ink-secondary)]">
+                    Version 1: {health.data.version_comparison.v1_total?.toFixed(1) ?? "not available"} · Version 2: {health.data.version_comparison.v2_total?.toFixed(1) ?? "not available"}
+                    {health.data.version_comparison.difference != null && ` · Difference: ${health.data.version_comparison.difference > 0 ? "+" : ""}${health.data.version_comparison.difference.toFixed(1)} points`}
+                  </p>
+                  <p className="mt-1 text-caption text-[var(--ink-muted)]">{health.data.version_comparison.note} The breakdown above uses {health.data.methodology_version ?? "v1"}.</p>
+                </div>
+              )}
+
               <p className="mt-5 border-t border-[var(--hairline)] pt-3 text-caption leading-relaxed text-[var(--ink-muted)]">
                 {health.data.methodology}
               </p>
@@ -122,6 +140,7 @@ export default function InsightsPage() {
               <div className="mt-5"><SkeletonChart height={220} title={false} /></div>
             </LoadingRegion>
           )}
+          {profile.error && <ErrorNote message={profile.error} />}
           {profile.data && !profile.data.available && <Unavailable reason={profile.data.reason} />}
           {profile.data?.available && (
             <>
@@ -149,6 +168,16 @@ export default function InsightsPage() {
                   {profile.data.caveat}
                 </p>
               )}
+              {profile.data.feature_provenance && (
+                <div className="mt-4 rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
+                  <h3 className="text-small font-medium text-[var(--ink-primary)]">Where the behavioural inputs come from</h3>
+                  <ul className="mt-2 space-y-1">{Object.entries(profile.data.feature_provenance.sources).map(([name, source]) => (
+                    <li key={name} className="flex justify-between gap-3 text-small"><span className="text-[var(--ink-secondary)]">{titleCase(name)}</span><span className="text-[var(--ink-primary)]">{titleCase(source)}</span></li>
+                  ))}</ul>
+                  <p className="mt-3 text-caption text-[var(--ink-secondary)]">Recorded transaction coverage: {percent(profile.data.feature_provenance.confidence, 0)}. {profile.data.feature_provenance.confidence_basis}</p>
+                  <p className="mt-2 text-caption text-[var(--ink-muted)]">{profile.data.feature_provenance.note}</p>
+                </div>
+              )}
             </>
           )}
         </CardBody>
@@ -171,6 +200,7 @@ export default function InsightsPage() {
               <SkeletonChart height={160} title={false} />
             </LoadingRegion>
           )}
+          {anomalies.error && <ErrorNote message={anomalies.error} />}
           {anomalies.data && !anomalies.data.available && <Unavailable reason={anomalies.data.reason} />}
           {anomalies.data?.available && (
             <>
@@ -249,6 +279,7 @@ export default function InsightsPage() {
               <div className="mt-5"><SkeletonChart height={240} title={false} /></div>
             </LoadingRegion>
           )}
+          {forecast.error && <ErrorNote message={forecast.error} />}
           {forecast.data && !forecast.data.available && <Unavailable reason={forecast.data.reason} />}
           {forecast.data?.available && (
             <>
@@ -256,9 +287,17 @@ export default function InsightsPage() {
                 <Stat label="Today" value={rupeesCompact(forecast.data.current_value)} />
                 <Stat label="Baseline" value={rupeesCompact(forecast.data.baseline_value)}
                       sub="value plus contributions, zero return" />
-                <Stat label="Projected" value={rupeesCompact(forecast.data.projected_value)}
+                <Stat label="Model ensemble" value={rupeesCompact(forecast.data.projected_value)}
                       sub={`${percent(forecast.data.projected_growth_over_baseline ?? 0, 2, true)} over baseline`} />
               </div>
+
+              {forecast.data.recommendation && (
+                <div className="mt-4 rounded-[8px] border border-[var(--accent-dim)] bg-[var(--accent-wash)] p-4 text-small text-[var(--ink-secondary)]">
+                  <p className="font-medium text-[var(--ink-primary)]">Evaluation recommendation: {titleCase(forecast.data.recommendation.recommended_source)}</p>
+                  {!forecast.data.recommendation.model_beats_baseline && <p className="mt-1">The model did not beat the mean-drift baseline across the evaluation folds. The model ensemble above is shown for comparison; the mean-drift baseline value is not supplied by this endpoint. The zero-return baseline shown above is a different measure.</p>}
+                  <p className="mt-1">{forecast.data.recommendation.note}</p>
+                </div>
+              )}
 
               {forecast.data.projection_range && (
                 <div className="mt-5 rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">

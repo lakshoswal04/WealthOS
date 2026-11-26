@@ -75,7 +75,10 @@ class Settings(BaseSettings):
     # SettingsError at boot and the whole API fails to start -- which is the
     # exact value a deployment runbook tells you to set.
     cors_origins: Annotated[list[str], NoDecode] = Field(
-        default=["http://localhost:3000", "http://127.0.0.1:3000"],
+        default=[
+            "http://localhost:3000", "http://127.0.0.1:3000",
+            "http://localhost:3001", "http://127.0.0.1:3001",
+        ],
         alias="CORS_ORIGINS",
     )
 

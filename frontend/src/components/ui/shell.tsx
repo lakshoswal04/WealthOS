@@ -167,7 +167,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
         <main
           id="main"
-          className="mx-auto w-full max-w-[1220px] px-4 py-7 sm:px-7 lg:py-9"
+          key={pathname}
+          className="page-enter mx-auto w-full max-w-[1220px] px-4 py-7 sm:px-7 lg:py-9"
         >
           {children}
         </main>

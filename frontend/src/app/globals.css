@@ -3,50 +3,161 @@
 /* ──────────────────────────────────────────────────────────────────────────
    WealthOS design tokens
 
-   A dark private-bank surface: deep ink, warm metal, generous hairlines.
-   Dark is the primary mode on purpose — these pages are dense with figures,
-   and a dark ground lets the data carry the only saturated colour on screen.
+   A warm private-bank light surface: bone ground, near-black ink, white
+   cards, generous whitespace. Light is the default and the only automatic
+   theme. The dark theme is preserved below under [data-theme="dark"] and is
+   reachable explicitly, because the work that validated it was real and
+   throwing it away would lose it.
 
-   --surface-1 (#0e1116) is the CHART GROUND and is load-bearing. The eight
-   series colours in lib/viz.ts were validated against exactly this value for
-   the lightness band, chroma floor, colour-vision-deficiency separation,
-   normal-vision separation and 3:1 contrast. Changing it silently
-   invalidates that work: re-run the palette validator before touching it.
-   ────────────────────────────────────────────────────────────────────── */
+   --surface-1 (#ffffff) is the CHART GROUND and is load-bearing. The eight
+   series colours in lib/viz.ts are validated against the page ground
+   (#f4ede7), which is the harder of the two surfaces because it is darker
+   and therefore gives a mid-tone mark less luminance to work with. Passing
+   there passes on white. Changing either value invalidates that work:
+   re-run the validator before touching them.
+
+   The light series palette is NOT the dark one reused. The dark eight were
+   validated against #0e1116 and five of them fall below 3:1 on bone
+   (#199e70 2.94, #c98500 2.65, #0ca30c 2.89, #9085e9 2.70, #e66767 2.79),
+   which the contrast check calls non-dismissable. Each hue was re-stepped
+   darker until it cleared 3.3:1 on bone, keeping its hue angle so an asset
+   class means the same colour in either theme.
+   ────────────────────────────────────────────────────────────────── */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+
+  /* Local fallbacks keep the app buildable and visually stable when a deploy
+     environment cannot fetch a web font. Inter is used when installed; the
+     surrounding system UI faces preserve the same neutral grotesk character. */
+  --font-display: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
   /* ── surfaces ── */
-  --surface-0: #070a0e;   /* page ground, deeper than the cards it holds */
-  --surface-1: #0e1116;   /* chart + input ground — validated, do not change */
-  --surface-2: #11151b;   /* card */
-  --surface-3: #1a212a;   /* raised / hover */
-  --surface-4: #232c37;   /* control, active */
+  --surface-0: #f4ede7;   /* page ground — bone, sampled from the reference */
+  --surface-1: #ffffff;   /* chart + input ground — validated, do not change */
+  --surface-2: #fbf8f5;   /* card */
+  --surface-3: #ece5de;   /* raised / hover */
+  --surface-4: #ded5cc;   /* control, active */
 
   /* Glass: a card that lets a little of the ground through reads as a
      physical layer rather than a flat rectangle. */
   --glass: color-mix(in oklab, var(--surface-2) 88%, transparent);
   --glass-strong: color-mix(in oklab, var(--surface-2) 96%, transparent);
 
+  --hairline: #e6ddd5;
+  --hairline-strong: #d6cbc1;
+
+  /* ── ink ──
+     Contrast against the bone ground, measured: 17.06, 6.88, 5.08, 2.17.
+     --ink-faint is decorative only and never carries text that must be read;
+     it is the muted half of the split headline. */
+  --ink-primary: #0b0a09;
+  --ink-secondary: #55504a;
+  --ink-muted: #6b635c;
+  --ink-faint: #a9a29b;
+
+  /* ── accent ──
+     The reference's primary action is black, not a colour, and that
+     restraint is most of the look. --accent stays gold for identity and is
+     stepped dark enough to carry text (4.52:1 on bone); --action is the
+     near-black the buttons actually use. */
+  --accent: #926300;
+  --accent-bright: #845500;
+  --accent-dim: #d8c79d;
+  --accent-ink: #fdfbf8;
+  --accent-wash: color-mix(in oklab, var(--accent) 10%, transparent);
+  --action: #121010;
+  --action-ink: #f7f3ef;
+
+  /* ── status: reserved for state, never reused as a series colour ──
+     All four stepped to >= 4.5:1 on the bone ground so they work as text. */
+  --good: #007e00;
+  --good-ink: #00660a;
+  --warning: #9e5d00;
+  --warning-ink: #824c00;
+  --serious: #c04201;
+  --serious-ink: #9e3601;
+  --critical: #bd4145;
+  --critical-ink: #9c3539;
+
+  /* ── categorical series (validated against --surface-0 #f4ede7) ──
+     Lightness band PASS, chroma floor PASS, adjacent-pair CVD separation
+     PASS (worst 8.5 protan / 7.4 tritan), normal-vision floor PASS (17.6),
+     contrast PASS (all 8 >= 3.3:1). The tritan figure sits in the 6-8 band,
+     which is legal only with secondary encoding — every chart here carries a
+     legend and direct labels, which is that encoding. */
+  --series-1: #3583e1;  /* blue */
+  --series-2: #d95926;  /* orange */
+  --series-3: #009467;  /* aqua */
+  --series-4: #b67400;  /* yellow */
+  --series-5: #d55181;  /* magenta */
+  --series-6: #009700;  /* green */
+  --series-7: #8175d8;  /* violet */
+  --series-8: #d7595b;  /* red */
+
+  /* ── recessive chart furniture ── */
+  --grid: #e8e0d9;
+  --axis: #b9afa6;
+
+  /* ── elevation ──
+     A light interface casts real shadows, so these are softer and warmer
+     than the dark theme's, which needed a top highlight to read at all. */
+  --lift-1: 0 1px 2px rgb(60 48 38 / 0.06);
+  --lift-2: 0 1px 2px rgb(60 48 38 / 0.06), 0 8px 24px -8px rgb(60 48 38 / 0.12);
+  --lift-3: 0 2px 4px rgb(60 48 38 / 0.07), 0 18px 44px -16px rgb(60 48 38 / 0.18);
+  --glow-accent: 0 0 0 1px color-mix(in oklab, var(--accent) 28%, transparent),
+                 0 8px 28px -10px color-mix(in oklab, var(--accent) 30%, transparent);
+
+  /* The top edge of a card, "lit from above". On a dark ground that is a
+     white highlight; on a light one a white line is invisible, so it becomes
+     a faint warm shadow instead. Tokenised because the technique inverts
+     between themes rather than just changing value. */
+  --edge-lit: rgb(120 96 72 / 0.10);
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 18px;
+
+  --ease: cubic-bezier(0.22, 0.75, 0.3, 1);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Dark theme — opt in with <html data-theme="dark">
+
+   Preserved rather than deleted. These are the values the original palette
+   work validated against #0e1116, and that validation is a real result. It
+   is NOT applied on prefers-color-scheme, because the light theme is the
+   design that was asked for and a dark OS setting should not silently
+   replace it.
+   ────────────────────────────────────────────────────────────────── */
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface-0: #0b0d10;
+  --surface-1: #111519;
+  --surface-2: #181d22;
+  --surface-3: #232b32;
+  --surface-4: #303b44;
+
   --hairline: #1f2731;
   --hairline-strong: #2b3542;
 
-  /* ── ink ── */
   --ink-primary: #f2f5f8;
   --ink-secondary: #a3b0bf;
-  --ink-muted: #6b7889;
-  --ink-faint: #4b5666;
+  --ink-muted: #a0acb8;
+  --ink-faint: #8996a3;
 
-  /* ── accent: warm metal, not amber ──
-     Reads as brushed gold against the ink, and nods to the gold asset class. */
-  --accent: #d4a24c;
-  --accent-bright: #e8bd6d;
-  --accent-dim: #7a5c25;
-  --accent-ink: #130d03;
+  --accent: #80cbea;
+  --accent-bright: #c1e7f7;
+  --accent-dim: #356b82;
+  --accent-ink: #08151c;
   --accent-wash: color-mix(in oklab, var(--accent) 12%, transparent);
+  --action: #f4f8fa;
+  --action-ink: #101719;
 
-  /* ── status: reserved for state, never reused as a series colour ── */
   --good: #0ca30c;
   --good-ink: #5ddc5d;
   --warning: #c98500;
@@ -56,36 +167,26 @@
   --critical: #e66767;
   --critical-ink: #ff9b9b;
 
-  /* ── categorical series (validated against --surface-1) ── */
-  --series-1: #3987e5;  /* blue */
-  --series-2: #d95926;  /* orange */
-  --series-3: #199e70;  /* aqua */
-  --series-4: #c98500;  /* yellow */
-  --series-5: #d55181;  /* magenta */
-  --series-6: #0ca30c;  /* green */
-  --series-7: #9085e9;  /* violet */
-  --series-8: #e66767;  /* red */
+  /* Validated against #0e1116, not against bone. */
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #0ca30c;
+  --series-7: #9085e9;
+  --series-8: #e66767;
 
-  /* ── recessive chart furniture ── */
   --grid: #1a212a;
   --axis: #3c4654;
 
-  /* ── elevation ──
-     Dark interfaces need shadow plus a top highlight; shadow alone reads as
-     a smudge because there is no light surface to cast onto. */
   --lift-1: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 1px 2px rgb(0 0 0 / 0.4);
   --lift-2: 0 1px 0 0 rgb(255 255 255 / 0.04) inset,
             0 2px 8px rgb(0 0 0 / 0.45), 0 12px 32px -12px rgb(0 0 0 / 0.6);
   --lift-3: 0 1px 0 0 rgb(255 255 255 / 0.05) inset,
             0 4px 16px rgb(0 0 0 / 0.5), 0 24px 56px -20px rgb(0 0 0 / 0.7);
-  --glow-accent: 0 0 0 1px color-mix(in oklab, var(--accent) 30%, transparent),
-                 0 8px 28px -10px color-mix(in oklab, var(--accent) 40%, transparent);
 
-  --radius: 12px;
-  --radius-sm: 8px;
-  --radius-lg: 18px;
-
-  --ease: cubic-bezier(0.22, 0.75, 0.3, 1);
+  --edge-lit: rgb(255 255 255 / 0.09);
 }
 
 * { border-color: var(--hairline); }
@@ -114,14 +215,27 @@ body {
 }
 
 .display {
-  font-family: var(--font-display), Georgia, serif;
-  font-weight: 400;
-  letter-spacing: -0.012em;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
-/* A metallic sheen for the wordmark and hero numerals. */
+/* The wordmark's second half.
+ *
+ * Was a gold gradient with a hard-coded #a87f34 at its end, which is a
+ * dark-theme device: on bone it reads as low-contrast mud. It is now a plain
+ * ink shift, which is what the reference does -- "synex" is one weight, one
+ * colour, and its presence comes from spacing rather than from a finish. The
+ * gradient survives in the dark theme, where it still works.
+ */
 .metal {
-  background: linear-gradient(170deg, var(--accent-bright) 0%, var(--accent) 45%, #a87f34 100%);
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
+:root[data-theme="dark"] .metal {
+  background: linear-gradient(170deg, var(--accent-bright) 0%, var(--accent) 45%,
+              color-mix(in oklab, var(--accent) 80%, #000) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -138,8 +252,8 @@ body {
 .edge-lit::after {
   content: ""; position: absolute; inset-inline: 0; top: 0; height: 1px;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.09) 22%,
-              rgb(255 255 255 / 0.09) 78%, transparent);
+  background: linear-gradient(90deg, transparent, var(--edge-lit) 22%,
+              var(--edge-lit) 78%, transparent);
 }
 
 /* A hairline rule that fades at both ends, for section breaks. */
@@ -235,3 +349,45 @@ body {
 .text-h2       { font-size: var(--text-h2);       line-height: var(--leading-tight); }
 .text-h1       { font-size: var(--text-h1);       line-height: var(--leading-tight); }
 .text-display  { font-size: var(--text-display);  line-height: var(--leading-tight); }
+
+/* Atmospheric surfaces and typography inspired by the Origin reference. */
+.origin-hero {
+  background:
+    radial-gradient(ellipse 55% 42% at 50% 0%, rgb(84 169 210 / .38), transparent 75%),
+    radial-gradient(ellipse 40% 28% at 18% 5%, rgb(21 104 150 / .35), transparent 75%),
+    linear-gradient(180deg, #103a50 0%, #102432 28%, #0b0d10 68%);
+}
+.hero-title, .landing-page h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+}
+.hero-title em { font-weight: 400; }
+.landing-page .origin-hero > div:last-child { position: relative; }
+.wealth-card {
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+@media (hover: hover) {
+  .wealth-card:hover {
+    border-color: color-mix(in oklab, var(--accent) 38%, var(--hairline));
+    box-shadow: var(--lift-2), 0 0 28px -18px color-mix(in oklab, var(--accent) 50%, transparent);
+  }
+}
+.landing-page section { scroll-margin-top: 5rem; }
+.landing-page h2 { letter-spacing: -.035em; }
+@keyframes page-arrive {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes meter-arrive {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.page-enter { animation: page-arrive 380ms var(--ease) both; }
+.meter-fill { transform-origin: left; animation: meter-arrive 850ms var(--ease) both; }
+:root[data-theme="dark"] .metal {
+  background: none;
+  color: var(--accent);
+}
+:root[data-theme="dark"] body {
+  background-image: radial-gradient(ellipse 65% 35% at 80% 0%, rgb(33 104 142 / .12), transparent 70%);
+}

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { api, type ImportResult } from "@/lib/api";
 import { Badge, Button, Card, CardBody, CardHeader, ErrorNote } from "@/components/ui";
 import { PageHead } from "@/components/ui/shell";
+import { LinkedAccounts } from "@/components/ui/linked-accounts";
 
 const TEMPLATE = `symbol,asset_type,quantity,average_price,purchase_date
 RELIANCE,Equity,40,1150.50,2022-03-15
@@ -167,6 +168,7 @@ export default function ImportPage() {
           </Card>
         </div>
       </div>
+      <LinkedAccounts />
     </>
   );
 }

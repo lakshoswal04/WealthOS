@@ -13,7 +13,7 @@ export function Card({ className, tone = "default", children, ...rest }:
     <div
       {...rest}
       className={clsx(
-        "grain edge-lit relative overflow-hidden rounded-[var(--radius)] border backdrop-blur-[2px]",
+        "wealth-card grain edge-lit relative overflow-hidden rounded-[var(--radius)] border backdrop-blur-[2px]",
         tone === "accent"
           ? "border-[var(--accent-dim)] bg-[var(--glass-strong)] shadow-[var(--glow-accent)]"
           : tone === "flat"
@@ -99,7 +99,7 @@ export function Meter({ value, max = 100, color }: { value: number; max?: number
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
       <div
-        className="h-full rounded-full transition-[width] duration-[900ms] ease-[var(--ease)]"
+        className="meter-fill h-full rounded-full transition-[width] duration-[900ms] ease-[var(--ease)]"
         style={{
           width: `${pct}%`,
           background: color ?? "linear-gradient(90deg, var(--accent-dim), var(--accent))",
@@ -141,11 +141,17 @@ export function Button({ variant = "primary", size = "md", className, ...rest }:
   }
 ) {
   const variants = {
+    // A flat near-black pill, not a gold gradient. The reference's restraint
+    // is most of its character: one black action per view, everything else
+    // a hairline. --action flips to gold in the dark theme, where black on
+    // near-black would vanish.
     primary:
-      "bg-gradient-to-b from-[var(--accent-bright)] to-[var(--accent)] text-[var(--accent-ink)] " +
-      "shadow-[var(--lift-1)] hover:brightness-110 active:brightness-95 disabled:from-[var(--accent-dim)] disabled:to-[var(--accent-dim)]",
+      "rounded-full bg-[var(--action)] text-[var(--action-ink)] " +
+      "shadow-[var(--lift-1)] hover:opacity-90 active:opacity-100 " +
+      "disabled:bg-[var(--surface-4)] disabled:text-[var(--ink-muted)]",
     ghost:
-      "border border-[var(--hairline-strong)] bg-transparent text-[var(--ink-primary)] hover:border-[var(--surface-4)] hover:bg-[var(--surface-3)]",
+      "rounded-full border border-[var(--hairline-strong)] bg-transparent text-[var(--ink-primary)] " +
+      "hover:border-[var(--surface-4)] hover:bg-[var(--surface-3)]",
     subtle: "bg-[var(--surface-3)] text-[var(--ink-primary)] hover:bg-[var(--surface-4)]",
     danger:
       "border border-[color-mix(in_oklab,var(--critical)_45%,transparent)] bg-transparent text-[var(--critical-ink)] " +
@@ -170,10 +176,11 @@ export function LinkButton({ href, variant = "primary", size = "md", className, 
 }) {
   const variants = {
     primary:
-      "bg-gradient-to-b from-[var(--accent-bright)] to-[var(--accent)] text-[var(--accent-ink)] " +
-      "shadow-[var(--lift-1)] hover:brightness-110",
+      "rounded-full bg-[var(--action)] text-[var(--action-ink)] " +
+      "shadow-[var(--lift-1)] hover:opacity-90",
     ghost:
-      "border border-[var(--hairline-strong)] bg-transparent text-[var(--ink-primary)] hover:bg-[var(--surface-3)]",
+      "rounded-full border border-[var(--hairline-strong)] bg-transparent text-[var(--ink-primary)] " +
+      "hover:bg-[var(--surface-3)]",
   };
   const sizes = { sm: "px-2.5 py-1.5 text-small", md: "px-4 py-2 text-body", lg: "px-5 py-2.5 text-body-lg" };
   return (

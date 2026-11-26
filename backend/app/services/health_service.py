@@ -359,6 +359,7 @@ def health_score(
     }
 
     if include_sensitivity:
-        payload["sensitivity"] = sensitivity_analysis(inputs)
+        scorer = compute_health_score_v2 if methodology == "v2" else compute_health_score
+        payload["sensitivity"] = sensitivity_analysis(inputs, compute=scorer)
 
     return payload

@@ -42,35 +42,33 @@ export default function LandingPage() {
     <>
       <PublicHeader />
 
-      <main className="pt-16">
+      <main className="landing-page pt-16">
         {/* ───────────────────────── hero ───────────────────────── */}
-        <section className="relative overflow-hidden">
+        <section className="origin-hero relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute left-1/2 top-[-18rem] h-[36rem] w-[64rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,color-mix(in_oklab,var(--accent)_13%,transparent),transparent_66%)] blur-2xl" />
           </div>
 
           <div className="mx-auto w-full max-w-[1180px] px-5 pb-16 pt-20 lg:pt-28">
-            <div className="stagger max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--hairline-strong)] bg-[var(--surface-2)] px-3 py-1.5 text-caption text-[var(--ink-secondary)]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                Academic research prototype · Polaris School of Technology
-              </div>
-
-              <h1 className="display mt-7 text-[clamp(2.6rem,6.2vw,4.4rem)] leading-[1.03] tracking-[-0.025em] text-[var(--ink-primary)]">
-                The intelligence layer
-                <br />
-                for <span className="metal">personal wealth</span>.
-              </h1>
-
-              <p className="mt-6 max-w-2xl text-body-lg leading-relaxed text-[var(--ink-secondary)]">
-                Most investors can tell you what they own. Far fewer can tell you
-                how risky it is, whether it is genuinely diversified, or whether
-                it will actually reach the goals it exists for. WealthOS measures
-                all three from fifteen years of real Indian market history — then
-                explains the result in plain language.
+            {/* Centred, with a letterspaced eyebrow above a two-line headline
+                whose first line is muted and second is full ink. The weight
+                split is what gives the line its shape — a single-weight
+                headline at this size reads as a wall. */}
+            <div className="stagger mx-auto max-w-3xl text-center">
+              <p className="text-caption font-medium uppercase tracking-[0.22em] text-[var(--ink-muted)]">
+                Portfolio intelligence, measured
               </p>
 
-              <div className="mt-9 flex flex-wrap items-center gap-3">
+              <h1 className="hero-title mt-6 text-[clamp(3rem,7vw,6rem)] leading-[1.02] tracking-[-0.045em] text-[var(--ink-primary)]">
+                <em>Understand</em> your wealth
+              </h1>
+
+              <p className="mx-auto mt-6 max-w-xl text-body-lg leading-relaxed text-[var(--ink-muted)]">
+                Your portfolio, risk, and goals in one clear picture. Explore your
+                wealth with intelligence grounded in real market history.
+              </p>
+
+              <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 {user ? (
                   <LinkButton href="/overview" size="lg">Go to your dashboard</LinkButton>
                 ) : (
