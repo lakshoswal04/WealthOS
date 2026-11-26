@@ -101,7 +101,31 @@ for colour-vision-deficiency separation and contrast.
 
 ## Data model
 
-Nine tables. Two decisions worth noting:
+Eleven tables. Three of the original nine were **defined, migrated and never
+written to**, which is worth recording because finding them changed what
+several later phases needed to build:
+
+| Table | Was | Now |
+|---|---|---|
+| `alerts` | Dead. Schema already carried `title`, `message`, `metric_value`, `threshold`, a `details` JSONB and an `alert_type` enum listing exactly the six categories the decision-support requirement asks for. | The decision-support engine writes it. Phase 6 implemented a write path rather than designing something new. |
+| `model_outputs` | Dead. | Stores each health score, which is what makes `health_score_drop` measurable: comparing today's score to the last one requires having kept the last one. |
+| `portfolio_snapshots` | Dead. | **Still dead, deliberately.** Allocation drift was supposed to come from here. It comes from the transaction record instead, with the reconstructed price path as a labelled fallback — both better sources than snapshots nobody writes. Left in place rather than dropped, with this note, so the next person does not rediscover it as an opportunity. |
+
+Two tables were added for account linking: `linked_accounts` and
+`account_sync_runs`. Both are described in
+[`docs/account-linking.md`](account-linking.md). The access and refresh token
+columns are named `*_encrypted` on purpose — a column called `access_token`
+invites someone to log it.
+
+`transactions` gained `external_id` with a unique constraint on
+`(user_id, external_id)`. That is what makes a repeated broker sync
+idempotent, and it has to be the provider's own identifier rather than
+`(date, symbol, value)`: two genuine trades in the same stock on the same day
+at the same price are two trades, and content matching silently merges them.
+The constraint means a bug in the dedupe query becomes an error rather than a
+duplicated portfolio.
+
+Two further decisions worth noting:
 
 **Market data has no foreign key to users.** It is reference data shared by
 every account. Mixing it with user records is how portfolio systems end up

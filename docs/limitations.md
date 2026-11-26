@@ -144,3 +144,58 @@ that two users cannot see each other's data — not for throughput.
 **One process holds the price cache in memory.** Several API replicas would
 each hold their own copy, which is fine at this size but is not a shared
 cache.
+
+## Account linking
+
+**No broker is connected.** The integration layer is complete and tested —
+authorisation, encrypted tokens, refresh, sync, duplicate suppression, and
+the handling of expiry, revocation, rate limits, outages, partial responses
+and missing scopes — against a simulated provider that contacts nothing. What
+is missing is an account and an approval, not a design;
+[`docs/account-linking.md`](account-linking.md) states exactly what live
+access to Zerodha, Upstox or Groww requires.
+
+**Daily token expiry is the binding product constraint, not an
+implementation gap.** Both brokers with self-service APIs expire access
+tokens once a day with no silent refresh — Zerodha around 06:00 IST, Upstox
+at 03:30. Any claim of continuous background sync against them would be
+false. A production system has to prompt the user daily.
+
+**Groww cannot be supported without a commercial agreement.** It has no
+public developer programme, so no amount of engineering reaches it. It is
+listed as a sandbox provider only.
+
+**Sync is a full pull, not incremental.** The sandbox honours a `since`
+watermark and the service does not pass one. Correct and cheap at this scale,
+wasteful at a real one.
+
+**One secret protects both sessions and tokens.** The Fernet key is derived
+from `JWT_SECRET_KEY`, so rotating it invalidates stored broker tokens as
+well as logins. A dedicated key would be better practice; one secret was
+chosen because two secrets that must both be set correctly is two chances to
+deploy with a default, and a token encrypted under
+`insecure-development-key` is not encrypted.
+
+## Decision support
+
+**Alerts describe measurements, never trades.** "Your largest holding is 38%
+of the portfolio" is a measurement; "reduce it" is investment advice, and this
+platform is not licensed to give it. The distinction is enforced rather than
+documented: every generated message is scanned for advisory phrasing and
+refused if it matches, and a test plants a rule saying "you should sell some
+of this position" to prove the gate rejects.
+
+**Every alert message is checked against the measurements that produced it**,
+using the same groundedness machinery as the Copilot. A rule that states a
+figure the services did not compute is refused, and the refusal is reported
+rather than hidden, because a rule that keeps failing verification is a bug
+worth seeing.
+
+**Alerts are generated on request, not on a schedule.** There is no
+background job and no notification delivery. `POST /alerts/generate` is
+called by the client; an alert of the same type raised in the last 24 hours
+is not recreated.
+
+**`health_score_drop` needs two measurements to exist.** On a first run there
+is nothing to have dropped from, and the rule correctly stays silent rather
+than inventing a comparison.
