@@ -20,6 +20,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, status
 
+from app.api.deps import CurrentUser
 from app.core.config import settings
 
 log = logging.getLogger("wealthos.research")
@@ -96,8 +97,17 @@ def one_report(name: str) -> dict:
 
 
 @router.post("/reports/refresh", include_in_schema=False)
-def refresh() -> dict:
-    """Drop the cache, so a re-run of the pipelines is picked up."""
+def refresh(user: CurrentUser) -> dict:
+    """Drop the cache, so a re-run of the pipelines is picked up.
+
+    Requires a session. The reports themselves are public -- they are
+    published training evidence and contain no user data -- but this endpoint
+    changes server state and was reachable by anyone, which made repeatedly
+    forcing a disk re-read free. Found by the route audit in
+    tests/test_route_isolation.py, which enumerates the live router rather
+    than a hand-kept list, so it caught an endpoint nobody had looked at
+    since it was written.
+    """
     with _lock:
         _cache.clear()
     return {"cleared": True}
