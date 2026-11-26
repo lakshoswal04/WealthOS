@@ -108,7 +108,7 @@ export default function RiskPage() {
         </CardBody>
       </Card>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+      <div className="mt-5 grid gap-5 md:grid-cols-2">
         <Card className="rise">
           <CardHeader
             title="Risk against return"
@@ -147,7 +147,7 @@ export default function RiskPage() {
             subtitle="A portfolio is not diversified merely because it holds many things."
           />
           <CardBody>
-            <div className="grid gap-4 sm:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
               <Stat label="Holdings" value={conc.n_holdings} />
               <Stat label="Effective holdings" value={conc.effective_holdings.toFixed(1)}
                     hint="1 / HHI — how many equally weighted positions this behaves like" />

@@ -82,7 +82,7 @@ export default function PortfolioPage() {
           <CardHeader title="Add a holding"
                       subtitle="Enter the split-adjusted cost; prices here are adjusted for bonuses and splits." />
           <CardBody>
-            <form onSubmit={addHolding} className="grid gap-3 sm:grid-cols-4">
+            <form onSubmit={addHolding} className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
               {formError && <div className="sm:col-span-4"><ErrorNote message={formError} /></div>}
               <Field label="Symbol">
                 <input
@@ -129,7 +129,7 @@ export default function PortfolioPage() {
         </Card>
       ) : (
         <>
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2">
             <Card className="rise">
               <CardHeader title="By asset class" />
               <CardBody>

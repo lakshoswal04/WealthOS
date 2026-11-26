@@ -109,7 +109,7 @@ function ClusteringSection({ report, map }: { report?: Report; map?: Report }) {
         label is known, makes the second measurable at all.
       </Note>
 
-      <div className="mt-4 grid gap-5 lg:grid-cols-2">
+      <div className="mt-4 grid gap-5 md:grid-cols-2">
         <Card>
           <CardHeader title="Choosing k"
                       subtitle="Silhouette across every candidate. k was selected, not assumed." />
@@ -167,7 +167,7 @@ function ClusteringSection({ report, map }: { report?: Report; map?: Report }) {
         <CardHeader title="The groups it found"
                     subtitle="Named from the fitted centroids after training, never decided in advance." />
         <CardBody>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
             {[...clusters].sort((a, b) => b.size - a.size).map((cluster) => (
               <div key={cluster.cluster}
                    className="rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
@@ -258,7 +258,7 @@ function AnomalySection({ report }: { report?: Report }) {
         deep model has to earn its place — and it does, by a wide margin.
       </Note>
 
-      <div className="mt-4 grid gap-5 lg:grid-cols-2">
+      <div className="mt-4 grid gap-5 md:grid-cols-2">
         <Card>
           <CardHeader title="Against a shallow baseline"
                       subtitle="The same features, the same threshold selection, a standard detector." />
@@ -487,7 +487,19 @@ function CopilotSection({ report }: { report?: Report }) {
 /* ───────────────────────── splits ───────────────────────── */
 
 function SplitsSection({ report }: { report?: Report }) {
-  if (!isAvailable(report)) return null;
+  // `return null` here made the whole section vanish with no
+  // explanation, so a reader could not tell an unavailable report
+  // from a page that had finished rendering.
+  if (!isAvailable(report)) {
+    return (
+      <Card className="mt-5">
+        <CardHeader title="Train, validation and test split boundaries" />
+        <CardBody>
+          <Unavailable reason="The split report has not been generated yet. Run the training pipeline to produce it." />
+        </CardBody>
+      </Card>
+    );
+  }
 
   const boundaries = record(report, "split_boundaries");
   const forecast = record(report, "forecast");

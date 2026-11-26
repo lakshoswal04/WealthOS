@@ -53,6 +53,13 @@ test.beforeAll(async ({ request }) => {
   expect(health.ok(), `API at ${API} is not reachable`).toBeTruthy();
 });
 
+/*
+ * Card titles render as <h2>, so these assertions target the heading role
+ * rather than any element whose text contains the phrase. Bare text matches
+ * were passing by luck: they also matched the screen-reader labels on the new
+ * loading placeholders, which made the assertion a race between the skeleton
+ * disappearing and the heading appearing.
+ */
 test("the full demonstration journey works end to end", async ({ page }) => {
   await register(page);
 
@@ -108,9 +115,9 @@ test("the full demonstration journey works end to end", async ({ page }) => {
   // ---- insights ----
   await page.getByRole("link", { name: /^Insights/ }).click();
   await page.waitForURL("**/insights");
-  await expect(page.getByText("Portfolio Health Score")).toBeVisible({ timeout: 25_000 });
-  await expect(page.getByText("What moves the score")).toBeVisible({ timeout: 25_000 });
-  await expect(page.getByText("Wealth forecast")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Portfolio Health Score" })).toBeVisible({ timeout: 25_000 });
+  await expect(page.getByRole("heading", { name: "What moves the score" })).toBeVisible({ timeout: 25_000 });
+  await expect(page.getByRole("heading", { name: "Wealth forecast" })).toBeVisible();
 
   // ---- copilot ----
   await page.getByRole("link", { name: /^Copilot/ }).click();
@@ -133,7 +140,13 @@ test("a malformed CSV is rejected in full and says why", async ({ page }) => {
   });
   await page.getByRole("button", { name: "Import" }).click();
 
-  await expect(page.getByText("Rejected")).toBeVisible({ timeout: 20_000 });
+  // Targets the outcome badge rather than any element containing the word.
+  // A bare text match broke when the results table gained a screen-reader
+  // caption that also mentions rejected rows -- the assertion was testing
+  // the copy, not the outcome.
+  const outcome = page.getByTestId("import-outcome");
+  await expect(outcome).toBeVisible({ timeout: 20_000 });
+  await expect(outcome).toHaveText("Rejected");
   await expect(page.getByText(/Nothing was saved/)).toBeVisible();
   await expect(page.getByText(/not a supported symbol/)).toBeVisible();
 

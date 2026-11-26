@@ -24,7 +24,7 @@ export default function OverviewPage() {
     return (
       <LoadingRegion label="Valuing your portfolio">
         <SkeletonStats count={4} />
-        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
           <SkeletonChart height={260} />
           <SkeletonChart height={260} />
         </div>

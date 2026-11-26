@@ -155,7 +155,7 @@ export function ScenarioSimulator({ goalId }: { goalId: number }) {
               target={simulation.target_amount}
             />
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
               {([["p10", "Worst 10%"], ["p25", "Lower 25%"],
                  ["p75", "Upper 25%"], ["p90", "Best 10%"]] as const).map(([key, label]) => (
                 <div key={key}

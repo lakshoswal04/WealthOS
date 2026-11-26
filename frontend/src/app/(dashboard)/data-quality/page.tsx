@@ -71,7 +71,7 @@ function SourcesSection({ seed, priors }: { seed?: Report; priors?: Report }) {
         </CardBody></Card>
       </div>
 
-      <div className="mt-4 grid gap-px overflow-hidden rounded-[var(--radius)] border border-[var(--hairline)] bg-[var(--hairline)] lg:grid-cols-2">
+      <div className="mt-4 grid gap-px overflow-hidden rounded-[var(--radius)] border border-[var(--hairline)] bg-[var(--hairline)] md:grid-cols-2">
         {[
           {
             name: "Kaggle — NSE India Stock Data", kind: "Real",
@@ -195,7 +195,7 @@ function AdjustmentSection({ report }: { report?: Report }) {
         do exactly that on the unadjusted series.
       </Note>
 
-      <div className="mt-4 grid gap-5 lg:grid-cols-2">
+      <div className="mt-4 grid gap-5 md:grid-cols-2">
         <Card>
           <CardHeader title="Volatility, both ways"
                       subtitle={`Annualised, over ${window[0] ?? "the overlap"} to ${window[1] ?? "2021"}. The five worst-affected symbols.`} />
@@ -258,7 +258,19 @@ function AdjustmentSection({ report }: { report?: Report }) {
 /* ───────────────────────── splices ───────────────────────── */
 
 function SpliceSection({ report }: { report?: Report }) {
-  if (!isAvailable(report)) return null;
+  // `return null` here made the whole section vanish with no
+  // explanation, so a reader could not tell an unavailable report
+  // from a page that had finished rendering.
+  if (!isAvailable(report)) {
+    return (
+      <Card className="mt-5">
+        <CardHeader title="Price series splices" />
+        <CardBody>
+          <Unavailable reason="The data pipeline report has not been generated yet. Run stage 03 to produce it." />
+        </CardBody>
+      </Card>
+    );
+  }
 
   const splices = record(report, "splices");
   const panel = record(report, "panel");
@@ -269,7 +281,7 @@ function SpliceSection({ report }: { report?: Report }) {
       title="Joining the sources"
       lede="Two joins happen in the price pipeline, held to deliberately different standards. The pipeline aborts rather than writing a series that looks plausible and is wrong."
     >
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2">
         {Object.entries(splices).map(([name, raw]) => {
           const splice = { s: raw };
           const kind = str(splice, "s.kind");
@@ -342,7 +354,16 @@ function SpliceSection({ report }: { report?: Report }) {
 /* ───────────────────────── ingest ───────────────────────── */
 
 function IngestSection({ report }: { report?: Report }) {
-  if (!isAvailable(report)) return null;
+  if (!isAvailable(report)) {
+    return (
+      <Card className="mt-5">
+        <CardHeader title="Adjustment validation" />
+        <CardBody>
+          <Unavailable reason="The adjustment validation report has not been generated yet. Run stage 03b to produce it." />
+        </CardBody>
+      </Card>
+    );
+  }
 
   const equity = record(report, "equity");
   const index = record(report, "index");
@@ -353,7 +374,7 @@ function IngestSection({ report }: { report?: Report }) {
       title="Ingest quality"
       lede="Defects are flagged, never silently deleted. An extreme observation in Indian equity history is usually a real event, and removing it would quietly bias every volatility and drawdown figure computed downstream."
     >
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2">
         <Card>
           <CardHeader title="Equity files" />
           <CardBody>
@@ -397,7 +418,16 @@ function IngestSection({ report }: { report?: Report }) {
 /* ───────────────────────── cohort ───────────────────────── */
 
 function CohortSection({ report }: { report?: Report }) {
-  if (!isAvailable(report)) return null;
+  if (!isAvailable(report)) {
+    return (
+      <Card className="mt-5">
+        <CardHeader title="Seeded database" />
+        <CardBody>
+          <Unavailable reason="The database seed report has not been generated yet. Run stage 04 to produce it." />
+        </CardBody>
+      </Card>
+    );
+  }
 
   const archetypes = numberRecord(report, "archetype_counts");
   const anomalies = record(report, "anomalies");
@@ -429,7 +459,7 @@ function CohortSection({ report }: { report?: Report }) {
         </CardBody></Card>
       </div>
 
-      <div className="mt-4 grid gap-5 lg:grid-cols-2">
+      <div className="mt-4 grid gap-5 md:grid-cols-2">
         <Card>
           <CardHeader title="Archetype composition"
                       subtitle="Archetypes overlap deliberately — a cohort of cleanly separated blobs would flatter the clustering model into a score that says nothing." />

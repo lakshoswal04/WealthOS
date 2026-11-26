@@ -13,6 +13,7 @@
  *    because it has a meaningful zero; magnitude uses a single hue.
  */
 
+import { useEffect, useState } from "react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart,
   Pie, PieChart, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart,
@@ -29,6 +30,32 @@ import { monthLabel, percent, rupeesCompact, titleCase } from "@/lib/format";
    lib/viz.ts now. They were defined privately here, which is why the chart
    greys had drifted from the interface greys and the tooltip card was a
    hard-coded #11161d rather than the card surface. */
+
+/**
+ * A viewport-aware width for a category Y axis.
+ *
+ * These were fixed at 128-168px. On a 360px phone a 168px axis is 47% of the
+ * viewport, leaving the bars less room than their own labels, so the chart
+ * stopped being readable exactly where space was tightest. Below the `sm`
+ * breakpoint the labels are truncated by the axis instead.
+ */
+function useCategoryAxisWidth(desktop: number): number {
+  const [width, setWidth] = useState(desktop);
+  useEffect(() => {
+    const measure = () => {
+      const viewport = window.innerWidth;
+      setWidth(
+        viewport < 480 ? Math.min(desktop, 84)
+        : viewport < 640 ? Math.min(desktop, 104)
+        : desktop,
+      );
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [desktop]);
+  return width;
+}
 
 function Frame({ height = 260, children }: { height?: number; children: React.ReactElement }) {
   return (
@@ -182,12 +209,13 @@ export function DrawdownChart({ dates, drawdown }: { dates: string[]; drawdown: 
 
 export function SectorBar({ data }: { data: { label: string; weight: number }[] }) {
   const sorted = [...data].sort((a, b) => b.weight - a.weight).slice(0, 12);
+  const axisWidth = useCategoryAxisWidth(132);
   return (
     <Frame height={Math.max(180, sorted.length * 28)}>
       <BarChart data={sorted} layout="vertical" margin={{ top: 4, right: 48, bottom: 4, left: 8 }}>
         <CartesianGrid {...GRID_VERTICAL} />
         <XAxis type="number" {...AXIS} tickFormatter={(v: number) => percent(v, 0)} />
-        <YAxis type="category" dataKey="label" {...AXIS} width={132} />
+        <YAxis type="category" dataKey="label" {...AXIS} width={axisWidth} />
         <Tooltip
           contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
           formatter={(v: number) => [percent(v, 2), "Weight"]}
@@ -380,12 +408,13 @@ export function HealthBreakdown({ components }: {
     .filter((c) => c.score !== null)
     .map((c) => ({ name: titleCase(c.name), score: c.score as number, weight: c.weight }));
 
+  const axisWidth = useCategoryAxisWidth(128);
   return (
     <Frame height={Math.max(180, data.length * 34)}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 44, bottom: 4, left: 8 }}>
         <CartesianGrid {...GRID_VERTICAL} />
         <XAxis type="number" domain={[0, 100]} {...AXIS} />
-        <YAxis type="category" dataKey="name" {...AXIS} width={128} />
+        <YAxis type="category" dataKey="name" {...AXIS} width={axisWidth} />
         <Tooltip
           contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
           formatter={(v: number, _n, item) => [
@@ -451,12 +480,13 @@ export function ClusterComparison({ rows }: {
     You: r.investor,
     "Cluster average": r.cluster_average,
   }));
+  const axisWidth = useCategoryAxisWidth(150);
   return (
     <Frame height={Math.max(200, data.length * 46)}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 20, bottom: 4, left: 8 }}>
         <CartesianGrid {...GRID_VERTICAL} />
         <XAxis type="number" {...AXIS} />
-        <YAxis type="category" dataKey="name" {...AXIS} width={150} />
+        <YAxis type="category" dataKey="name" {...AXIS} width={axisWidth} />
         <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
                  formatter={(v: number) => v.toFixed(3)} />
         <Legend verticalAlign="top" align="right" {...LEGEND} />
@@ -719,13 +749,14 @@ export function MagnitudeBars({ items, format, color, domain }: {
   format?: (v: number) => string; color?: string; domain?: [number, number];
 }) {
   const data = [...items].sort((a, b) => b.value - a.value);
+  const axisWidth = useCategoryAxisWidth(168);
   return (
     <Frame height={Math.max(160, data.length * 30)}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 52, bottom: 4, left: 8 }}>
         <CartesianGrid {...GRID_VERTICAL} />
         <XAxis type="number" {...AXIS} domain={domain ?? [0, "auto"]}
                tickFormatter={format ?? ((v: number) => v.toFixed(2))} />
-        <YAxis type="category" dataKey="label" {...AXIS} width={168} />
+        <YAxis type="category" dataKey="label" {...AXIS} width={axisWidth} />
         <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
                  formatter={(v: number) => (format ?? ((x: number) => x.toFixed(4)))(v)} />
         <Bar dataKey="value" fill={color ?? SERIES[0]} radius={[0, 4, 4, 0]} {...STATIC_SERIES} />

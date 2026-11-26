@@ -267,7 +267,7 @@ export default function LandingPage() {
               Five steps, start to finish.
             </h2>
 
-            <ol className="mt-12 grid gap-px overflow-hidden rounded-[var(--radius)] border border-[var(--hairline)] bg-[var(--hairline)] lg:grid-cols-5">
+            <ol className="mt-12 grid gap-px overflow-hidden rounded-[var(--radius)] border border-[var(--hairline)] bg-[var(--hairline)] md:grid-cols-3 lg:grid-cols-5">
               {[
                 ["Import", "Upload a CSV or add holdings by hand. The whole file is validated before anything is saved."],
                 ["Analyse", "Positions are priced against adjusted market history and turned into risk and concentration measures."],

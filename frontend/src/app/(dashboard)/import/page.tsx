@@ -175,7 +175,14 @@ function ImportOutcome({ result }: { result: ImportResult }) {
   return (
     <div className="mt-5">
       <div className="flex items-center gap-2">
-        <Badge tone={result.accepted ? "good" : "critical"}>
+        {/* A testable hook. The outcome was previously identified in the
+            e2e suite by the bare string "Rejected", which collided the
+            moment the results table gained a screen-reader caption
+            describing the rejected rows. */}
+        <Badge
+          tone={result.accepted ? "good" : "critical"}
+          data-testid="import-outcome"
+        >
           {result.accepted ? "Imported" : "Rejected"}
         </Badge>
         <span className="text-small text-[var(--ink-secondary)]">

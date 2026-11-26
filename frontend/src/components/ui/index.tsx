@@ -109,10 +109,10 @@ export function Meter({ value, max = 100, color }: { value: number; max?: number
   );
 }
 
-export function Badge({ tone = "neutral", children }: {
+export function Badge({ tone = "neutral", children, ...rest }: {
   tone?: "neutral" | "good" | "warning" | "serious" | "critical" | "accent";
   children: ReactNode;
-}) {
+} & React.HTMLAttributes<HTMLSpanElement>) {
   const tones: Record<string, string> = {
     neutral: "border-[var(--hairline-strong)] bg-[var(--surface-3)] text-[var(--ink-secondary)]",
     good: "border-[color-mix(in_oklab,var(--good)_40%,transparent)] bg-[color-mix(in_oklab,var(--good)_13%,transparent)] text-[var(--good-ink)]",
@@ -122,7 +122,9 @@ export function Badge({ tone = "neutral", children }: {
     accent: "border-[var(--accent-dim)] bg-[var(--accent-wash)] text-[var(--accent)]",
   };
   return (
-    <span className={clsx(
+    <span
+      {...rest}
+      className={clsx(
       "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-[3px] text-caption font-medium",
       tones[tone],
     )}>
