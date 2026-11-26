@@ -24,6 +24,14 @@ from .constants import (
     RELIABLE_OBSERVATIONS_FOR_RISK,
     TRADING_DAYS_PER_YEAR,
 )
+from .health import (
+    COMPONENT_WEIGHTS,
+    HealthInputs,
+    HealthScore,
+    compute_health_score,
+    sensitivity_analysis,
+)
+from .health_v2 import COMPONENT_WEIGHTS_V2, compute_health_score_v2
 from .jsonsafe import json_safe, round_or_none
 from .concentration import (
     concentration_by_group,
@@ -86,6 +94,10 @@ __all__ = [
     "ASSET_CLASSES", "ASSET_CLASS_LIQUIDITY",
     # json safety
     "json_safe", "round_or_none",
+    # health score
+    "HealthInputs", "HealthScore", "compute_health_score",
+    "compute_health_score_v2", "sensitivity_analysis",
+    "COMPONENT_WEIGHTS", "COMPONENT_WEIGHTS_V2",
     # returns
     "simple_returns", "log_returns", "cumulative_return_series", "total_return",
     "annualized_return", "annualized_volatility", "cagr", "wealth_index",
