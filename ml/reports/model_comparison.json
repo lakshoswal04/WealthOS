@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-26T05:29:13.124720+00:00",
+  "generated_at": "2026-11-26T05:47:43.536716+00:00",
   "method": "Every figure is read from ml/reports/baseline_v1/, snapshotted before any change, against the current ml/reports/. Nothing is quoted from memory, and a metric that got worse is reported as worse.",
   "anomaly_detection": {
     "available": true,
@@ -503,8 +503,23 @@
     "spread_warning": "At every horizon the standard deviation of skill across folds is comparable to or larger than its mean (1m 0.005 +/- 0.018, 3m 0.052 +/- 0.069, 6m 0.037 +/- 0.095, 12m 0.155 +/- 0.164). Any single skill figure from this system should be read as the centre of a wide distribution, not as a point estimate."
   },
   "copilot_grounding": {
-    "available": false,
-    "reason": "a report is missing"
+    "available": true,
+    "groundedness_rate": {
+      "before": 1.0,
+      "after": 1.0,
+      "change": 0.0,
+      "verdict": "unchanged"
+    },
+    "numbers_checked": {
+      "before": 458,
+      "after": 458
+    },
+    "fully_grounded_answers": {
+      "before": 30,
+      "after": 30,
+      "of": 30
+    },
+    "note": "Unchanged, and that is the intended result: the Copilot was already verifying every figure it stated against the tool output that produced it. The same machinery now gates every generated alert, which is where this phase used it."
   },
   "health_score": {
     "note": "The Health Score is an analytics engine rather than a model, so its comparison lives in health_score_v1_vs_v2.json. v1 and v2 are both computed on every request and returned together."

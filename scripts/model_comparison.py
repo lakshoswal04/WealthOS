@@ -294,18 +294,34 @@ def forecast_section() -> dict:
 # --------------------------------------------------------------------------
 
 def copilot_section() -> dict:
-    before, after = _load(BASELINE, "copilot_eval"), _load(CURRENT, "copilot_eval")
+    before = _load(BASELINE, "copilot_groundedness")
+    after = _load(CURRENT, "copilot_groundedness")
     if not before or not after:
         return {"available": False, "reason": "a report is missing"}
+
+    old_summary = before.get("summary", {})
+    new_summary = after.get("summary", {})
     return {
         "available": True,
         "groundedness_rate": _delta(
-            before.get("groundedness_rate"), after.get("groundedness_rate")
+            old_summary.get("overall_groundedness_rate"),
+            new_summary.get("overall_groundedness_rate"),
         ),
         "numbers_checked": {
-            "before": before.get("numbers_checked"),
-            "after": after.get("numbers_checked"),
+            "before": old_summary.get("numbers_checked"),
+            "after": new_summary.get("numbers_checked"),
         },
+        "fully_grounded_answers": {
+            "before": old_summary.get("fully_grounded_answers"),
+            "after": new_summary.get("fully_grounded_answers"),
+            "of": new_summary.get("answers"),
+        },
+        "note": (
+            "Unchanged, and that is the intended result: the Copilot was "
+            "already verifying every figure it stated against the tool output "
+            "that produced it. The same machinery now gates every generated "
+            "alert, which is where this phase used it."
+        ),
     }
 
 
