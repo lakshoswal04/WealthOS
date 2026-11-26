@@ -71,3 +71,32 @@ class ModelName(StrEnum):
     FORECAST_XGBOOST = "forecast_xgboost"
     FORECAST_LSTM = "forecast_lstm"
     FORECAST_GRU = "forecast_gru"
+
+
+class LinkedAccountStatus(StrEnum):
+    """Lifecycle of a brokerage link.
+
+    `EXPIRED` and `REVOKED` are distinct on purpose: an expired token can be
+    refreshed silently, a revoked one requires the user to authorise again,
+    and showing the same message for both would send people to re-authorise
+    when they did not need to.
+    """
+
+    ACTIVE = "active"
+    EXPIRED = "expired"
+    REVOKED = "revoked"
+    DISCONNECTED = "disconnected"
+    ERROR = "error"
+
+
+class SyncStatus(StrEnum):
+    """Outcome of one synchronisation attempt.
+
+    `PARTIAL` exists because a broker returning half a portfolio is the
+    dangerous case: silently treating it as success would delete or
+    understate real holdings.
+    """
+
+    SUCCESS = "success"
+    PARTIAL = "partial"
+    FAILED = "failed"

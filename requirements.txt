@@ -18,6 +18,11 @@ xgboost==3.0.5
 lightgbm==4.6.0
 joblib==1.5.2
 
+# --- cryptography ---
+# Fernet, for encrypting linked-account tokens at rest. A database dump
+# containing a usable brokerage credential is the failure this prevents.
+cryptography==46.0.3
+
 # --- hyperparameter search ---
 # Replaces hand-picked configurations in the forecast pipeline. The previous
 # four XGBoost configs all early-stopped at iteration 0 on three of four
