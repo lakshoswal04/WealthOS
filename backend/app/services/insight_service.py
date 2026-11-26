@@ -15,6 +15,7 @@ import torch
 from sqlalchemy.orm import Session
 
 from wealthos_core.anomaly import aggregate_error, derive_anomaly_features
+from app.ml_runtime import behaviour as live_behaviour
 from app.ml_runtime import features as live_features
 from app.ml_runtime.registry import registry
 from app.models import User
@@ -51,7 +52,12 @@ def investor_profile(db: Session, user: User) -> dict:
             ),
         }
 
-    profile = live_features.behavioural_profile(history, user)
+    reconstructed = live_features.behavioural_profile(history, user)
+    # Prefer what the investor actually did over what holding today's
+    # positions would have implied, and label every feature either way.
+    profile, provenance = live_behaviour.behavioural_provenance(
+        db, user, reconstructed, history
+    )
     columns = artifact["feature_columns"]
     vector = pd.DataFrame([[profile.get(c, 0.0) for c in columns]], columns=columns)
     vector = vector.replace([np.inf, -np.inf], 0.0).fillna(0.0)
@@ -90,6 +96,10 @@ def investor_profile(db: Session, user: User) -> dict:
         "match_confidence": round(max(0.0, min(confidence, 1.0)), 3),
         "distinguishing_traits": matched["distinguishing_traits"],
         "investor_features": {k: round(float(v), 4) for k, v in profile.items()},
+        "feature_provenance": provenance,
+        "reconstructed_features": {
+            k: round(float(v), 4) for k, v in reconstructed.items()
+        },
         "largest_differences_from_cluster": differences,
         "stated_risk_tolerance": str(user.risk_tolerance) if user.risk_tolerance else None,
         "method": (
@@ -97,9 +107,14 @@ def investor_profile(db: Session, user: User) -> dict:
             "10,000 investors. Cluster names were derived from fitted centroids."
         ),
         "caveat": (
-            "Behaviour is reconstructed by valuing current holdings back through "
-            "price history, so it reflects the portfolio held today rather than "
-            "a replay of past positions."
+            "Portfolio state -- allocations, concentration, holding count -- is "
+            "read from today's holdings and is exact. Behavioural features are "
+            "taken from recorded transactions where the record is long enough "
+            "to describe a habit, and reconstructed otherwise; "
+            "`feature_provenance` says which, feature by feature, and carries "
+            "the share of the period the transaction record covers. "
+            "Reconstruction holds quantities fixed, so any feature it supplies "
+            "for turnover or trade frequency is biased towards zero."
         ),
     }
 
