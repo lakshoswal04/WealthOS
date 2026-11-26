@@ -285,6 +285,25 @@ def wealth_forecast(db: Session, user: User, horizon: int = 12) -> dict:
     predictions: dict[str, dict] = {}
 
     tabular_columns = artifact["tabular_features"]
+
+    # `reindex(columns=...)` against the artifact's own stored column list is
+    # what guarantees the prediction is aligned, since the array handed to the
+    # model is positional. Checking the columns actually exist turns a silent
+    # zero-fill into a refusal: reindex invents a NaN column for a name the
+    # frame does not have, and a model scoring a fabricated feature returns a
+    # confident number from nothing.
+    absent = [c for c in tabular_columns if c not in frame.columns]
+    if absent:
+        return {
+            "available": False,
+            "reason": (
+                "The deployed forecast model expects features this service "
+                f"does not compute ({', '.join(absent)}), so no projection "
+                "can be trusted. The artifact and the application are out of "
+                "step."
+            ),
+        }
+
     tabular_row = (
         frame.reindex(columns=tabular_columns)
         .fillna(artifact["tabular_medians"])
@@ -292,8 +311,9 @@ def wealth_forecast(db: Session, user: User, horizon: int = 12) -> dict:
         .fillna(0.0)
         .tail(1)
     )
+    tabular_name = artifact.get("tabular_model", "xgboost")
     growth = float(artifact["xgboost"].predict(tabular_row.to_numpy())[0])
-    predictions["xgboost"] = {
+    predictions[tabular_name] = {
         "excess_log_growth": round(growth, 6),
         "projected_value": round(baseline * float(np.exp(growth)), 2),
     }
@@ -352,6 +372,27 @@ def wealth_forecast(db: Session, user: User, horizon: int = 12) -> dict:
         },
         "model_predictions": predictions,
         "models_used": list(predictions),
+        # Walk-forward evidence, carried from the training run.
+        #
+        # At some horizons the trained model does not beat a constant forecast
+        # across folds, and at 1 month it does not. Presenting its number
+        # without saying so would be presenting a figure the evidence does not
+        # support, so the recommendation travels with the projection and the UI
+        # can show the baseline instead.
+        "recommendation": {
+            "recommended_source": artifact.get("recommended", "unknown"),
+            "model_beats_baseline": (
+                artifact.get("recommended") not in (None, "baseline_mean_drift")
+            ),
+            "walk_forward_mean_skill": artifact.get("walk_forward_mean_skill"),
+            "note": (
+                "Skill is measured against the training-window mean across "
+                "expanding walk-forward folds, not against a single held-out "
+                "block. Where the recommended source is the baseline, the "
+                "model's projection is still shown for comparison but should "
+                "not be read as a better estimate than the constant one."
+            ),
+        },
         "assumptions": {
             "baseline": (
                 "Current value plus the recent average monthly contribution "

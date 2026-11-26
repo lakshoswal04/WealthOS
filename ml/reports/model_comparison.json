@@ -1,0 +1,394 @@
+{
+  "generated_at": "2026-11-26T05:21:30.796040+00:00",
+  "method": "Every figure is read from ml/reports/baseline_v1/, snapshotted before any change, against the current ml/reports/. Nothing is quoted from memory, and a metric that got worse is reported as worse.",
+  "anomaly_detection": {
+    "available": true,
+    "dataset_changed": true,
+    "dataset_note": "The cohort was regenerated. The generator wrote a dormancy break as a large contribution and never created the silence the label describes, so a row labelled dormancy_break was indistinguishable from an investor receiving a bonus. Part of the improvement below is therefore that the labels now describe what is in the data. The aggregation change alone, measured on the UNCHANGED model and the UNCHANGED dataset, moved dormancy recall from 0.4667 to 0.5795 and F1 from 0.8392 to 0.8500 -- see anomaly_aggregation_study.json. The rest came from the data fix.",
+    "features": {
+      "before": 24,
+      "after": 27,
+      "added": [
+        "months_since_contribution",
+        "delta_contribution_ratio",
+        "recent_funding_rate"
+      ]
+    },
+    "headline": {
+      "precision": {
+        "before": 0.7962,
+        "after": 0.9299,
+        "change": 0.1337,
+        "verdict": "better"
+      },
+      "recall": {
+        "before": 0.887,
+        "after": 0.9871,
+        "change": 0.1001,
+        "verdict": "better"
+      },
+      "f1": {
+        "before": 0.8392,
+        "after": 0.9576,
+        "change": 0.1184,
+        "verdict": "better"
+      },
+      "pr_auc": {
+        "before": 0.9355,
+        "after": 0.9956,
+        "change": 0.0601,
+        "verdict": "better"
+      },
+      "roc_auc": {
+        "before": 0.9995,
+        "after": 1.0,
+        "change": 0.0005,
+        "verdict": "better"
+      },
+      "false_positive_rate": {
+        "before": 0.00079,
+        "after": 0.00028,
+        "change": -0.00051,
+        "verdict": "better"
+      }
+    },
+    "recall_by_anomaly_type": {
+      "allocation_shock": {
+        "before": 0.965,
+        "after": 0.9679,
+        "change": 0.0029,
+        "verdict": "better"
+      },
+      "concentration_spike": {
+        "before": 1.0,
+        "after": 1.0,
+        "change": 0.0,
+        "verdict": "unchanged"
+      },
+      "dormancy_break": {
+        "before": 0.4667,
+        "after": 0.9692,
+        "change": 0.5025,
+        "verdict": "better"
+      },
+      "panic_sell": {
+        "before": 0.9899,
+        "after": 1.0,
+        "change": 0.0101,
+        "verdict": "better"
+      },
+      "turnover_spike": {
+        "before": 1.0,
+        "after": 1.0,
+        "change": 0.0,
+        "verdict": "unchanged"
+      }
+    },
+    "baseline_comparison": {
+      "isolation_forest_pr_auc": {
+        "before": 0.3255,
+        "after": 0.2752,
+        "change": -0.0503,
+        "verdict": "WORSE"
+      },
+      "note": "The shallow baseline is reported because a deep model that cannot beat one has not earned its place. It is measured on the regenerated data too, and it got worse, which is consistent with the anomalies now being defined by a temporal pattern a point-in-time detector cannot see."
+    },
+    "new_diagnostics": {
+      "threshold_transfer": {
+        "false_alert_budget": 0.001,
+        "threshold_at_budget": 6.18576571,
+        "validation_false_positive_rate": 0.001005,
+        "test_false_positive_rate": 0.00153,
+        "drift_multiple": 1.523,
+        "finding": "The score distribution is not stationary between the validation and test periods, so a threshold calibrated to a given false-alert rate on validation does not deliver that rate on test. This affects the shipped threshold too, and it is a property of the data rather than of the aggregation: the same threshold transfers cleanly across a time boundary placed inside validation. Any deployment should recalibrate the threshold on recent data rather than trust a fixed one."
+      },
+      "calibration_monotonic": true,
+      "confusion_matrix": {
+        "true_positive": 1074,
+        "false_positive": 81,
+        "false_negative": 14,
+        "true_negative": 288820
+      },
+      "accuracy": 0.999672
+    }
+  },
+  "clustering": {
+    "available": true,
+    "dataset_changed": true,
+    "chosen_k": {
+      "before": 7,
+      "after": 7
+    },
+    "archetype_recovery_ari": {
+      "before": 0.9465,
+      "after": 0.9471,
+      "change": 0.0006,
+      "verdict": "better"
+    },
+    "stability_mean_ari": {
+      "before": 0.9573,
+      "after": 0.9494,
+      "change": -0.0079,
+      "verdict": "WORSE"
+    },
+    "note": "Re-run for consistency after the cohort regeneration rather than to improve it: at ARI 0.947 and stability 0.957 there was no defect to fix. k=7 still wins on silhouette. The small fall in stability sits inside its own 0.046 standard deviation across 20 rounds, so it is noise from the new cohort, not a regression."
+  },
+  "forecasting": {
+    "horizons": {
+      "1m": {
+        "available": true,
+        "before": {
+          "best_model": {
+            "name": "gru",
+            "skill_vs_mean_baseline": 0.0383
+          },
+          "xgboost_best_iterations": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "all_configs_stopped_at_iteration_zero": true,
+          "skill_vs_mean_baseline": 0.0383
+        },
+        "after": {
+          "tabular_model_chosen": "lightgbm",
+          "optuna_trials": 25,
+          "best_params": {
+            "num_leaves": 41,
+            "learning_rate": 0.005248335365599746,
+            "min_child_samples": 43,
+            "subsample": 0.8782890606101604,
+            "colsample_bytree": 0.4035440942160963,
+            "reg_lambda": 9.375690492655478,
+            "n_estimators": 111
+          },
+          "walk_forward_folds": 6,
+          "walk_forward_mean_skill": 0.0052,
+          "walk_forward_skill_std": 0.0178,
+          "folds_beating_baseline": 3,
+          "test_skill_vs_mean_baseline": 0.0399,
+          "best_model_on_test": {
+            "name": "lightgbm",
+            "skill_vs_mean_baseline": 0.0399
+          },
+          "recommendation": {
+            "horizon_months": 1,
+            "recommended": "baseline_mean_drift",
+            "walk_forward_mean_skill": 0.0052,
+            "walk_forward_skill_std": 0.0178,
+            "folds_beating_baseline": 3,
+            "folds": 6,
+            "threshold_applied": 0.02,
+            "reasoning": "Mean walk-forward skill +0.0052 across 6 folds, beating the mean-drift baseline in None of them. That does not clear the bar for recommending a model over a constant forecast, so the baseline stands. Reporting no skill where there is none is the result; engineering a number around it would not be."
+          },
+          "prediction_intervals": {
+            "50": {
+              "nominal_coverage": 0.5,
+              "half_width_log_growth": 0.020326,
+              "realised_coverage_on_test": 0.5932
+            },
+            "80": {
+              "nominal_coverage": 0.8,
+              "half_width_log_growth": 0.038621,
+              "realised_coverage_on_test": 0.8127
+            },
+            "95": {
+              "nominal_coverage": 0.95,
+              "half_width_log_growth": 0.059065,
+              "realised_coverage_on_test": 0.9188
+            }
+          }
+        }
+      },
+      "3m": {
+        "available": true,
+        "before": {
+          "best_model": {
+            "name": "xgboost",
+            "skill_vs_mean_baseline": 0.0052
+          },
+          "xgboost_best_iterations": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "all_configs_stopped_at_iteration_zero": true,
+          "skill_vs_mean_baseline": 0.0052
+        },
+        "after": {
+          "tabular_model_chosen": "xgboost",
+          "optuna_trials": 25,
+          "best_params": {
+            "max_depth": 6,
+            "learning_rate": 0.019251049533196722,
+            "min_child_weight": 22,
+            "subsample": 0.736463138144189,
+            "colsample_bytree": 0.693692745264241,
+            "reg_lambda": 14.09258993838722,
+            "n_estimators": 65
+          },
+          "walk_forward_folds": 6,
+          "walk_forward_mean_skill": 0.0517,
+          "walk_forward_skill_std": 0.0691,
+          "folds_beating_baseline": 4,
+          "test_skill_vs_mean_baseline": 0.0649,
+          "best_model_on_test": {
+            "name": "xgboost",
+            "skill_vs_mean_baseline": 0.0649
+          },
+          "recommendation": {
+            "horizon_months": 3,
+            "recommended": "xgboost",
+            "walk_forward_mean_skill": 0.0517,
+            "walk_forward_skill_std": 0.0691,
+            "folds_beating_baseline": 4,
+            "folds": 6,
+            "threshold_applied": 0.02,
+            "reasoning": "Mean walk-forward skill +0.0517 across 6 folds, beating the mean-drift baseline in None of them. That is positive on balance and above the threshold, so the model is recommended over the constant forecast."
+          },
+          "prediction_intervals": {
+            "50": {
+              "nominal_coverage": 0.5,
+              "half_width_log_growth": 0.031243,
+              "realised_coverage_on_test": 0.4743
+            },
+            "80": {
+              "nominal_coverage": 0.8,
+              "half_width_log_growth": 0.059364,
+              "realised_coverage_on_test": 0.7507
+            },
+            "95": {
+              "nominal_coverage": 0.95,
+              "half_width_log_growth": 0.090787,
+              "realised_coverage_on_test": 0.9047
+            }
+          }
+        }
+      },
+      "6m": {
+        "available": true,
+        "before": {
+          "best_model": {
+            "name": "gru",
+            "skill_vs_mean_baseline": 0.2402
+          },
+          "xgboost_best_iterations": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "all_configs_stopped_at_iteration_zero": true,
+          "skill_vs_mean_baseline": 0.2402
+        },
+        "after": {
+          "tabular_model_chosen": "lightgbm",
+          "optuna_trials": 25,
+          "best_params": {
+            "num_leaves": 27,
+            "learning_rate": 0.007658778378696193,
+            "min_child_samples": 52,
+            "subsample": 0.9947336537678865,
+            "colsample_bytree": 0.6972980895682378,
+            "reg_lambda": 4.572630227520724,
+            "n_estimators": 68
+          },
+          "walk_forward_folds": 6,
+          "walk_forward_mean_skill": 0.0367,
+          "walk_forward_skill_std": 0.0954,
+          "folds_beating_baseline": 5,
+          "test_skill_vs_mean_baseline": 0.0697,
+          "best_model_on_test": {
+            "name": "gru",
+            "skill_vs_mean_baseline": 0.2455
+          },
+          "recommendation": {
+            "horizon_months": 6,
+            "recommended": "lightgbm",
+            "walk_forward_mean_skill": 0.0367,
+            "walk_forward_skill_std": 0.0954,
+            "folds_beating_baseline": 5,
+            "folds": 6,
+            "threshold_applied": 0.02,
+            "reasoning": "Mean walk-forward skill +0.0367 across 6 folds, beating the mean-drift baseline in None of them. That is positive on balance and above the threshold, so the model is recommended over the constant forecast."
+          },
+          "prediction_intervals": {
+            "50": {
+              "nominal_coverage": 0.5,
+              "half_width_log_growth": 0.041533,
+              "realised_coverage_on_test": 0.4811
+            },
+            "80": {
+              "nominal_coverage": 0.8,
+              "half_width_log_growth": 0.078916,
+              "realised_coverage_on_test": 0.7731
+            },
+            "95": {
+              "nominal_coverage": 0.95,
+              "half_width_log_growth": 0.120689,
+              "realised_coverage_on_test": 0.9267
+            }
+          }
+        }
+      },
+      "12m": {
+        "available": true,
+        "before": {
+          "best_model": {
+            "name": "lstm",
+            "skill_vs_mean_baseline": 0.2486
+          },
+          "xgboost_best_iterations": [
+            17,
+            17,
+            4,
+            5
+          ],
+          "all_configs_stopped_at_iteration_zero": false,
+          "skill_vs_mean_baseline": 0.2486
+        },
+        "after": {
+          "tabular_model_chosen": null,
+          "optuna_trials": null,
+          "best_params": null,
+          "walk_forward_folds": null,
+          "walk_forward_mean_skill": null,
+          "walk_forward_skill_std": null,
+          "folds_beating_baseline": null,
+          "test_skill_vs_mean_baseline": null,
+          "best_model_on_test": {
+            "name": "lstm",
+            "skill_vs_mean_baseline": 0.2486
+          },
+          "recommendation": null,
+          "prediction_intervals": null
+        }
+      }
+    },
+    "recommended_per_horizon": {
+      "1m": "baseline_mean_drift",
+      "3m": "xgboost",
+      "6m": "lightgbm",
+      "12m": null
+    },
+    "diagnosis": "best_iteration = 0 for every XGBoost configuration at 1, 3 and 6 months was read as an untrained model. It was the opposite: early stopping was working correctly and declining to fit a relationship the validation block could not confirm. The forecast features are dominated by market-level variables identical across investors in a given month, and 47-63% of the target variance is between-month, so the effective sample is the number of distinct months -- 121 train, 18 validation, 29 test -- not the 675,724 rows. Eighteen months is one draw of market regimes. A ridge regression makes the same point from the other side: the month-mean target correlates with market volatility at r = 0.24 to 0.52 over the training period, significant at every horizon (t = 2.6 to 6.6), and still generalises to the validation block with negative skill.",
+    "what_changed": [
+      "Walk-forward folds replace the single validation block, so a skill claim comes from several regimes and carries a spread.",
+      "Optuna searches XGBoost and LightGBM against walk-forward skill penalised by its own standard deviation, rather than against one block's RMSE.",
+      "The search runs on a 2,000-investor sample of all months. The effective sample is months, which subsampling investors leaves intact; the winner is refitted on everything.",
+      "Recurrent models get 120 epochs with patience 15, up from 25 and 4. They were finding their best validation loss at epoch 1 for the same reason XGBoost stopped at iteration 0.",
+      "Prediction intervals come from the pooled walk-forward residual spread, with realised coverage measured on test reported beside the nominal level.",
+      "A deployment gate recommends the constant baseline wherever the model does not beat it on balance across folds."
+    ],
+    "honest_outcome": "At one month the model does not beat a constant forecast and the baseline is recommended. That is the result, not a failure to tune: engineering a number around it would have been the failure."
+  },
+  "copilot_grounding": {
+    "available": false,
+    "reason": "a report is missing"
+  },
+  "health_score": {
+    "note": "The Health Score is an analytics engine rather than a model, so its comparison lives in health_score_v1_vs_v2.json. v1 and v2 are both computed on every request and returned together."
+  }
+}

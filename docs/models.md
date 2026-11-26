@@ -92,17 +92,48 @@ margin of 0.61 PR-AUC.
 
 ### By anomaly type
 
-| Type | Recall |
-|---|---|
-| Concentration spike | 1.000 |
-| Turnover spike | 1.000 |
-| Panic sell | 0.990 |
-| Allocation shock | 0.965 |
-| **Dormancy break** | **0.467** |
+| Type | Recall (baseline) | Recall (now) |
+|---|---|---|
+| Concentration spike | 1.000 | 1.000 |
+| Turnover spike | 1.000 | 1.000 |
+| Panic sell | 0.990 | 1.000 |
+| Allocation shock | 0.965 | 0.968 |
+| **Dormancy break** | **0.467** | **0.969** |
 
-The weak case is reported rather than hidden. A large one-off contribution
-is genuinely hard to separate from ordinary lumpy saving — the signal looks
-like normal behaviour, only larger.
+The weak case used to be explained here as a signal that genuinely resembles
+lumpy saving. That explanation was wrong, and the way it was wrong is worth
+recording.
+
+Measurement contradicted it: `contribution_ratio` for a dormancy break
+spanned 0.30 to 0.79 against a maximum of 0.2006 across 289,000 normal test
+rows. The classes did not overlap. Two defects produced the 0.467.
+
+**The score diluted the signal.** Reconstruction error was reduced by a flat
+mean over 24 features, which assumes they are equally hard to reconstruct.
+They are not, so a feature with large ordinary noise dominated and a clean
+deviation in two well-reconstructed features was averaged away. Per-feature
+z-scoring against the error distribution on normal training rows fixes it.
+Measured on the unchanged model and unchanged data, that change alone took
+F1 from 0.8392 to 0.8500 and dormancy recall from 0.4667 to 0.5795. Note
+that a plain per-feature maximum was *worse* than the mean (F1 0.7914,
+dormancy 0.3897): an unnormalised max returns whichever feature is hardest
+to reconstruct, which is largely the same feature every row. The improvement
+is in the normalisation, not the reducer. Full table in
+`ml/reports/anomaly_aggregation_study.json`.
+
+**The generator never created the anomaly.** `inject_anomalies` wrote the
+large contribution and left the preceding months exactly as simulated — still
+contributing, still trading — so a row labelled `dormancy_break` was a large
+contribution and nothing more. It now zeroes three to six months of
+contributions, trades and turnover first, and three lag features make that
+silence visible: `months_since_contribution`, `delta_contribution_ratio` and
+`recent_funding_rate`. The last deliberately excludes the current month,
+because a dormancy break *is* a funded month and including it would leak the
+label.
+
+The jump from 0.5795 to 0.969 is therefore mostly the data fix. That is a
+correction to mislabelled data, not a gain in modelling skill, and the two
+should not be added together.
 
 ### What limits this number
 
@@ -174,20 +205,70 @@ usually quoted.
 
 ### Across horizons
 
-| Horizon | Best model | Skill vs mean drift |
-|---|---|---|
-| 1 month | GRU | 0.038 |
-| 3 months | XGBoost | 0.005 |
-| 6 months | GRU | 0.240 |
-| 12 months | LSTM | **0.249** |
-
-**Skill rises with horizon.** That is the substantive finding: short-horizon
-portfolio growth is dominated by unpredictable market noise, while longer
+Skill is now measured across expanding walk-forward folds rather than on one
+held-out block, and the per-horizon figures live in
+`ml/reports/forecast_*.json` under `tabular_search.<model>.walk_forward` with
+`ml/reports/model_comparison.json` holding the before-and-after. The shape of
+the result is unchanged: **skill rises with horizon**, because short-horizon
+portfolio growth is dominated by unpredictable market noise while longer
 horizons carry a larger predictable component through contribution
 compounding and regime persistence.
 
-At three months essentially nothing beats the baseline. That is an honest
-negative result and is reported as one.
+**At one month the model does not beat a constant forecast, and the pipeline
+recommends the baseline.** That is the result rather than a failure to tune.
+
+### Why the old numbers measured the wrong thing
+
+`best_iteration = 0` for every XGBoost configuration at 1, 3 and 6 months was
+read as an undertrained model, and the recurrent models finding their best
+validation loss at epoch 1 of 25 looked like the same problem. It was the
+opposite: early stopping was working correctly and declining to fit a
+relationship the validation block could not confirm.
+
+The forecast features are dominated by market-level variables that are
+identical for every investor in a given month, and 47-63% of the target's
+variance is between-month rather than between-investor. So the effective
+sample for a market-driven forecast is the number of distinct months, not the
+number of rows:
+
+| Split | Months | Investors | Rows |
+|---|---|---|---|
+| Train | 121 | 9,743 | 675,724 |
+| Validation | **18** | 9,963 | 177,884 |
+| Test | 29 | 10,000 | 289,897 |
+
+Eighteen months is one small draw of market regimes. Early stopping against
+it is early stopping against noise.
+
+A ridge regression makes the same point from the other side. Over the 121
+training months the month-mean target correlates with market volatility at
+r = 0.24 to 0.52, statistically significant at every horizon (t = 2.6 to
+6.6) — and it still generalises to the validation block with *negative* skill
+at all four horizons. Real signal, unmeasurable on one block.
+
+### What replaced it
+
+- **Walk-forward folds.** Six expanding windows, each training on everything
+  before a boundary and scoring the next six months. Ten judgements over ten
+  regimes where there was one, and the spread across folds is the error bar on
+  any skill claim.
+- **Optuna, over the right objective.** XGBoost and LightGBM searched against
+  mean walk-forward skill penalised by its own standard deviation, because a
+  configuration that wins hugely in one regime and loses in the next is not a
+  better forecaster than one that is mildly positive throughout.
+- **A principled search sample.** The search runs on 2,000 investors across
+  all months, and the winner is refitted on everything. Subsampling investors
+  leaves the effective sample — months — completely intact while removing 80%
+  of the compute. Not a corner cut; a consequence of the diagnosis.
+- **Real epoch budgets.** 120 epochs with patience 15, against 25 and 4.
+- **Prediction intervals** from the pooled walk-forward residual spread, with
+  the coverage actually realised on test printed next to the nominal level,
+  because return residuals are fat-tailed and the nominal figure understates
+  the tails.
+- **A deployment gate.** Where a model does not beat the constant baseline on
+  balance across folds, the artifact records `baseline_mean_drift` as the
+  recommendation and the API carries that through to the response, so a
+  number the evidence does not support is never presented as a forecast.
 
 ### Fairness of the comparison
 
