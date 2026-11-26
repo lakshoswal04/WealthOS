@@ -251,6 +251,33 @@ ANOMALY_TYPES = (
 ANOMALY_INVESTOR_SHARE = 0.12   # share of the cohort that receives anomalies
 ANOMALY_MIN_HISTORY = 12        # months of normal behaviour required first
 
+# A dormancy break is defined by the silence before it, so the generator has
+# to produce that silence. Three to six months of no contributions and no
+# trades is long enough to be unambiguous against ordinary lumpy saving and
+# short enough to leave room for several events in one investor's history.
+ANOMALY_QUIET_MIN: int = 3
+ANOMALY_QUIET_MAX: int = 6
+
+
+def _spaced_choice(
+    candidates: np.ndarray, count: int, min_gap: int, rng: np.random.Generator
+) -> np.ndarray:
+    """Pick up to ``count`` values at least ``min_gap`` apart.
+
+    Anomaly injection writes backwards in time for dormancy breaks, so two
+    events closer together than the quiet stretch would corrupt each other:
+    the earlier injection would be zeroed out by the later one's silence and
+    the row would keep a label describing something no longer in the data.
+    """
+    pool = list(rng.permutation(candidates))
+    chosen: list[int] = []
+    for value in pool:
+        if len(chosen) >= count:
+            break
+        if all(abs(int(value) - int(taken)) >= min_gap for taken in chosen):
+            chosen.append(int(value))
+    return np.array(sorted(chosen), dtype=int)
+
 
 def inject_anomalies(
     state: dict[str, np.ndarray], allocation: dict[str, np.ndarray],
@@ -280,9 +307,17 @@ def inject_anomalies(
         if len(observed) < ANOMALY_MIN_HISTORY + 3:
             continue
 
-        eligible = observed[ANOMALY_MIN_HISTORY:]
+        # Leave room before the chosen month for a dormancy quiet stretch, and
+        # keep events far enough apart that one does not overwrite another's
+        # run-up -- two dormancy breaks three months apart would leave the
+        # first one's injection sitting inside the second one's silence.
+        eligible = observed[ANOMALY_MIN_HISTORY + ANOMALY_QUIET_MAX:]
+        if len(eligible) == 0:
+            continue
         n_events = int(rng.integers(1, 6))
-        months = rng.choice(eligible, size=min(n_events, len(eligible)), replace=False)
+        months = _spaced_choice(
+            eligible, n_events, ANOMALY_QUIET_MAX + 1, rng
+        )
 
         for month in months:
             kind = str(rng.choice(ANOMALY_TYPES))
@@ -323,10 +358,30 @@ def inject_anomalies(
                 )
 
             else:  # dormancy_break
-                # A large one-off injection after a quiet stretch.
+                # A large one-off injection AFTER A QUIET STRETCH -- and the
+                # quiet stretch has to be created, not merely described.
+                #
+                # This branch used to write the injection alone, leaving the
+                # preceding months exactly as the simulation produced them:
+                # still contributing, still trading. So the row labelled
+                # "dormancy_break" was a large contribution and nothing more,
+                # indistinguishable from an ordinary investor receiving a
+                # bonus. docs/EXPLAINER.md explained the resulting low recall
+                # with a story about preceding inactivity that the generator
+                # never produced, and a model cannot learn a pattern that is
+                # absent from the data describing it.
+                quiet_months = int(rng.integers(ANOMALY_QUIET_MIN, ANOMALY_QUIET_MAX + 1))
+                start = max(0, int(month) - quiet_months)
+                if start < month:
+                    state["contribution"][investor, start:month] = 0.0
+                    state["n_trades"][investor, start:month] = 0.0
+                    state["turnover_value"][investor, start:month] = 0.0
+
                 state["contribution"][investor, month] = (
                     state["value"][investor, month] * float(rng.uniform(0.3, 0.8))
                 )
+                # Re-entering the market after a pause means placing trades.
+                state["n_trades"][investor, month] += float(rng.integers(1, 5))
 
             labels[investor, month] = 1
             type_labels[investor, month] = kind

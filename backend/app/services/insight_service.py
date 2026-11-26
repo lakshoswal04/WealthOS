@@ -14,6 +14,7 @@ import pandas as pd
 import torch
 from sqlalchemy.orm import Session
 
+from wealthos_core.anomaly import aggregate_error, derive_anomaly_features
 from app.ml_runtime import features as live_features
 from app.ml_runtime.registry import registry
 from app.models import User
@@ -120,25 +121,29 @@ def detect_anomalies(db: Session, user: User, limit: int = 24) -> dict:
         }
 
     columns = artifact["feature_columns"]
-    frame = history.sort_values("date").copy()
-
-    allocation_columns = [
-        "equity_allocation", "etf_allocation", "gold_allocation",
-        "debt_allocation", "cash_allocation",
-    ]
-    for column in allocation_columns + ["hhi", "top_holding_weight", "n_holdings"]:
-        frame[f"delta_{column}"] = frame[column].diff()
-    frame["allocation_shift"] = (
-        frame[[f"delta_{c}" for c in allocation_columns]].abs().sum(axis=1) / 2.0
-    )
-    median_turnover = frame["turnover"].median()
-    frame["turnover_ratio"] = (
-        frame["turnover"] / median_turnover if median_turnover else 0.0
-    )
+    # One definition of the derivations, shared with p07_features. These were
+    # reimplemented here until Phase 3a, so the two drifted apart the moment a
+    # feature was added to training: `reindex` below fills an unknown column
+    # with zero without complaint, and the model would have scored a vector
+    # that silently disagreed with the one it was fitted on.
+    frame = derive_anomaly_features(history.sort_values("date"), group_key=None)
 
     usable = frame.dropna(subset=["delta_equity_allocation"]).copy()
     if usable.empty:
         return {"available": False, "reason": "Not enough consecutive months to compare."}
+
+    missing = [c for c in columns if c not in usable.columns]
+    if missing:
+        # Fail loudly. Scoring against zero-filled columns produces a
+        # confident number from a feature vector the model has never seen.
+        return {
+            "available": False,
+            "reason": (
+                "The deployed model expects features this service does not "
+                f"compute ({', '.join(missing)}), so no score can be trusted. "
+                "The model artifact and the application are out of step."
+            ),
+        }
 
     matrix = usable.reindex(columns=columns).replace([np.inf, -np.inf], np.nan).fillna(0.0)
     scaled = artifact["scaler"].transform(matrix)
@@ -146,7 +151,25 @@ def detect_anomalies(db: Session, user: User, limit: int = 24) -> dict:
     with torch.no_grad():
         tensor = torch.tensor(scaled, dtype=torch.float32)
         rebuilt = artifact["model"](tensor)
-        errors = ((rebuilt - tensor) ** 2).mean(dim=1).numpy()
+        squared = ((rebuilt - tensor) ** 2).numpy()
+
+    # The aggregation is part of the model, carried in the artifact. Older
+    # artifacts predate it and were scored with a flat mean, so that is the
+    # fallback -- reducing the error differently from training would compute a
+    # different number from the same weights.
+    how = artifact.get("aggregation", "mean")
+    reference = None
+    if how.startswith("zscore_"):
+        reference_mean = artifact.get("error_reference_mean")
+        reference_std = artifact.get("error_reference_std")
+        if reference_mean is None or reference_std is None:
+            how = "mean"
+        else:
+            reference = {
+                "mean": np.asarray(reference_mean, dtype="float64"),
+                "std": np.asarray(reference_std, dtype="float64"),
+            }
+    errors = aggregate_error(squared, how, reference)
 
     threshold = float(artifact["threshold"])
     usable["anomaly_score"] = errors
@@ -154,7 +177,7 @@ def detect_anomalies(db: Session, user: User, limit: int = 24) -> dict:
 
     # Which features the model reconstructed worst explains *why* a month
     # looked unusual, rather than only that it did.
-    per_feature_error = ((rebuilt - tensor) ** 2).numpy()
+    per_feature_error = squared
 
     detected = []
     for position, (_, row) in enumerate(usable.iterrows()):

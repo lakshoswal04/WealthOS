@@ -11,7 +11,19 @@ scipy==1.18.1          # 1.15.x ships a macOS binary that fails to dlopen on Dar
 # --- classical ML ---
 scikit-learn==1.7.2
 xgboost==3.0.5
+# A second gradient-booster, so the forecast comparison is not one library's
+# opinion of itself. LightGBM's leaf-wise growth behaves differently from
+# XGBoost's level-wise on small, noisy panels, which is exactly the regime
+# the short-horizon forecasts sit in.
+lightgbm==4.6.0
 joblib==1.5.2
+
+# --- hyperparameter search ---
+# Replaces hand-picked configurations in the forecast pipeline. The previous
+# four XGBoost configs all early-stopped at iteration 0 on three of four
+# horizons, so the reported short-horizon weakness measured an untrained
+# model rather than a ceiling.
+optuna==4.6.0
 
 # --- deep learning ---
 torch==2.8.0

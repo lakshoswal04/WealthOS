@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-15T23:23:08.224506+00:00",
+  "generated_at": "2026-11-26T03:31:16.226384+00:00",
   "split_boundaries": {
     "train_end": "2022-12-31",
     "validation_end": "2024-06-30"
@@ -43,15 +43,15 @@
     "by_split": {
       "test": {
         "rows": 290000,
-        "anomalies": 1000
+        "anomalies": 1088
       },
       "train": {
         "rows": 774093,
-        "anomalies": 1966
+        "anomalies": 1878
       },
       "validation": {
         "rows": 179412,
-        "anomalies": 590
+        "anomalies": 630
       }
     }
   },
