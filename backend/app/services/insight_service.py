@@ -11,7 +11,6 @@ from datetime import date
 
 import numpy as np
 import pandas as pd
-import torch
 from sqlalchemy.orm import Session
 
 from wealthos_core.anomaly import aggregate_error, derive_anomaly_features
@@ -162,6 +161,8 @@ def detect_anomalies(db: Session, user: User, limit: int = 24) -> dict:
 
     matrix = usable.reindex(columns=columns).replace([np.inf, -np.inf], np.nan).fillna(0.0)
     scaled = artifact["scaler"].transform(matrix)
+
+    import torch  # loaded on first use, not at API start
 
     with torch.no_grad():
         tensor = torch.tensor(scaled, dtype=torch.float32)
@@ -327,6 +328,8 @@ def wealth_forecast(db: Session, user: User, horizon: int = 12) -> dict:
             .fillna(0.0)
             .tail(sequence_length)
         )
+        import torch  # loaded on first use, not at API start
+
         scaled = artifact["sequence_scaler"].transform(window).astype("float32")
         tensor = torch.tensor(scaled[None, :, :])
         for cell, model in artifact["sequence_models"].items():

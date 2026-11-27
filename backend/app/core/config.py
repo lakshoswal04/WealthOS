@@ -70,6 +70,12 @@ class Settings(BaseSettings):
     # deterministic explainer over the same tool outputs, so the platform
     # stays usable.
     llm_provider: str = Field(default="auto", alias="LLM_PROVIDER")
+    # Low-memory hosting (Render's free 512 MB). PyTorch is never loaded, so
+    # the neural models (anomaly autoencoder, LSTM/GRU forecasts, the deep
+    # swing models in the forward test) are off; LightGBM, HAR and the HMM
+    # still serve model picks, Autopilot and the regime. Models load on first
+    # use instead of at start-up.
+    low_memory: bool = Field(default=False, alias="LOW_MEMORY")
     gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
     gemini_model: str = Field(default="gemini-3.6-flash", alias="GEMINI_MODEL")
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")

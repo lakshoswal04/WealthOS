@@ -31,6 +31,11 @@ services:
         value: gemini-3.6-flash
       - key: LLM_PROVIDER
         value: auto                  # Gemini when its key is set, else Claude
+      # The free plan has 512 MB; the full API peaks around 700-840 MB.
+      # LOW_MEMORY keeps PyTorch out (neural models off, everything else on).
+      # Set it to "false" after moving to a plan with 1 GB or more.
+      - key: LOW_MEMORY
+        value: "true"
       - key: ANTHROPIC_API_KEY
         sync: false                  # optional alternative to Gemini
       - key: ENVIRONMENT

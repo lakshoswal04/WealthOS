@@ -28,6 +28,10 @@ logging.basicConfig(
 )
 log = logging.getLogger("wealthos")
 
+
+class _SkipProbe(Exception):
+    """Skips the start-up model probe in low-memory mode."""
+
 DESCRIPTION = """
 Personal wealth intelligence: portfolio analytics, risk, goal forecasting and
 a grounded AI Copilot.
@@ -65,6 +69,9 @@ async def lifespan(app: FastAPI):
     try:
         from app.ml_runtime.registry import registry
 
+        if settings.low_memory:
+            log.info("low-memory mode: models load on first use; PyTorch models are off")
+            raise _SkipProbe
         status = registry.status()
         loaded = [k for k, v in status["available"].items() if v]
         missing = [k for k, v in status["available"].items() if not v]
@@ -74,6 +81,8 @@ async def lifespan(app: FastAPI):
                 "models unavailable (those endpoints will report it): %s",
                 ", ".join(missing),
             )
+    except _SkipProbe:
+        pass
     except Exception as exc:
         log.error("model registry failed to initialise: %s", exc)
 
@@ -92,8 +101,12 @@ async def lifespan(app: FastAPI):
 
                 scheduler.start()
 
-            for step in (live_market_service.index_strip, screener_service.warm, master.ensure,
-                         research_service.calendar, research_service.news, daily_jobs):
+            steps = [live_market_service.index_strip, screener_service.warm, master.ensure,
+                     research_service.calendar, research_service.news, daily_jobs]
+            if settings.low_memory:
+                # The Upstox instrument file is large; load it when options are first used.
+                steps.remove(master.ensure)
+            for step in steps:
                 try:
                     step()
                 except Exception as exc:  # a cold cache must not stop the API

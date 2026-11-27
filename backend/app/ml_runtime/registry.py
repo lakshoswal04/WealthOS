@@ -57,7 +57,16 @@ class ModelRegistry:
             return joblib.load(self._dir / "investor_clustering.joblib")
         return self._load("clustering", loader)
 
+    def _low_memory(self, key: str) -> bool:
+        if settings.low_memory:
+            self._failures.setdefault(key, "Disabled in low-memory mode (LOW_MEMORY=true): needs PyTorch.")
+            return True
+        return False
+
     def anomaly(self) -> dict | None:
+        if self._low_memory("anomaly"):
+            return None
+
         def loader():
             import joblib
             import torch
@@ -79,13 +88,16 @@ class ModelRegistry:
 
         def loader():
             import joblib
+
+            support = joblib.load(self._dir / f"forecast_{horizon}m.joblib")
+            if settings.low_memory:
+                return {**support, "sequence_models": {}}
             import torch
 
             from ml.pipelines.p10_train_forecast import SequenceForecaster
 
-            support = joblib.load(self._dir / f"forecast_{horizon}m.joblib")
             sequence_models = {}
-            for cell in ("lstm", "gru"):
+            for cell in (() if settings.low_memory else ("lstm", "gru")):
                 path = self._dir / f"forecast_{cell}_{horizon}m.pt"
                 if not path.exists():
                     continue
@@ -120,6 +132,9 @@ class ModelRegistry:
 
     def swing_deep(self, name: str) -> dict | None:
         """One sequence network (lstm, gru, tcn, transformer) with its input contract."""
+        if self._low_memory(f"swing_{name}"):
+            return None
+
         def loader():
             import torch
 

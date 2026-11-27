@@ -10,7 +10,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libgomp1 libpq5 curl \
     && rm -rf /var/lib/apt/lists/*
 
-ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_NO_CACHE_DIR=1
+# MALLOC_ARENA_MAX: glibc gives each thread its own malloc arena; capping
+# them stops a threaded Python server fragmenting past a small memory limit.
+# *_NUM_THREADS=1: the API's maths is small, every extra thread pool costs
+# memory, and LightGBM + PyTorch OpenMP pools can deadlock.
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_NO_CACHE_DIR=1 \
+    MALLOC_ARENA_MAX=2 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 WORKDIR /app
 
 # CPU-only torch, installed FIRST and from PyTorch's own index.
