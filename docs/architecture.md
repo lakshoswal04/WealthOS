@@ -99,6 +99,63 @@ for colour-vision-deficiency separation and contrast.
 
 ---
 
+## The trading layer
+
+Added on top of the analytics, all on real data (see `docs/real-data.md`):
+
+```
+ Yahoo Finance (delayed)          Upstox (per user, live)          assets.upstox.com
+ quotes · daily OHLCV · news      option chain · quotes · candles   instrument master
+ fundamentals · calendar          margin · holdings                 (expiries, lots)
+          │                                │                              │
+          ▼                                ▼                              ▼
+ live_market_service ◀── feed_for(user) ── market_data.Feed ── integrations/upstox
+          │                                │
+          ├── screener_service, ideas_service, research_service
+          ├── options_service (chain, OI, crossovers, unusual, futures)
+          ├── paper_trading_service (fills at real prices; Upstox margin)
+          └── copilot_tools → copilot_service → chat_service (threads, cards, memory)
+```
+
+* **One feed per user.** `feed_for(db, user)` holds that user's Upstox token.
+  Every option or futures call goes through it, and its caches are keyed by
+  user. Without a session, calls raise `OptionsUnavailable`, which the API
+  returns as 409 `upstox_required` with an action. Stocks fall back to Yahoo.
+* **No fallback invents data.** If Yahoo and Upstox both fail, the API returns
+  503 `market_data_unavailable`, and the UI shows the reason.
+* **OAuth state is signed and single-use.** A ten-minute JWT is bound to the
+  user and to a nonce stored on their credential row, and cleared on use.
+* **The assistant cannot trade.** `propose_paper_order` and `propose_autopilot`
+  return proposals. Only the user's Confirm places a paper order.
+
+## The swing models
+
+Stages 13–19 train market models on real NSE history (`docs/swing-models.md`):
+
+```
+ history_daily.parquet ─▶ wealthos_core.swing_features ─▶ p15 ranker ensemble + quantiles
+ (Yahoo, 1995→, p13)        (33 features, point-in-time)   p16 volatility (HAR/GARCH/LightGBM)
+                                     │                      p17 regime (HMM, filtered)
+                                     │                      p18 LSTM/GRU/TCN/transformer
+                                     ▼                      p19 risk-profiled books + model card
+ universe_daily.parquet ─▶ signals_service ─▶ /signals, /advisor/swing-plan, ideas kind=model,
+ (2 years, refreshed      (same feature code,  copilot tools, chart panel
+  after each close)        models via registry) forward_test_service ─▶ forward_scores table
+```
+
+* **One feature implementation.** `swing_features.build_features` builds the
+  training panel and today's scores, so serving cannot drift from training.
+* **Only completed sessions.** A bar counts only if the price file was written
+  after that day's 16:00 IST close; the file refreshes itself after the close.
+* **Frozen forward test.** Each model's scores are recorded once per session
+  (`forward_scores`, unique per model and date) and replayed later. They are
+  never recomputed, even after a retrain.
+* **Missing models degrade, not fail.** Without artifacts the API returns 503
+  `models_unavailable`, which the UI shows as "Models not trained yet".
+* **One OpenMP runtime at a time.** On macOS, a multi-threaded torch CPU pass
+  after LightGBM can deadlock, so network inference runs single-threaded
+  (`deep_models.cpu_inference_mode`).
+
 ## Data model
 
 Eleven tables. Three of the original nine were **defined, migrated and never

@@ -189,6 +189,108 @@
   --edge-lit: rgb(255 255 255 / 0.09);
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Terminal theme — the trading surfaces' default (<html data-theme="terminal">)
+
+   Neutral near-black, no blue cast, so green and red carry all the colour on
+   a trading screen. Gains and losses get their own tokens (--up, --down)
+   rather than borrowing the status colours, because a falling price is not
+   a "critical" state. The categorical series reuse the dark theme's set,
+   which was validated against #0e1116 -- within a hair of this ground.
+   ────────────────────────────────────────────────────────────────── */
+
+:root[data-theme="terminal"] {
+  color-scheme: dark;
+
+  --surface-0: #0a0a0a;
+  --surface-1: #111111;
+  --surface-2: #151515;
+  --surface-3: #1e1e1e;
+  --surface-4: #2a2a2a;
+
+  --glass: #131313;
+  --glass-strong: #161616;
+
+  --hairline: #222222;
+  --hairline-strong: #2f2f2f;
+
+  --ink-primary: #f4f4f4;
+  --ink-secondary: #a8a8a8;
+  --ink-muted: #8c8c8c;
+  --ink-faint: #6e6e6e;
+
+  /* WealthOS gold, kept as the identity colour. */
+  --accent: #e2b450;
+  --accent-bright: #f1cc78;
+  --accent-dim: #6b5524;
+  --accent-ink: #141008;
+  --accent-wash: color-mix(in oklab, var(--accent) 12%, transparent);
+  --action: #f4f4f4;
+  --action-ink: #0a0a0a;
+
+  --up: #3fcf7f;
+  --down: #f2665e;
+  --buy: #26a259;
+  --sell: #c8413b;
+
+  --good: #2fb36a;
+  --good-ink: #4fd88d;
+  --warning: #c98500;
+  --warning-ink: #e8b84b;
+  --serious: #d95926;
+  --serious-ink: #f08a5d;
+  --critical: #e5534b;
+  --critical-ink: #f87f78;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #0ca30c;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+
+  --grid: #1b1b1b;
+  --axis: #3a3a3a;
+
+  --lift-1: 0 1px 2px rgb(0 0 0 / 0.5);
+  --lift-2: 0 1px 2px rgb(0 0 0 / 0.5), 0 12px 32px -12px rgb(0 0 0 / 0.7);
+  --lift-3: 0 4px 16px rgb(0 0 0 / 0.55), 0 24px 56px -20px rgb(0 0 0 / 0.75);
+  --glow-accent: 0 0 0 1px color-mix(in oklab, var(--accent) 24%, transparent);
+  --edge-lit: rgb(255 255 255 / 0.05);
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --radius-lg: 20px;
+}
+
+:root[data-theme="terminal"] body { background-image: none; }
+:root[data-theme="terminal"] .metal { background: none; color: var(--accent); }
+
+/* Up/down tokens for the other themes, so trading components work anywhere. */
+:root { --up: var(--good-ink); --down: var(--critical-ink); --buy: #1f8a4c; --sell: #b8352f; }
+
+/* The scrolling index strip. Two copies of the list slide by exactly one
+   copy's width, so the loop has no seam. */
+@keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.ticker-track { animation: ticker-scroll 60s linear infinite; }
+.ticker-track:hover { animation-play-state: paused; }
+
+/* A price that just changed blinks its direction once. */
+@keyframes tick-up { from { background: color-mix(in oklab, var(--up) 28%, transparent); } to { background: transparent; } }
+@keyframes tick-down { from { background: color-mix(in oklab, var(--down) 28%, transparent); } to { background: transparent; } }
+.tick-up { animation: tick-up 900ms ease-out; border-radius: 4px; }
+.tick-down { animation: tick-down 900ms ease-out; border-radius: 4px; }
+
+/* For an input whose container already shows focus (the chat composer's
+   pill border): the global ring drawn inside it would be a second, boxed
+   focus indicator. Unlayered, so it outranks the global :focus-visible rule. */
+.no-focus-ring:focus-visible { outline: none; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
 * { border-color: var(--hairline); }
 
 html { scroll-behavior: smooth; }

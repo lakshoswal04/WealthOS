@@ -55,9 +55,11 @@ class LinkCompleteRequest(BaseModel):
 
 @router.get("/linked-accounts/providers")
 def providers() -> dict:
-    """The simulated providers, and what live access would require."""
+    """The simulated providers (test builds only), and what live access requires."""
+    from app.core.config import settings
+
     return {
-        "providers": list(SUPPORTED_PROVIDERS),
+        "providers": list(SUPPORTED_PROVIDERS) if settings.broker_sandbox_enabled else [],
         "scopes": list(SANDBOX_SCOPES),
         "all_simulated": True,
         "simulation_notice": linking_service.SIMULATION_NOTICE,
@@ -77,6 +79,8 @@ def start(payload: LinkStartRequest, user: CurrentUser) -> dict:
         result = linking_service.begin_link(
             payload.provider, payload.redirect_uri, secrets.token_urlsafe(16)
         )
+    except linking_service.SandboxDisabled as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
@@ -101,6 +105,8 @@ def complete(payload: LinkCompleteRequest, user: CurrentUser, db: DbSession) -> 
                 if payload.granted_scopes is not None else None
             ),
         )
+    except linking_service.SandboxDisabled as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)

@@ -111,8 +111,15 @@ def test_empty_and_oversized_messages_are_rejected(client, auth):
 def test_capabilities_describes_the_active_mode(client):
     body = client.get("/api/v1/copilot/capabilities").json()
     assert body["mode"] in {"llm", "deterministic_fallback"}
-    assert len(body["tools"]) == 8
+    names = {t["name"] for t in body["tools"]}
+    # The eight portfolio tools, the trading tools added with paper trading,
+    # and the three swing-model tools.
+    assert {"get_portfolio_summary", "get_risk_metrics", "get_health_score"} <= names
+    assert {"get_quote", "get_option_chain_summary", "propose_paper_order"} <= names
+    assert {"get_model_signals", "get_market_regime", "propose_swing_plan"} <= names
+    assert len(body["tools"]) == 23
     assert body["limits"]
+    assert any("confirm" in limit.lower() for limit in body["limits"])
 
 
 def test_answer_is_grounded_in_the_tools_it_called(client, funded):

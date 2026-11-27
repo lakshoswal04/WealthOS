@@ -43,14 +43,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { access_token } = await api.login(email, password);
     setToken(access_token);
     setUser(await api.me());
-    router.push("/overview");
+    router.push("/home");
   }, [router]);
 
   const signUp = useCallback(async (payload: Record<string, unknown>) => {
     const { access_token } = await api.register(payload);
     setToken(access_token);
     setUser(await api.me());
-    router.push("/import");
+    router.push("/home");
   }, [router]);
 
   const signOut = useCallback(() => {

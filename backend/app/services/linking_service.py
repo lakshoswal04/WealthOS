@@ -97,7 +97,7 @@ def _serialise(account: LinkedAccount) -> dict:
         ),
         "last_sync_error": account.last_sync_error,
         "created_at": account.created_at.isoformat() if account.created_at else None,
-        "simulation_notice": SIMULATION_NOTICE,
+        "simulation_notice": SIMULATION_NOTICE if account.is_simulated else None,
     }
 
 
@@ -124,11 +124,26 @@ def _serialise_run(run: AccountSyncRun) -> dict:
 # Authorisation
 # --------------------------------------------------------------------------
 
+class SandboxDisabled(RuntimeError):
+    """The simulated broker is switched off (everywhere but the test suite)."""
+
+
+def _require_sandbox() -> None:
+    from app.core.config import settings
+
+    if not settings.broker_sandbox_enabled:
+        raise SandboxDisabled(
+            "Simulated broker linking is disabled. Connect a real Upstox account "
+            "under Settings → Broker APIs."
+        )
+
+
 def begin_link(provider: str, redirect_uri: str, state: str) -> dict:
     """Where the user would authorise, and what they would be granting.
 
     Returns a URL rather than following it. Nothing is contacted.
     """
+    _require_sandbox()
     if provider not in SUPPORTED_PROVIDERS:
         raise ValueError(
             f"unknown provider {provider!r}; expected one of {SUPPORTED_PROVIDERS}"
@@ -163,6 +178,7 @@ def complete_link(
     than inserting a second one. Without that, a user who links twice gets
     every holding imported twice.
     """
+    _require_sandbox()
     if provider not in SUPPORTED_PROVIDERS:
         raise ValueError(f"unknown provider {provider!r}")
 
@@ -217,8 +233,8 @@ def list_accounts(db: Session, user: User) -> dict:
     return {
         "accounts": [_serialise(a) for a in rows],
         "total": len(rows),
-        "all_simulated": all(a.is_simulated for a in rows),
-        "simulation_notice": SIMULATION_NOTICE,
+        "all_simulated": bool(rows) and all(a.is_simulated for a in rows),
+        "simulation_notice": SIMULATION_NOTICE if any(a.is_simulated for a in rows) else None,
         "csv_import_still_available": True,
         "csv_import_note": (
             "CSV import remains a first-class way to load a portfolio and "
@@ -367,10 +383,10 @@ def sync_account(
     run.duplicates_skipped = duplicates
     run.finished_at = datetime.now(timezone.utc)
     run.details = {
-        "is_simulated": True,
+        "is_simulated": account.is_simulated,
         "unknown_symbols_skipped": unknown,
         "partial_response": partial,
-        "simulation_notice": SIMULATION_NOTICE,
+        "simulation_notice": SIMULATION_NOTICE if account.is_simulated else None,
     }
     if partial:
         run.error_kind = "partial_response"
@@ -390,7 +406,7 @@ def sync_account(
     return {
         "account": _serialise(account),
         "run": _serialise_run(run),
-        "simulation_notice": SIMULATION_NOTICE,
+        "simulation_notice": SIMULATION_NOTICE if account.is_simulated else None,
     }
 
 
@@ -453,7 +469,7 @@ def _fail(
     run.error_kind = kind
     run.error_message = message[:512]
     run.finished_at = datetime.now(timezone.utc)
-    run.details = {"is_simulated": True, **(details or {})}
+    run.details = {"is_simulated": account.is_simulated, **(details or {})}
     account.last_sync_error = message[:512]
     db.commit()
     db.refresh(run)
@@ -461,7 +477,7 @@ def _fail(
     return {
         "account": _serialise(account),
         "run": _serialise_run(run),
-        "simulation_notice": SIMULATION_NOTICE,
+        "simulation_notice": SIMULATION_NOTICE if account.is_simulated else None,
     }
 
 
@@ -489,5 +505,5 @@ def sync_history(db: Session, user: User, account_id: int, limit: int = 20) -> d
         "successful_runs": len(successful),
         "failed_runs": sum(1 for r in runs if r.status == SyncStatus.FAILED),
         "partial_runs": sum(1 for r in runs if r.status == SyncStatus.PARTIAL),
-        "simulation_notice": SIMULATION_NOTICE,
+        "simulation_notice": SIMULATION_NOTICE if account.is_simulated else None,
     }

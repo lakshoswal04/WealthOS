@@ -32,6 +32,8 @@ __all__ = [
     "calmar_ratio",
     "treynor_ratio",
     "performance_summary",
+    "probabilistic_sharpe_ratio",
+    "deflated_sharpe_ratio",
 ]
 
 
@@ -165,3 +167,71 @@ def performance_summary(
         summary["treynor_ratio"] = float("nan")
 
     return summary
+
+
+# --------------------------------------------------------------------------
+# Selection-bias-aware Sharpe (Bailey and López de Prado, 2012 and 2014)
+# --------------------------------------------------------------------------
+
+_EULER_GAMMA = 0.5772156649015329
+
+
+def probabilistic_sharpe_ratio(
+    sharpe: float, benchmark_sharpe: float, n_obs: int, skew: float = 0.0, kurtosis: float = 3.0
+) -> float:
+    """Probability that the true (per-period) Sharpe exceeds ``benchmark_sharpe``.
+
+    Both Sharpe ratios are per period (not annualised). ``kurtosis`` is the
+    ordinary kurtosis (3 for a normal distribution), not excess kurtosis.
+    """
+    from scipy.stats import norm
+
+    if n_obs < 2 or np.isnan(sharpe):
+        return float("nan")
+    denom = 1.0 - skew * sharpe + (kurtosis - 1.0) / 4.0 * sharpe**2
+    if denom <= 0:
+        return float("nan")
+    z = (sharpe - benchmark_sharpe) * np.sqrt(n_obs - 1) / np.sqrt(denom)
+    return float(norm.cdf(z))
+
+
+def deflated_sharpe_ratio(
+    returns: pd.Series, n_trials: int, trial_sharpe_std: float | None = None
+) -> dict:
+    """Probability the strategy's Sharpe is real after trying ``n_trials`` variants.
+
+    Testing many configurations and keeping the best inflates the winner's
+    Sharpe. The deflated Sharpe ratio raises the bar to the Sharpe expected
+    from the best of ``n_trials`` skill-less strategies, then asks how likely
+    the observed one beats it. ``trial_sharpe_std`` is the spread of
+    per-period Sharpe ratios across the trials; without it, the sampling
+    standard error of a single Sharpe estimate is used.
+    """
+    from scipy.stats import kurtosis as _kurt
+    from scipy.stats import norm
+    from scipy.stats import skew as _skew
+
+    r = _clean(returns)
+    n = len(r)
+    if n < 10 or r.std(ddof=1) == 0:
+        return {"dsr": float("nan"), "sharpe_per_period": float("nan"), "benchmark_sharpe_per_period": float("nan"),
+                "n_trials": int(n_trials), "n_obs": int(n)}
+    sr = float(r.mean() / r.std(ddof=1))
+    sk = float(_skew(r))
+    ku = float(_kurt(r, fisher=False))
+    sd = trial_sharpe_std if trial_sharpe_std is not None else float(np.sqrt(1.0 / (n - 1)))
+    n_trials = max(int(n_trials), 1)
+    if n_trials == 1:
+        sr0 = 0.0
+    else:
+        sr0 = sd * ((1.0 - _EULER_GAMMA) * norm.ppf(1.0 - 1.0 / n_trials)
+                    + _EULER_GAMMA * norm.ppf(1.0 - 1.0 / (n_trials * np.e)))
+    return {
+        "dsr": probabilistic_sharpe_ratio(sr, sr0, n, sk, ku),
+        "sharpe_per_period": sr,
+        "benchmark_sharpe_per_period": float(sr0),
+        "skew": sk,
+        "kurtosis": ku,
+        "n_trials": n_trials,
+        "n_obs": int(n),
+    }

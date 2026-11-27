@@ -70,7 +70,7 @@ export default function LandingPage() {
 
               <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 {user ? (
-                  <LinkButton href="/overview" size="lg">Go to your dashboard</LinkButton>
+                  <LinkButton href="/home" size="lg">Go to your dashboard</LinkButton>
                 ) : (
                   <>
                     <LinkButton href="/register" size="lg">Create your account</LinkButton>
@@ -299,7 +299,7 @@ export default function LandingPage() {
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             {user ? (
-              <LinkButton href="/overview" size="lg">Go to your dashboard</LinkButton>
+              <LinkButton href="/home" size="lg">Go to your dashboard</LinkButton>
             ) : (
               <>
                 <LinkButton href="/register" size="lg">Create your account</LinkButton>

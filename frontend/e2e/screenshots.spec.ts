@@ -27,7 +27,7 @@ async function seed(page: Page) {
   await page.getByLabel("Annual income (₹)").fill("1800000");
   await page.getByLabel("Monthly savings (₹)").fill("45000");
   await page.getByRole("button", { name: "Create account" }).click();
-  await page.waitForURL("**/import");
+  await page.waitForURL("**/home");
 
   await page.setInputFiles('input[type="file"]', {
     name: "holdings.csv", mimeType: "text/csv", buffer: Buffer.from(CSV),
@@ -36,7 +36,7 @@ async function seed(page: Page) {
   await page.getByText("Imported", { exact: true }).waitFor({ timeout: 20_000 });
 
   await page.getByRole("button", { name: "New goal" }).waitFor({ state: "detached" }).catch(() => {});
-  await page.goto("/goals");
+  await page.goto("/analysis/goals");
   await page.getByRole("button", { name: "New goal" }).click();
   await page.getByLabel("Name").fill("Retirement");
   await page.getByLabel("Target amount (₹)").fill("25000000");
@@ -51,12 +51,12 @@ test("capture every page", async ({ page }) => {
   await seed(page);
 
   const pages: [string, string][] = [
-    ["/overview", "overview"],
-    ["/portfolio", "portfolio"],
-    ["/risk", "risk"],
-    ["/goals", "goals"],
-    ["/insights", "insights"],
-    ["/copilot", "copilot"],
+    ["/analysis/overview", "overview"],
+    ["/analysis/holdings", "portfolio"],
+    ["/analysis/risk", "risk"],
+    ["/analysis/goals", "goals"],
+    ["/analysis/insights", "insights"],
+    ["/home", "copilot"],
     ["/import", "import"],
     ["/profile", "profile"],
   ];
@@ -65,12 +65,13 @@ test("capture every page", async ({ page }) => {
     await page.goto(path);
     // Charts and model panels settle after their fetches resolve.
     await page.waitForTimeout(3500);
-    if (path === "/goals") {
+    if (path === "/analysis/goals") {
       await page.getByText("Retirement").first().click();
       await page.waitForTimeout(2500);
     }
-    if (path === "/copilot") {
-      await page.getByRole("button", { name: "Why is my portfolio risky?" }).click();
+    if (path === "/home") {
+      await page.getByLabel("Message the AI").fill("Why is my portfolio risky?");
+      await page.getByLabel("Message the AI").press("Enter");
       await page.getByText(/figures verified/).waitFor({ timeout: 30_000 });
       await page.waitForTimeout(800);
     }

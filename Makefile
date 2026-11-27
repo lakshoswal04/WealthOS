@@ -3,7 +3,7 @@
 PY := .venv/bin/python
 SHELL := /bin/bash
 
-.PHONY: help setup data cohort models all dev api web test test-e2e lint clean db-reset
+.PHONY: help setup data cohort models swing swing-quick all dev api web test test-e2e lint clean db-reset
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -16,12 +16,13 @@ setup: ## Create the venv, install dependencies, run migrations
 	cd frontend && pnpm install
 	cd backend && ../$(PY) -m alembic upgrade head
 
-data: ## Stages 01-04 — ingest, fetch, splice, validate, seed the database
+data: ## Stages 01-04 + 12 — ingest, fetch, splice, validate, seed, trading universe
 	$(PY) -m ml.pipelines.p01_ingest_market
 	$(PY) -m ml.pipelines.p02_fetch_external
 	$(PY) -m ml.pipelines.p03_build_prices
 	$(PY) -m ml.pipelines.p03b_validate_adjustment
 	$(PY) -m ml.pipelines.p04_seed_database --reset
+	$(PY) -m ml.pipelines.p12_fetch_universe
 
 cohort: ## Stages 05-07 — holding priors, synthetic investors, feature tables
 	$(PY) -m ml.pipelines.p05_big_sharks_priors
@@ -34,7 +35,24 @@ models: ## Stages 08-11 — train, evaluate, measure Copilot grounding
 	for h in 1 3 6 12; do $(PY) -m ml.pipelines.p10_train_forecast --horizon $$h; done
 	$(PY) -m ml.pipelines.p11_eval_copilot
 
-all: data cohort models ## Run the whole pipeline end to end
+swing: ## Stages 13-19 — swing-trading models on real NSE history (about 30 minutes)
+	$(PY) -m ml.pipelines.p13_fetch_history
+	$(PY) -m ml.pipelines.p14_build_swing_features
+	$(PY) -m ml.pipelines.p15_train_ranker
+	$(PY) -m ml.pipelines.p16_train_volatility
+	$(PY) -m ml.pipelines.p17_train_regime
+	$(PY) -W ignore -m ml.pipelines.p18_train_deep
+	$(PY) -m ml.pipelines.p19_swing_portfolio
+
+swing-quick: ## Smoke run of stages 14-19 (fewer trials and epochs; not for reporting)
+	$(PY) -m ml.pipelines.p14_build_swing_features
+	$(PY) -m ml.pipelines.p15_train_ranker --quick
+	$(PY) -m ml.pipelines.p16_train_volatility --quick
+	$(PY) -m ml.pipelines.p17_train_regime
+	$(PY) -W ignore -m ml.pipelines.p18_train_deep --quick
+	$(PY) -m ml.pipelines.p19_swing_portfolio
+
+all: data cohort models swing ## Run the whole pipeline end to end
 
 api: ## Run the API on :8010
 	cd backend && PYTHONPATH=.. ../$(PY) -m uvicorn app.main:app --reload --port 8010

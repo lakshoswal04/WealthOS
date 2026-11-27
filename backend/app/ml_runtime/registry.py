@@ -98,6 +98,41 @@ class ModelRegistry:
 
         return self._load(key, loader)
 
+    # ---- swing-trading models (ml/pipelines stages 15-18) ----
+
+    def _joblib(self, key: str, filename: str) -> dict | None:
+        def loader():
+            import joblib
+            return joblib.load(self._dir / filename)
+        return self._load(key, loader)
+
+    def swing_ranker(self) -> dict | None:
+        return self._joblib("swing_ranker", "swing_ranker.joblib")
+
+    def swing_quantiles(self) -> dict | None:
+        return self._joblib("swing_quantiles", "swing_quantiles.joblib")
+
+    def swing_vol(self) -> dict | None:
+        return self._joblib("swing_vol", "swing_vol.joblib")
+
+    def swing_regime(self) -> dict | None:
+        return self._joblib("swing_regime", "swing_regime.joblib")
+
+    def swing_deep(self, name: str) -> dict | None:
+        """One sequence network (lstm, gru, tcn, transformer) with its input contract."""
+        def loader():
+            import torch
+
+            from ml.pipelines.deep_models import build, cpu_inference_mode
+
+            cpu_inference_mode()
+            checkpoint = torch.load(self._dir / f"swing_{name}.pt", map_location="cpu", weights_only=False)
+            model = build(checkpoint["name"], checkpoint["n_features"], checkpoint["seq_len"])
+            model.load_state_dict(checkpoint["state_dict"])
+            model.eval()
+            return {**{k: v for k, v in checkpoint.items() if k != "state_dict"}, "model": model}
+        return self._load(f"swing_{name}", loader)
+
     # ---- status ----
 
     def status(self) -> dict:
@@ -107,6 +142,9 @@ class ModelRegistry:
             ("investor_clustering", self.clustering),
             ("anomaly_autoencoder", self.anomaly),
             ("forecast_12m", lambda: self.forecast(12)),
+            ("swing_ranker", self.swing_ranker),
+            ("swing_vol", self.swing_vol),
+            ("swing_regime", self.swing_regime),
         ):
             available[name] = probe() is not None
         return {

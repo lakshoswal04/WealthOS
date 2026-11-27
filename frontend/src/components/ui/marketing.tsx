@@ -45,7 +45,7 @@ export function PublicHeader() {
 
         <div className="ml-auto flex items-center gap-2.5">
           {loading ? null : user ? (
-            <LinkButton href="/overview" size="sm">Go to dashboard</LinkButton>
+            <LinkButton href="/home" size="sm">Go to dashboard</LinkButton>
           ) : (
             <>
               <Link href="/login"
@@ -112,9 +112,10 @@ export function PublicFooter() {
           </strong>{" "}
           It explains computed portfolio metrics and does not provide investment
           advice. Forecasts are projections under stated assumptions, not
-          predictions, and may be wrong. Market prices are real and
-          corporate-action adjusted; all investor-level data used in
-          demonstrations is synthetic and labelled as such.
+          predictions, and may be wrong. Market prices are real: live from
+          your own Upstox account when you connect it, otherwise delayed from
+          Yahoo Finance. Trading is paper only. The behaviour models were
+          trained on a synthetic investor cohort, documented under Research.
         </p>
       </div>
     </footer>

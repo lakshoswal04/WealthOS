@@ -35,9 +35,15 @@ MODEL_REPORTS = ("clustering", "anomaly_detection", "copilot_groundedness",
 DATA_REPORTS = ("ingest_quality", "price_build", "adjustment_impact",
                 "external_fetch", "big_sharks_priors", "cohort", "database_seed")
 
-ALL_REPORTS = MODEL_REPORTS + DATA_REPORTS
+# The swing-trading stack (ml/pipelines stages 13-19). Served on their own
+# endpoint: they carry equity curves and timelines that the Model Lab's
+# single request does not need.
+SWING_REPORTS = ("history_fetch", "swing_features", "swing_ranker", "swing_volatility", "swing_regime",
+                 "swing_deep", "swing_portfolio", "swing_model_card")
 
-_cache: dict[str, dict] = {}
+ALL_REPORTS = MODEL_REPORTS + DATA_REPORTS + SWING_REPORTS
+
+_cache: dict[str, tuple[float, dict]] = {}
 _lock = threading.Lock()
 
 
@@ -51,10 +57,10 @@ def _load(name: str) -> dict:
     A missing report disables one panel rather than failing the page, which
     matches how the model endpoints already degrade.
     """
-    if name in _cache:
-        return _cache[name]
-
     path = _reports_dir() / f"{name}.json"
+    cached = _cache.get(name)
+    if cached is not None and path.exists() and cached[0] == path.stat().st_mtime:
+        return cached[1]
     if not path.exists():
         return {
             "available": False,
@@ -72,7 +78,9 @@ def _load(name: str) -> dict:
 
     payload["available"] = True
     with _lock:
-        _cache[name] = payload
+        # Keyed on the file's mtime, so a retrained model's report shows up
+        # without a restart.
+        _cache[name] = (path.stat().st_mtime, payload)
     return payload
 
 
@@ -83,6 +91,12 @@ def all_reports() -> dict:
         "models": {name: _load(name) for name in MODEL_REPORTS},
         "data": {name: _load(name) for name in DATA_REPORTS},
     }
+
+
+@router.get("/swing")
+def swing_reports() -> dict:
+    """The swing-model reports: data, ranker, volatility, regime, deep learning, portfolios, model card."""
+    return {name: _load(name) for name in SWING_REPORTS}
 
 
 @router.get("/reports/{name}")

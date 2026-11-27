@@ -62,6 +62,7 @@ class AlertType(StrEnum):
     GOAL_OFF_TRACK = "goal_off_track"
     ALLOCATION_DRIFT = "allocation_drift"
     HEALTH_SCORE_DROP = "health_score_drop"
+    AUTOPILOT = "autopilot"
 
 
 class ModelName(StrEnum):

@@ -37,6 +37,9 @@ if not _test_database_url.rsplit("/", 1)[-1].split("?")[0].endswith("_test"):
 
 os.environ["DATABASE_URL"] = _test_database_url
 os.environ["JWT_SECRET_KEY"] = "test-only-secret-not-used-anywhere-else"
+# Every price in a test comes from the seeded simulator, never the network.
+os.environ["LIVE_MARKET_ENABLED"] = "false"
+os.environ["BROKER_SANDBOX_ENABLED"] = "true"
 
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import create_engine  # noqa: E402
@@ -167,3 +170,36 @@ def second_user(client):
 @pytest.fixture
 def auth(registered_user):
     return registered_user["headers"]
+
+
+@pytest.fixture
+def market(monkeypatch, seeded_db, tmp_path):
+    """Deterministic market data: fixture Yahoo quotes, a fixture instrument
+    master and a mock Upstox API. Yields the FakeUpstox for assertions."""
+    from datetime import datetime as _dt
+
+    from app.integrations.upstox import client as upstox_client
+    from app.integrations.upstox.instruments import master
+    from app.services import live_market_service as live
+    from app.services import market_data, screener_service
+    from tests.fakes import FakeUpstox, FixtureMarket, install_master
+
+    frozen = _dt(2026, 11, 25, 11, 0, tzinfo=live.IST)     # a Wednesday, mid-session
+    monkeypatch.setattr(live, "now_ist", lambda: frozen)
+    monkeypatch.setattr(live, "_daily_path", lambda: tmp_path / "missing.parquet")
+    monkeypatch.setattr(live.daily_store, "_frame", None)
+    monkeypatch.setattr(live.daily_store, "_mtime", None)
+    monkeypatch.setattr(type(screener_service.fundamentals), "_path",
+                        property(lambda self: tmp_path / "fundamentals.json"))
+    monkeypatch.setattr(screener_service.fundamentals, "_data", {})
+    monkeypatch.setattr(live, "provider", FixtureMarket(market_cache.panel(seeded_db)))
+    install_master()
+    fake = FakeUpstox()
+    monkeypatch.setattr(upstox_client, "TRANSPORT", fake.transport())
+    for reset in (live.reset_caches, screener_service.reset_cache, market_data.clear_cache):
+        reset()
+    yield fake
+    for reset in (live.reset_caches, screener_service.reset_cache, market_data.clear_cache):
+        reset()
+    master.load_records([])
+    master._day = None

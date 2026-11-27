@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-11-26T07:40:35.570534+00:00",
+  "symbols": 106,
+  "rows": 51636,
+  "first_date": "2024-11-26",
+  "last_date": "2026-11-26",
+  "thin_symbols": {
+    "ICICIPRULI": 88,
+    "MIDCPNIFTY": 1
+  },
+  "note": "Daily OHLCV, split/dividend adjusted by Yahoo. Used by screeners only."
+}

@@ -35,6 +35,7 @@ PUBLIC_PATHS = {
     "/api/v1/models/status": "which artifacts loaded; no user data",
     "/api/v1/research/reports": "published training evidence, no user data",
     "/api/v1/research/reports/{name}": "published training evidence",
+    "/api/v1/research/swing": "published swing-model evidence, no user data",
     "/api/v1/linked-accounts/providers": "static provider list and scopes",
     "/api/v1/market/assets": "the tradable universe, identical for everyone",
     "/api/v1/portfolio/assets": "the tradable universe, identical for everyone",
@@ -145,6 +146,21 @@ def _create_owned_resources(client, headers) -> dict[str, int]:
     if alerts.get("alerts"):
         ids["alert"] = alerts["alerts"][0]["id"]
 
+    order = client.post("/api/v1/paper/orders", headers=headers, json={
+        "instrument": "equity", "symbol": "RELIANCE", "side": "buy", "quantity": 1,
+        "order_type": "limit", "limit_price": 1.0})
+    if order.status_code == 201:
+        ids["paper_order"] = order.json()["id"]
+
+    thread = client.post("/api/v1/chat/threads", headers=headers, json={"title": "Private"})
+    if thread.status_code == 201:
+        ids["chat_thread"] = thread.json()["id"]
+
+    screen = client.post("/api/v1/screeners/saved", headers=headers, json={
+        "name": "Private", "definition": {"filters": [{"field": "rsi_14", "op": "lte", "value": 70}]}})
+    if screen.status_code == 201:
+        ids["saved_screen"] = screen.json()["id"]
+
     return ids
 
 
@@ -185,7 +201,21 @@ def test_one_user_cannot_read_or_change_anothers_resources(
             ("DELETE", f"/api/v1/alerts/{mine['alert']}", None),
         ]
 
-    assert len(attempts) >= 6, f"too few resources to audit: {sorted(mine)}"
+    if "paper_order" in mine:
+        attempts += [("POST", f"/api/v1/paper/orders/{mine['paper_order']}/cancel", None)]
+    if "chat_thread" in mine:
+        attempts += [
+            ("GET", f"/api/v1/chat/threads/{mine['chat_thread']}", None),
+            ("POST", f"/api/v1/chat/threads/{mine['chat_thread']}/messages", {"content": "hi"}),
+            ("DELETE", f"/api/v1/chat/threads/{mine['chat_thread']}", None),
+        ]
+    if "saved_screen" in mine:
+        attempts += [
+            ("GET", f"/api/v1/screeners/saved/{mine['saved_screen']}/run", None),
+            ("DELETE", f"/api/v1/screeners/saved/{mine['saved_screen']}", None),
+        ]
+
+    assert len(attempts) >= 12, f"too few resources to audit: {sorted(mine)}"
 
     for method, url, body in attempts:
         response = client.request(method, url, headers=other,
@@ -206,6 +236,9 @@ def test_a_second_user_sees_an_empty_account(client, auth, second_user):
     assert client.get("/api/v1/alerts", headers=other).json()["total"] == 0
     assert client.get("/api/v1/linked-accounts", headers=other).json()["total"] == 0
     assert client.get("/api/v1/portfolio/transactions", headers=other).json() == []
+    assert client.get("/api/v1/paper/orders", headers=other).json()["total"] == 0
+    assert client.get("/api/v1/chat/threads", headers=other).json()["threads"] == []
+    assert client.get("/api/v1/screeners/saved", headers=other).json()["screens"] == []
 
 
 def test_a_malformed_token_is_refused_everywhere(client):

@@ -17,17 +17,8 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("sandbox linking is explicitly labeled and sends a simulated request", async ({ page }) => {
-  await page.goto("/import");
-  await expect(page.getByRole("heading", { name: "Simulated account linking" })).toBeVisible();
-  await expect(page.getByText(/Syncing adds simulated transactions/)).toBeVisible();
-  const request = page.waitForRequest((r) => r.url().endsWith("/api/v1/linked-accounts") && r.method() === "POST");
-  await page.getByRole("button", { name: "Create simulated link" }).click();
-  expect((await request).postDataJSON()).toMatchObject({ provider: "sandbox", account_reference: "SBX0001" });
-});
-
 test("alerts report measurement failures and an unavailable health score does not crash", async ({ page }) => {
-  await page.goto("/insights");
+  await page.goto("/analysis/insights");
   await expect(page.getByText(/A health score is not available yet/)).toBeVisible();
   await page.getByRole("button", { name: "Check portfolio" }).click();
   await expect(page.getByText("Risk: Not enough history")).toBeVisible();
@@ -43,35 +34,10 @@ test("insights show provenance and distinguish forecast baselines", async ({ pag
     projected_growth_over_baseline: 0.1,
     recommendation: { recommended_source: "baseline_mean_drift", model_beats_baseline: false, note: "Evaluated across folds." },
   } }));
-  await page.goto("/insights");
+  await page.goto("/analysis/insights");
   await expect(page.getByRole("heading", { name: "Where the behavioural inputs come from" })).toBeVisible();
   await expect(page.getByText("Coverage is not a probability.", { exact: false })).toBeVisible();
   await expect(page.getByText(/mean-drift baseline value is not supplied/)).toBeVisible();
   await expect(page.getByText("Model ensemble", { exact: true })).toBeVisible();
 });
 
-test("simulated sync reports failures and retains history after disconnect", async ({ page }) => {
-  let disconnected = false;
-  let syncRequests = 0;
-  await page.route("**/api/v1/linked-accounts**", async (route) => {
-    const path = new URL(route.request().url()).pathname;
-    const method = route.request().method();
-    if (path === "/api/v1/linked-accounts") return route.fulfill({ json: { simulation_notice: "Simulation only", accounts: [{ id: 7, display_name: "Sandbox 0001", status: disconnected ? "disconnected" : "active", last_successful_sync_at: null, last_sync_error: null }] } });
-    if (path.endsWith("/sync")) { syncRequests++; return route.fulfill({ json: { run: { status: "failed" } } }); }
-    if (path.endsWith("/syncs")) return route.fulfill({ json: { runs: [{ id: 1, status: "failed", started_at: null, holdings_created: 0, holdings_updated: 0, transactions_created: 0, error_message: "Provider unavailable" }] } });
-    if (method === "DELETE") { disconnected = true; return route.fulfill({ status: 204 }); }
-    return route.fulfill({ status: 404 });
-  });
-  await page.goto("/import");
-  await expect(page.getByText("Sandbox 0001")).toBeVisible();
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await page.getByRole("button", { name: "Sync simulated data" }).click();
-  expect(syncRequests).toBe(0);
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Sync simulated data" }).click();
-  await expect(page.getByText(/Provider unavailable/)).toBeVisible();
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Disconnect", exact: true }).click();
-  await expect(page.getByText("Disconnected", { exact: true })).toBeVisible();
-  await expect(page.getByText(/Provider unavailable/)).toBeVisible();
-});

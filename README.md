@@ -1,36 +1,39 @@
 # WealthOS
 
-**AI-powered personal wealth intelligence and portfolio management**
+**AI trading and wealth intelligence for Indian markets**
 Polaris School of Technology — On-the-Job Training, Advanced Data Science track
 
-A full-stack platform that ingests a retail investor's portfolio, computes
-financial and risk analytics from fifteen years of real Indian market
-history, profiles investor behaviour, detects anomalous activity, forecasts
-wealth trajectories, produces a decomposable Portfolio Health Score, and
-explains all of it through an AI Copilot that can only quote figures the
-backend computed.
+An AI-first trading workspace on real market data: an AI chat that answers
+from measured figures and proposes paper orders you confirm, markets and
+open-interest analysis, screeners, rule-based ideas and backtests, a chart
+terminal, and a paper portfolio. Underneath sit the original WealthOS
+analytics: risk, a decomposable health score, goals, behaviour profiling,
+anomaly detection and wealth forecasting.
 
 > **This is an academic research prototype, not a regulated financial
-> advisory service.** It explains computed portfolio metrics. It does not
-> give investment advice. Market prices are real; all investor-level data in
-> demonstrations is synthetic and labelled as such.
+> advisory service.** It does not give investment advice, and trading is
+> paper only: no order is ever sent to a broker. All market data is real:
+> live from your own Upstox account when you connect it, otherwise delayed
+> from Yahoo Finance. Nothing is simulated. See
+> [`docs/real-data.md`](docs/real-data.md).
 
 ---
 
 ## What it does
 
-| Page | What it answers |
+| Area | What it does |
 |---|---|
-| **Overview** | What do I own, what is it worth, how healthy is it |
-| **Portfolio** | Every position, priced and weighted, by sector and asset class |
-| **Risk** | Volatility, Sharpe, Sortino, drawdown, VaR, beta, correlation |
-| **Goals** | Am I on track, and what would it take |
-| **Insights** | Behavioural cluster, anomalous months, wealth forecast |
-| **Copilot** | Ask in plain language; every figure is verified against the backend |
-| **Import** | CSV upload with full validation before anything is written |
-| **Profile** | The investor details that drive risk bands and projections |
-| **Model Lab** | How every model was selected and scored — silhouette by k, the cluster map, loss curves, skill by horizon, feature importances |
-| **Data Quality** | Sources, the corporate-action finding, splice validation, cohort composition |
+| **AI chat** (`/home`) | Plain-language questions about markets, options and your portfolio, answered live by Gemini or Claude (`GEMINI_API_KEY` or `ANTHROPIC_API_KEY`); every figure checked against the backend; orders proposed, placed only on Confirm; saved threads; Memory |
+| **Markets** | Gainers/losers/movers, indices, sector heatmap, news, results and dividend calendar, stock events, commodities |
+| **Options** (Upstox) | Live option chain, OI analysis, multi-strike OI, OI crossovers, unusual activity, strategy chart and wizard |
+| **Screeners** | 28 ready-made technical, fundamental and candlestick screens, a screen builder, saved screens |
+| **Model picks** | Trained swing models (LightGBM ensemble, volatility, regime) rank the NIFTY 100 for the next two weeks with calibrated ranges and reasons; a risk-profiled swing plan; a forward-test leaderboard ([`docs/swing-models.md`](docs/swing-models.md)) |
+| **Ideas** | Rule-based intraday, delivery and F&O setups, plus the model's picks; a strategy library backtested on two years of data |
+| **Charts** | A candlestick terminal with indicators, OI walls, Call/Put panes, watchlist, price alerts and an AI side panel |
+| **Portfolio** | Paper trading at real prices: holdings, positions, orders, P&L |
+| **Autopilot** | A paper sleeve the swing models rebalance on their own every few sessions for your risk profile and the market regime, with every run's orders and reasons; a model review of your real holdings; "invest ₹X across sectors" planning on live prices |
+| **Analysis** | The WealthOS analytics: overview, holdings, risk, goals, insights; Research: Swing Lab (market models), Model Lab and Data Quality (investor cohort) |
+| **Settings** | Broker APIs (Upstox), trading preferences, Memory, account, notifications; the Prompt Book tutorials |
 
 A public landing page sits at `/`; the dashboard lives behind sign-in.
 
@@ -88,6 +91,7 @@ Each stage is independently re-runnable and writes evidence to `ml/reports/`.
 make data      # stages 01-04: ingest, fetch, splice, validate, seed
 make cohort    # stages 05-07: Big Sharks priors, 10,000 investors, features
 make models    # stages 08-11: clustering, anomaly, forecasting, copilot eval
+make swing     # stages 13-19: swing-trading models on real NSE history (~30 min)
 ```
 
 Stage 01 expects the Kaggle NSE dataset at `$KAGGLE_NSE_DIR` (default
@@ -117,6 +121,8 @@ make test-e2e  # 12 Playwright tests against the running stack
 
 | Document | Contents |
 |---|---|
+| [`docs/real-data.md`](docs/real-data.md) | Where every figure comes from, and what you need to supply (Upstox, API keys) |
+| [`docs/swing-models.md`](docs/swing-models.md) | The swing-trading models: data, validation, results against baselines, limits |
 | [`docs/architecture.md`](docs/architecture.md) | How the pieces fit, and why |
 | [`docs/data.md`](docs/data.md) | Sources, what is real, what is synthetic, and the corporate-action problem |
 | [`docs/models.md`](docs/models.md) | Model cards and measured results |
@@ -128,6 +134,23 @@ make test-e2e  # 12 Playwright tests against the running stack
 ---
 
 ## Headline results
+
+### Swing-trading models (real NSE prices, walk-forward 2013–2026, after costs)
+
+| Model | Result |
+|---|---|
+| Swing ensemble (deployed) | Rank IC **0.033** (t = 3.7), hit rate 51.1%; top-10 book **25.4%** a year, Sharpe 1.27, worst drawdown −33%, against 17.6%, 0.98 and −38% for an equal-weight book of the same universe; deflated Sharpe 0.99 after 42 trials |
+| Baseline: 12-1 momentum | Rank IC 0.014 (t = 1.1); 20.9% a year, Sharpe 0.92 |
+| Return ranges | 80% intervals cover **80.3%** of outcomes out of sample (conformally calibrated) |
+| Volatility | HAR-RV cuts forecast loss (QLIKE) by 22% against trailing volatility |
+| Deep learning | Best network (temporal CNN) IC 0.037 but 22.4% a year; LightGBM stays deployed |
+
+Absolute returns are flattered by survivorship (the universe is today's
+NIFTY 100), so judge the margin over equal-weight; see
+[`docs/swing-models.md`](docs/swing-models.md). Research signals for paper
+trading, not investment advice.
+
+### Investor-cohort models
 
 All measured on a held-out test period that no model saw during training.
 

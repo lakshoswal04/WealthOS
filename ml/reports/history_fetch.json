@@ -1,0 +1,47 @@
+{
+  "generated_at": "2026-11-26T19:13:57.727119+00:00",
+  "stocks": 100,
+  "rows": 558384,
+  "first_date": "1995-07-10",
+  "last_date": "2026-11-25",
+  "median_years_per_stock": 24.4,
+  "shortest_histories": {
+    "ICICIPRULI": 0.4,
+    "HYUNDAI": 2.1,
+    "JIOFIN": 3.3,
+    "LICI": 4.5,
+    "ETERNAL": 5.3,
+    "LODHA": 5.6,
+    "IRFC": 5.8,
+    "MAZDOCK": 6.1,
+    "MAXHEALTH": 6.3,
+    "ADANIGREEN": 8.4
+  },
+  "market_series": {
+    "BANKNIFTY": {
+      "first": "2007-09-17",
+      "last": "2026-11-25",
+      "sessions": 4722
+    },
+    "INDIAVIX": {
+      "first": "2008-03-03",
+      "last": "2026-11-25",
+      "sessions": 4588
+    },
+    "NIFTY": {
+      "first": "2007-09-17",
+      "last": "2026-11-25",
+      "sessions": 4707
+    }
+  },
+  "missing_market_series": [],
+  "cleaning": {
+    "rows_before": 568432,
+    "dropped_non_positive_price": 89,
+    "dropped_zero_volume_stock_sessions": 9959
+  },
+  "biases": {
+    "survivorship": "The universe is today's NIFTY 100; stocks that left the index are absent. Models are judged against an equal-weight portfolio of the same universe, which carries the same bias.",
+    "dividends": "Stock prices are dividend-adjusted by Yahoo; ^NSEI is a price index. NIFTY is therefore a secondary benchmark that understates total return."
+  }
+}
