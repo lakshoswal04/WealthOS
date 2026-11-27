@@ -43,10 +43,13 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import lightgbm as lgb
+import optuna
 import xgboost as xgb
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
 
+from .walkforward import fold_summary, make_folds, walk_forward_score
 from .common import (
     MODEL_DIR,
     PROCESSED_DIR,
@@ -62,10 +65,47 @@ silence_accelerate_matmul_warnings()
 
 RANDOM_STATE = 42
 SEQUENCE_LENGTH = 24
-EPOCHS = 25
+
+# Raised from 25/4 in Phase 3b. The recurrent models were finding their best
+# validation loss at epoch 1 and stopping by epoch 5-8, which was read as
+# "barely trained". The cause was the same one that stopped XGBoost at
+# iteration 0: the validation block is eighteen distinct months, so the
+# early-stopping signal is dominated by which regime those months happened
+# to be. A longer budget and a slower trigger let the model train; whether
+# that training is worth anything is settled by walk-forward folds, not by
+# the validation block.
+EPOCHS = 120
 BATCH_SIZE = 512
 LEARNING_RATE = 1e-3
-PATIENCE = 4
+PATIENCE = 15
+
+# Walk-forward evaluation. See ml/pipelines/walkforward.py for why one
+# validation block cannot answer the question these folds answer.
+WALK_FORWARD_FOLDS = 6
+WALK_FORWARD_SCORE_MONTHS = 6
+WALK_FORWARD_MIN_TRAIN_MONTHS = 36
+
+# Optuna budget per model family. Each trial fits the model once per fold, so
+# the real cost is trials x folds.
+OPTUNA_TRIALS = 25
+
+# Investors sampled for the hyperparameter search. The winning configuration
+# is refitted on everything afterwards.
+#
+# This is not a corner cut for speed, it follows from the diagnosis. The
+# features that carry the signal are market-level and identical for every
+# investor in a given month, and 47-63% of the target variance is
+# between-month. The effective sample for ranking configurations is therefore
+# the number of distinct months, which subsampling investors leaves entirely
+# intact -- every month is still present, with 2,000 portfolios in it instead
+# of 10,000. What it removes is 80% of the rows and the eleven hours of
+# compute attached to them.
+SEARCH_INVESTOR_SAMPLE = 2000
+
+# A forecaster is only recommended over the baseline if it beats the mean
+# reference on average AND on more folds than not. An average skill of +0.01
+# drawn from folds of +0.30 and -0.28 is a coin flip, not a forecast.
+MIN_RECOMMENDABLE_SKILL = 0.02
 
 TABULAR_FEATURES = [
     "log_value", "months_invested",
@@ -402,51 +442,172 @@ def main() -> None:
                  results["baseline_drift"]["growth"]["r2"],
                  results["baseline_drift"]["skill_vs_mean_baseline"])
 
-    with Stage(log, "XGBoost"):
+    with Stage(log, "walk-forward folds"):
+        # Built over train+validation together. Treating validation as one
+        # held-out block is what produced the original diagnosis of an
+        # untrained model; these folds replace that single judgement with
+        # several, each over a different market regime.
+        searchable = pd.concat([train, validation], ignore_index=True)
+        searchable = searchable[searchable[target_column].notna()]
+        folds = make_folds(
+            searchable["date"],
+            n_folds=WALK_FORWARD_FOLDS,
+            score_months=WALK_FORWARD_SCORE_MONTHS,
+            min_train_months=WALK_FORWARD_MIN_TRAIN_MONTHS,
+        )
         medians = train[TABULAR_FEATURES].median()
-        def tabular(part): return part[TABULAR_FEATURES].fillna(medians).to_numpy()
 
-        # A small grid, selected on validation RMSE. The first attempt used a
-        # single configuration (depth 6, lr 0.05) and early-stopped at five
-        # trees, because that much capacity per tree overfits this target
-        # almost immediately. Concluding that a recurrent model beats XGBoost
-        # while XGBoost is effectively untuned would not be a fair comparison.
-        grid = [
-            {"max_depth": 3, "learning_rate": 0.02, "min_child_weight": 50},
-            {"max_depth": 4, "learning_rate": 0.02, "min_child_weight": 100},
-            {"max_depth": 4, "learning_rate": 0.05, "min_child_weight": 50},
-            {"max_depth": 6, "learning_rate": 0.05, "min_child_weight": 5},
-        ]
-        search = []
-        xgb_model, best_rmse, best_params = None, float("inf"), None
-        for params in grid:
-            candidate = xgb.XGBRegressor(
-                n_estimators=1500, subsample=0.8, colsample_bytree=0.8,
-                reg_lambda=5.0, random_state=RANDOM_STATE, n_jobs=-1,
-                early_stopping_rounds=50, eval_metric="rmse", **params,
+        def tabular(part):
+            return part[TABULAR_FEATURES].fillna(medians).to_numpy()
+
+        # The frame the search runs on: all months, a sample of investors.
+        investors = searchable["investor_id"].unique()
+        if len(investors) > SEARCH_INVESTOR_SAMPLE:
+            sampled = np.random.default_rng(RANDOM_STATE).choice(
+                investors, size=SEARCH_INVESTOR_SAMPLE, replace=False
             )
-            candidate.fit(
-                tabular(train), train[target_column],
-                eval_set=[(tabular(validation), validation[target_column])],
-                verbose=False,
+            search_frame = searchable[searchable["investor_id"].isin(sampled)]
+        else:
+            search_frame = searchable
+        log.info("  search sample: %d investors, %d rows, %d months (full: %d rows)",
+                 search_frame["investor_id"].nunique(), len(search_frame),
+                 search_frame["date"].nunique(), len(searchable))
+
+        report["walk_forward_design"] = {
+            "folds": [f.as_dict() for f in folds],
+            "score_months_per_fold": WALK_FORWARD_SCORE_MONTHS,
+            "distinct_months": {
+                "train": int(train["date"].nunique()),
+                "validation": int(validation["date"].nunique()),
+                "test": int(test["date"].nunique()),
+            },
+            "search_sample_investors": SEARCH_INVESTOR_SAMPLE,
+            "rationale": (
+                "The forecast features are dominated by market-level "
+                "variables identical across investors in a given month, so "
+                "the effective sample is the number of distinct months, not "
+                "the number of rows. The validation block holds eighteen "
+                "months; early stopping against it stopped every XGBoost "
+                "configuration at iteration 0. Folds give several regime "
+                "draws instead of one, and their spread is the error bar on "
+                "any skill claim made from them."
+            ),
+        }
+        log.info("  %d folds over %d train months + %d validation months",
+                 len(folds), train["date"].nunique(), validation["date"].nunique())
+
+    with Stage(log, "Optuna search: XGBoost and LightGBM on walk-forward skill"):
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+        def xgb_space(trial):
+            return {
+                "max_depth": trial.suggest_int("max_depth", 2, 8),
+                "learning_rate": trial.suggest_float("learning_rate", 0.005, 0.2, log=True),
+                "min_child_weight": trial.suggest_int("min_child_weight", 1, 400, log=True),
+                "subsample": trial.suggest_float("subsample", 0.5, 1.0),
+                "colsample_bytree": trial.suggest_float("colsample_bytree", 0.4, 1.0),
+                "reg_lambda": trial.suggest_float("reg_lambda", 0.1, 50.0, log=True),
+                "n_estimators": trial.suggest_int("n_estimators", 50, 800, log=True),
+            }
+
+        def lgb_space(trial):
+            return {
+                "num_leaves": trial.suggest_int("num_leaves", 4, 128, log=True),
+                "learning_rate": trial.suggest_float("learning_rate", 0.005, 0.2, log=True),
+                "min_child_samples": trial.suggest_int("min_child_samples", 10, 500, log=True),
+                "subsample": trial.suggest_float("subsample", 0.5, 1.0),
+                "colsample_bytree": trial.suggest_float("colsample_bytree", 0.4, 1.0),
+                "reg_lambda": trial.suggest_float("reg_lambda", 0.1, 50.0, log=True),
+                "n_estimators": trial.suggest_int("n_estimators", 50, 800, log=True),
+            }
+
+        def make_xgb(params):
+            return xgb.XGBRegressor(
+                random_state=RANDOM_STATE, n_jobs=-1, verbosity=0, **params
             )
-            rmse = float(candidate.best_score)
-            search.append({**params, "validation_rmse": round(rmse, 6),
-                           "best_iteration": int(candidate.best_iteration)})
-            log.info("  depth %d lr %.2f min_child %3d → validation RMSE %.6f (%d trees)",
-                     params["max_depth"], params["learning_rate"],
-                     params["min_child_weight"], rmse, candidate.best_iteration)
-            if rmse < best_rmse:
-                xgb_model, best_rmse, best_params = candidate, rmse, params
 
-        report["xgboost_search"] = search
-        report["xgboost_best_params"] = best_params
-        log.info("  chosen: %s", best_params)
+        def make_lgb(params):
+            return lgb.LGBMRegressor(
+                random_state=RANDOM_STATE, n_jobs=-1, verbose=-1,
+                subsample_freq=1, **params
+            )
 
+        def objective_for(make, space):
+            def objective(trial):
+                params = space(trial)
+
+                def fit_predict(fold_train, fold_score):
+                    estimator = make(params)
+                    estimator.fit(tabular(fold_train), fold_train[target_column])
+                    return estimator.predict(tabular(fold_score))
+
+                results = walk_forward_score(
+                    search_frame, folds, target_column, fit_predict
+                )
+                if not results:
+                    return -1e9
+                # Maximise mean skill, penalised by its spread. A
+                # configuration that wins hugely in one regime and loses in
+                # the next is not a better forecaster than one that is
+                # mildly positive throughout.
+                skills = np.array([r["skill_vs_mean"] for r in results])
+                return float(skills.mean() - 0.5 * skills.std())
+            return objective
+
+        searches = {}
+        tabular_models = {}
+        for name, make, space in (("xgboost", make_xgb, xgb_space),
+                                  ("lightgbm", make_lgb, lgb_space)):
+            study = optuna.create_study(
+                direction="maximize",
+                sampler=optuna.samplers.TPESampler(seed=RANDOM_STATE),
+            )
+            study.optimize(objective_for(make, space), n_trials=OPTUNA_TRIALS,
+                           show_progress_bar=False)
+
+            best_params = dict(study.best_params)
+            estimator = make(best_params)
+            estimator.fit(tabular(searchable), searchable[target_column])
+            tabular_models[name] = estimator
+
+            def fit_predict(fold_train, fold_score, _make=make, _params=best_params):
+                model = _make(_params)
+                model.fit(tabular(fold_train), fold_train[target_column])
+                return model.predict(tabular(fold_score))
+
+            folds_detail = walk_forward_score(
+                searchable, folds, target_column, fit_predict
+            )
+            searches[name] = {
+                "trials": OPTUNA_TRIALS,
+                "best_params": best_params,
+                "best_objective": round(float(study.best_value), 6),
+                "objective": (
+                    "mean walk-forward skill against the training-window mean, "
+                    "minus half its standard deviation across folds"
+                ),
+                "walk_forward": fold_summary(folds_detail),
+            }
+            summary = searches[name]["walk_forward"]
+            log.info("  %-9s mean skill %+.4f (sd %.4f), won %d/%d folds",
+                     name, summary["mean_skill_vs_mean"],
+                     summary["std_skill_vs_mean"],
+                     summary["folds_beating_mean_baseline"], summary["folds"])
+
+        report["tabular_search"] = searches
+
+        # Keep the better of the two on walk-forward evidence, not on test.
+        chosen_tabular = max(
+            searches, key=lambda k: searches[k]["walk_forward"]["mean_skill_vs_mean"]
+        )
+        report["tabular_chosen"] = chosen_tabular
+        log.info("  chosen tabular model: %s", chosen_tabular)
+
+        xgb_model = tabular_models[chosen_tabular]
         predicted_growth_xgb = xgb_model.predict(tabular(test))
         predicted_value_xgb = baseline_value * np.exp(predicted_growth_xgb)
 
-        results["xgboost"] = {
+        results[chosen_tabular] = {
             "growth": regression_metrics(actual_growth, predicted_growth_xgb, "excess log growth"),
             "value": regression_metrics(actual_value, predicted_value_xgb, "rupee value"),
             "skill_vs_zero_baseline": round(
@@ -455,19 +616,60 @@ def main() -> None:
             "skill_vs_mean_baseline": round(
                 skill_score(actual_growth, predicted_growth_xgb, mean_growth), 4
             ),
-            "best_iteration": int(xgb_model.best_iteration),
+            "walk_forward_skill": searches[chosen_tabular]["walk_forward"]["mean_skill_vs_mean"],
         }
-        log.info("  value R² %.4f   growth R² %.4f   skill vs mean %.4f   (%d trees)",
-                 results["xgboost"]["value"]["r2"], results["xgboost"]["growth"]["r2"],
-                 results["xgboost"]["skill_vs_mean_baseline"], xgb_model.best_iteration)
+        log.info("  value R2 %.4f   growth R2 %.4f   test skill vs mean %.4f",
+                 results[chosen_tabular]["value"]["r2"],
+                 results[chosen_tabular]["growth"]["r2"],
+                 results[chosen_tabular]["skill_vs_mean_baseline"])
 
-        importance = sorted(
-            zip(TABULAR_FEATURES, xgb_model.feature_importances_), key=lambda kv: -kv[1]
-        )[:12]
-        report["xgboost_feature_importance"] = [
-            {"feature": f, "importance": round(float(v), 5)} for f, v in importance
-        ]
-        log.info("  top features: %s", ", ".join(f for f, _ in importance[:5]))
+        importances = getattr(xgb_model, "feature_importances_", None)
+        if importances is not None:
+            importance = sorted(
+                zip(TABULAR_FEATURES, importances), key=lambda kv: -kv[1]
+            )[:12]
+            report["tabular_feature_importance"] = [
+                {"feature": f, "importance": round(float(v), 5)} for f, v in importance
+            ]
+            log.info("  top features: %s", ", ".join(f for f, _ in importance[:5]))
+
+    with Stage(log, "prediction intervals"):
+        # From the pooled residual spread across folds, not from the test
+        # residuals: an interval fitted on the data it is evaluated against
+        # is not an interval, it is a description.
+        pooled = searches[chosen_tabular]["walk_forward"]["pooled_residual_std"]
+        # Normal quantiles. Stated as an assumption because the residuals are
+        # not Gaussian -- they are fat-tailed, as return residuals always are
+        # -- so the stated coverage is a floor on the interval's width, not a
+        # guarantee of its calibration. Realised coverage on test is measured
+        # below, which is the figure to trust.
+        z = {"50": 0.6745, "80": 1.2816, "95": 1.9600}
+        intervals = {}
+        for label, multiple in z.items():
+            half_width = multiple * pooled
+            lower = predicted_growth_xgb - half_width
+            upper = predicted_growth_xgb + half_width
+            covered = float(
+                ((actual_growth >= lower) & (actual_growth <= upper)).mean()
+            )
+            intervals[label] = {
+                "nominal_coverage": int(label) / 100,
+                "half_width_log_growth": round(float(half_width), 6),
+                "realised_coverage_on_test": round(covered, 4),
+            }
+            log.info("  %s%% interval: +/-%.4f log growth, realised coverage %.3f",
+                     label, half_width, covered)
+        report["prediction_intervals"] = {
+            "source": "pooled walk-forward residual standard deviation",
+            "residual_std": pooled,
+            "distribution_assumed": "normal",
+            "caveat": (
+                "Residuals are fat-tailed, so nominal coverage understates "
+                "the tails. The realised coverage measured on the test split "
+                "is the honest figure."
+            ),
+            "levels": intervals,
+        }
 
     with Stage(log, "build sequences for the recurrent models"):
         prepared = frame.copy()
@@ -552,6 +754,42 @@ def main() -> None:
         log.info("  best against the mean-drift baseline: %s (%.4f)",
                  ranked[0][0], ranked[0][1])
 
+        # Whether anything should actually be deployed at this horizon is a
+        # separate question from which model ranked first, and it is settled
+        # on walk-forward evidence rather than on a single test split. One
+        # test window is 29 months: a model can top the table there by having
+        # guessed that regime, which is not a reason to run it.
+        tabular_walk = report["tabular_search"][report["tabular_chosen"]]["walk_forward"]
+        consistent = tabular_walk.get("beats_baseline_on_balance", False)
+        mean_skill = tabular_walk.get("mean_skill_vs_mean", 0.0)
+        recommend = bool(consistent and mean_skill >= MIN_RECOMMENDABLE_SKILL)
+
+        report["deployment_recommendation"] = {
+            "horizon_months": horizon,
+            "recommended": report["tabular_chosen"] if recommend else "baseline_mean_drift",
+            "walk_forward_mean_skill": mean_skill,
+            "walk_forward_skill_std": tabular_walk.get("std_skill_vs_mean"),
+            "folds_beating_baseline": tabular_walk.get("folds_beating_mean_baseline"),
+            "folds": tabular_walk.get("folds"),
+            "threshold_applied": MIN_RECOMMENDABLE_SKILL,
+            "reasoning": (
+                f"Mean walk-forward skill {mean_skill:+.4f} across "
+                f"{tabular_walk.get('folds')} folds, beating the mean-drift "
+                f"baseline in {tabular_walk.get('folds_beating_baseline')} of "
+                f"them. "
+            ) + (
+                "That is positive on balance and above the threshold, so the "
+                "model is recommended over the constant forecast."
+                if recommend else
+                "That does not clear the bar for recommending a model over a "
+                "constant forecast, so the baseline stands. Reporting no "
+                "skill where there is none is the result; engineering a "
+                "number around it would not be."
+            ),
+        }
+        log.info("  recommended at %dm: %s",
+                 horizon, report["deployment_recommendation"]["recommended"])
+
     report["results"] = results
     report["interpretation"] = (
         "R-squared on rupee value is high for every model including the "
@@ -568,10 +806,22 @@ def main() -> None:
     with Stage(log, "save artifacts"):
         joblib.dump(
             {
-                "xgboost": xgb_model, "tabular_features": TABULAR_FEATURES,
+                # Kept under the key "xgboost" for backward compatibility
+                # with artifacts the serving path already loads; the actual
+                # family is named in "tabular_model".
+                "xgboost": xgb_model,
+                "tabular_model": chosen_tabular,
+                "tabular_features": TABULAR_FEATURES,
                 "tabular_medians": medians, "sequence_scaler": sequence_scaler,
                 "sequence_features": SEQUENCE_FEATURES, "sequence_length": SEQUENCE_LENGTH,
-                "horizon": horizon, "version": "1.0.0",
+                "horizon": horizon,
+                # The serving path must be able to say "no useful forecast at
+                # this horizon" rather than present a number the evidence
+                # does not support.
+                "recommended": report["deployment_recommendation"]["recommended"],
+                "walk_forward_mean_skill": report["deployment_recommendation"]["walk_forward_mean_skill"],
+                "prediction_interval_residual_std": report["prediction_intervals"]["residual_std"],
+                "version": "2.0.0",
             },
             MODEL_DIR / f"forecast_{horizon}m.joblib",
         )

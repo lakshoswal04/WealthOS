@@ -63,11 +63,38 @@ class Settings(BaseSettings):
     jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
     access_token_expire_minutes: int = Field(default=1440, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
 
-    # --- Wealth Copilot ---
-    # With no key the Copilot falls back to a deterministic explainer over the
-    # same backend tool outputs, so the platform stays usable.
+    # --- Wealth Copilot (the AI chat) ---
+    # Two providers sit behind one interface (app/services/llm). LLM_PROVIDER
+    # "auto" uses Gemini when GEMINI_API_KEY is set, else Claude when
+    # ANTHROPIC_API_KEY is set. With neither, the Copilot falls back to a
+    # deterministic explainer over the same tool outputs, so the platform
+    # stays usable.
+    llm_provider: str = Field(default="auto", alias="LLM_PROVIDER")
+    gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
+    gemini_model: str = Field(default="gemini-3.6-flash", alias="GEMINI_MODEL")
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")
     copilot_model: str = Field(default="claude-opus-5-5", alias="COPILOT_MODEL")
+
+    # --- live market data ---
+    # Delayed quotes and intraday candles come from Yahoo Finance. Off, every
+    # price comes from the seeded simulator instead -- the test suite runs
+    # that way, so it never touches the network.
+    live_market_enabled: bool = Field(default=True, alias="LIVE_MARKET_ENABLED")
+    quote_ttl_seconds: float = Field(default=15.0, alias="QUOTE_TTL_SECONDS")
+
+    # --- brokers (Upstox) ---
+    # Where Upstox sends the browser after login. Must equal the redirect URL
+    # registered on the user's Upstox developer app.
+    upstox_redirect_uri: str = Field(
+        default="http://localhost:8010/api/v1/brokers/upstox/callback", alias="UPSTOX_REDIRECT_URI")
+    # Where the callback returns the user afterwards.
+    frontend_url: str = Field(default="http://localhost:3000", alias="FRONTEND_URL")
+    # The simulated broker from the account-linking phase. Off everywhere
+    # except the test suite, which uses it to exercise the sync layer.
+    broker_sandbox_enabled: bool = Field(default=False, alias="BROKER_SANDBOX_ENABLED")
+
+    # --- paper trading ---
+    paper_starting_cash: float = Field(default=1_000_000.0, alias="PAPER_STARTING_CASH")
 
     # --- CORS ---
     # NoDecode keeps pydantic-settings from JSON-decoding the env var before
@@ -75,7 +102,10 @@ class Settings(BaseSettings):
     # SettingsError at boot and the whole API fails to start -- which is the
     # exact value a deployment runbook tells you to set.
     cors_origins: Annotated[list[str], NoDecode] = Field(
-        default=["http://localhost:3000", "http://127.0.0.1:3000"],
+        default=[
+            "http://localhost:3000", "http://127.0.0.1:3000",
+            "http://localhost:3001", "http://127.0.0.1:3001",
+        ],
         alias="CORS_ORIGINS",
     )
 
@@ -116,9 +146,28 @@ class Settings(BaseSettings):
         return self.data_dir / "reference"
 
     @property
+    def llm_provider_active(self) -> str | None:
+        """'gemini', 'anthropic', or None (template fallback)."""
+        choice = (self.llm_provider or "auto").strip().lower()
+        has_gemini = bool(self.gemini_api_key.strip())
+        has_claude = bool(self.anthropic_api_key.strip())
+        if choice == "off":
+            return None
+        if choice == "gemini":
+            return "gemini" if has_gemini else None
+        if choice == "anthropic":
+            return "anthropic" if has_claude else None
+        return "gemini" if has_gemini else "anthropic" if has_claude else None
+
+    @property
+    def llm_model(self) -> str | None:
+        provider = self.llm_provider_active
+        return {"gemini": self.gemini_model, "anthropic": self.copilot_model}.get(provider or "")
+
+    @property
     def copilot_enabled(self) -> bool:
-        """True when a real LLM is reachable; otherwise the fallback is used."""
-        return bool(self.anthropic_api_key.strip())
+        """True when a real LLM is configured; otherwise the fallback is used."""
+        return self.llm_provider_active is not None
 
 
 @lru_cache

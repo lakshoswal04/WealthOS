@@ -11,10 +11,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.v1 import (
-    analytics, auth, copilot, goals, insights, portfolio, research,
+    account, alerts, analytics, auth, autopilot, chat, copilot, goals, ideas, insights, linking, markets,
+    options, paper, portfolio, research, screeners, signals, tools,
 )
 from app.core.config import settings
 from app.db.session import SessionLocal
+from app.services.live_market_service import MarketDataUnavailable
+from app.services.signals_service import SignalsUnavailable
+from app.services.market_data import OptionsUnavailable
 from app.services.market_service import market_cache
 
 logging.basicConfig(
@@ -73,9 +77,36 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         log.error("model registry failed to initialise: %s", exc)
 
+    if settings.live_market_enabled:
+        import threading
+
+        from app.services import live_market_service, screener_service
+
+        def warm() -> None:
+            from app.integrations.upstox.instruments import master
+            from app.services import research_service
+
+            def daily_jobs() -> None:
+                # Price refresh, forward test and due Autopilot runs, then every 15 minutes.
+                from app.services import scheduler
+
+                scheduler.start()
+
+            for step in (live_market_service.index_strip, screener_service.warm, master.ensure,
+                         research_service.calendar, research_service.news, daily_jobs):
+                try:
+                    step()
+                except Exception as exc:  # a cold cache must not stop the API
+                    log.warning("warm-up step %s failed: %s", getattr(step, "__name__", step), exc)
+
+        threading.Thread(target=warm, daemon=True).start()
+        log.info("live market: Yahoo Finance (delayed), warming in the background")
+    else:
+        log.info("live market: disabled, every price is simulated")
+
     log.info(
         "wealth copilot: %s",
-        "Anthropic API" if settings.copilot_enabled else "deterministic fallback (no API key)",
+        f"{settings.llm_provider_active} ({settings.llm_model})" if settings.copilot_enabled else "deterministic fallback (no API key)",
     )
     yield
     log.info("shutting down")
@@ -107,6 +138,31 @@ async def add_timing_header(request: Request, call_next):
     elapsed_ms = (time.perf_counter() - started) * 1000
     response.headers["X-Response-Time-ms"] = f"{elapsed_ms:.1f}"
     return response
+
+
+@app.exception_handler(OptionsUnavailable)
+async def options_unavailable_handler(request: Request, exc: OptionsUnavailable):
+    """Option/futures data without an Upstox session: say why, and how to fix it."""
+    if exc.state not in ("no_credentials", "not_connected", "expired"):
+        # The session is fine; the data itself is missing (no listed contracts,
+        # an empty chain). Nothing for the user to reconnect.
+        return JSONResponse(status_code=503, content={"detail": str(exc), "code": "market_data_unavailable"})
+    return JSONResponse(status_code=409, content={
+        "detail": str(exc), "code": "upstox_required", "state": exc.state,
+        "action": {"label": "Connect Upstox" if exc.state in ("no_credentials", "not_connected")
+                   else "Log in to Upstox again", "href": "/settings/brokers"},
+    })
+
+
+@app.exception_handler(MarketDataUnavailable)
+async def market_data_unavailable_handler(request: Request, exc: MarketDataUnavailable):
+    return JSONResponse(status_code=503, content={"detail": str(exc), "code": "market_data_unavailable"})
+
+
+@app.exception_handler(SignalsUnavailable)
+async def signals_unavailable_handler(request: Request, exc: SignalsUnavailable):
+    """Models not trained, or no price history yet: say which, so the UI can explain."""
+    return JSONResponse(status_code=503, content={"detail": str(exc), "code": exc.code})
 
 
 @app.exception_handler(Exception)
@@ -148,5 +204,19 @@ app.include_router(portfolio.router, prefix=settings.api_v1_prefix)
 app.include_router(analytics.router, prefix=settings.api_v1_prefix)
 app.include_router(goals.router, prefix=settings.api_v1_prefix)
 app.include_router(insights.router, prefix=settings.api_v1_prefix)
+app.include_router(alerts.router, prefix=settings.api_v1_prefix)
+app.include_router(linking.router, prefix=settings.api_v1_prefix)
 app.include_router(copilot.router, prefix=settings.api_v1_prefix)
 app.include_router(research.router, prefix=settings.api_v1_prefix)
+app.include_router(markets.router, prefix=settings.api_v1_prefix)
+app.include_router(options.router, prefix=settings.api_v1_prefix)
+app.include_router(screeners.router, prefix=settings.api_v1_prefix)
+app.include_router(ideas.router, prefix=settings.api_v1_prefix)
+app.include_router(paper.router, prefix=settings.api_v1_prefix)
+app.include_router(chat.router, prefix=settings.api_v1_prefix)
+app.include_router(account.router, prefix=settings.api_v1_prefix)
+app.include_router(tools.router, prefix=settings.api_v1_prefix)
+app.include_router(signals.router, prefix=settings.api_v1_prefix)
+app.include_router(autopilot.router, prefix=settings.api_v1_prefix)
+app.include_router(signals.advisor_router, prefix=settings.api_v1_prefix)
+app.include_router(account.callback_router, prefix=settings.api_v1_prefix)

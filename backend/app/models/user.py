@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.goal import Goal
     from app.models.holding import Holding
     from app.models.model_output import ModelOutput
+    from app.models.linked_account import LinkedAccount
     from app.models.snapshot import PortfolioSnapshot
     from app.models.transaction import Transaction
 
@@ -51,6 +52,9 @@ class User(Base, TimestampMixin):
         back_populates="user", cascade="all, delete-orphan"
     )
     goals: Mapped[list["Goal"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    linked_accounts: Mapped[list["LinkedAccount"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
     snapshots: Mapped[list["PortfolioSnapshot"]] = relationship(

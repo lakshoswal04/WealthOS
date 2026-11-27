@@ -87,7 +87,7 @@ export function ScenarioSimulator({ goalId }: { goalId: number }) {
             )}
             {touched && (
               <button onClick={reset}
-                      className="text-[11.5px] text-[var(--ink-muted)] transition-colors hover:text-[var(--accent)]">
+                      className="text-caption text-[var(--ink-muted)] transition-colors hover:text-[var(--accent)]">
                 Reset
               </button>
             )}
@@ -137,7 +137,7 @@ export function ScenarioSimulator({ goalId }: { goalId: number }) {
                 sub={`of ${simulation.monte_carlo.n_paths.toLocaleString("en-IN")} simulated paths`}
               />
               {gap > 0 && (
-                <p className="mt-3 text-[11.5px] leading-relaxed text-[var(--ink-secondary)]">
+                <p className="mt-3 text-caption leading-relaxed text-[var(--ink-secondary)]">
                   Reaching {rupeesCompact(simulation.target_amount)} on the average
                   path needs {rupeesCompact(simulation.required_monthly_contribution)} a
                   month — {rupeesCompact(gap)} more than the current setting.
@@ -155,22 +155,22 @@ export function ScenarioSimulator({ goalId }: { goalId: number }) {
               target={simulation.target_amount}
             />
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
               {([["p10", "Worst 10%"], ["p25", "Lower 25%"],
                  ["p75", "Upper 25%"], ["p90", "Best 10%"]] as const).map(([key, label]) => (
                 <div key={key}
                      className="rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5">
-                  <div className="whitespace-nowrap text-[10px] uppercase tracking-[0.08em] text-[var(--ink-faint)]">
+                  <div className="whitespace-nowrap text-micro uppercase tracking-[0.08em] text-[var(--ink-faint)]">
                     {label}
                   </div>
-                  <div className="tabular mt-1 text-[14px] text-[var(--ink-primary)]">
+                  <div className="tabular mt-1 text-body-lg text-[var(--ink-primary)]">
                     {rupeesCompact(finals[key])}
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-[11.5px] text-[var(--ink-muted)]">
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-caption text-[var(--ink-muted)]">
               <span className="flex items-center gap-1.5">
                 <span className="h-0.5 w-5 rounded bg-[var(--series-1)]" /> median path
               </span>

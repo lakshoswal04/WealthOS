@@ -20,6 +20,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, status
 
+from app.api.deps import CurrentUser
 from app.core.config import settings
 
 log = logging.getLogger("wealthos.research")
@@ -34,9 +35,15 @@ MODEL_REPORTS = ("clustering", "anomaly_detection", "copilot_groundedness",
 DATA_REPORTS = ("ingest_quality", "price_build", "adjustment_impact",
                 "external_fetch", "big_sharks_priors", "cohort", "database_seed")
 
-ALL_REPORTS = MODEL_REPORTS + DATA_REPORTS
+# The swing-trading stack (ml/pipelines stages 13-19). Served on their own
+# endpoint: they carry equity curves and timelines that the Model Lab's
+# single request does not need.
+SWING_REPORTS = ("history_fetch", "swing_features", "swing_ranker", "swing_volatility", "swing_regime",
+                 "swing_deep", "swing_portfolio", "swing_model_card")
 
-_cache: dict[str, dict] = {}
+ALL_REPORTS = MODEL_REPORTS + DATA_REPORTS + SWING_REPORTS
+
+_cache: dict[str, tuple[float, dict]] = {}
 _lock = threading.Lock()
 
 
@@ -50,10 +57,10 @@ def _load(name: str) -> dict:
     A missing report disables one panel rather than failing the page, which
     matches how the model endpoints already degrade.
     """
-    if name in _cache:
-        return _cache[name]
-
     path = _reports_dir() / f"{name}.json"
+    cached = _cache.get(name)
+    if cached is not None and path.exists() and cached[0] == path.stat().st_mtime:
+        return cached[1]
     if not path.exists():
         return {
             "available": False,
@@ -71,7 +78,9 @@ def _load(name: str) -> dict:
 
     payload["available"] = True
     with _lock:
-        _cache[name] = payload
+        # Keyed on the file's mtime, so a retrained model's report shows up
+        # without a restart.
+        _cache[name] = (path.stat().st_mtime, payload)
     return payload
 
 
@@ -82,6 +91,12 @@ def all_reports() -> dict:
         "models": {name: _load(name) for name in MODEL_REPORTS},
         "data": {name: _load(name) for name in DATA_REPORTS},
     }
+
+
+@router.get("/swing")
+def swing_reports() -> dict:
+    """The swing-model reports: data, ranker, volatility, regime, deep learning, portfolios, model card."""
+    return {name: _load(name) for name in SWING_REPORTS}
 
 
 @router.get("/reports/{name}")
@@ -96,8 +111,17 @@ def one_report(name: str) -> dict:
 
 
 @router.post("/reports/refresh", include_in_schema=False)
-def refresh() -> dict:
-    """Drop the cache, so a re-run of the pipelines is picked up."""
+def refresh(user: CurrentUser) -> dict:
+    """Drop the cache, so a re-run of the pipelines is picked up.
+
+    Requires a session. The reports themselves are public -- they are
+    published training evidence and contain no user data -- but this endpoint
+    changes server state and was reachable by anyone, which made repeatedly
+    forcing a disk re-read free. Found by the route audit in
+    tests/test_route_isolation.py, which enumerates the live router rather
+    than a hand-kept list, so it caught an endpoint nobody had looked at
+    since it was written.
+    """
     with _lock:
         _cache.clear()
     return {"cleared": True}

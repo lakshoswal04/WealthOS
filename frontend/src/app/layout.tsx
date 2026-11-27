@@ -1,34 +1,39 @@
 import type { Metadata } from "next";
-import { Fraunces, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Inter_Tight, JetBrains_Mono, Newsreader } from "next/font/google";
 import { AuthProvider } from "@/lib/auth";
 import "./globals.css";
 
-/* A characterful serif for headings against a technical sans for the
-   interface, with a mono reserved for figures so columns of numbers line up. */
-// Fraunces is a variable font: `axes` and an explicit `weight` list are
-// mutually exclusive, so the whole weight range stays available.
-const display = Fraunces({
-  subsets: ["latin"], variable: "--font-display",
-  axes: ["SOFT", "WONK", "opsz"],
+// Self-hosted at build time by next/font: no runtime font requests.
+const serif = Newsreader({
+  subsets: ["latin"], weight: ["300", "400", "500"], style: ["normal", "italic"],
+  variable: "--font-serif-face", display: "swap",
 });
-const body = IBM_Plex_Sans({
-  subsets: ["latin"], variable: "--font-body", weight: ["400", "500", "600"],
+const sans = Inter_Tight({
+  subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-sans-face", display: "swap",
 });
-const mono = IBM_Plex_Mono({
-  subsets: ["latin"], variable: "--font-mono", weight: ["400", "500"],
+const mono = JetBrains_Mono({
+  subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono-face", display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "WealthOS — Personal Wealth Intelligence",
+  title: "WealthOS — Your wealth, understood",
   description:
-    "Portfolio analytics, risk, goal forecasting and a grounded AI copilot. "
-    + "An academic research prototype, not investment advice.",
+    "Portfolio intelligence, trained market models, an AI that answers with your own numbers, "
+    + "and an Autopilot that runs on paper. Research signals, not investment advice.",
 };
+
+// Applies a saved theme before first paint, so a dark-theme user never sees
+// a flash of the light page (and vice versa).
+const THEME_BOOT = `try{var t=localStorage.getItem("wealthos.theme");if(t==="terminal"||t==="light")document.documentElement.dataset.theme=t}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark">
-      <body className={`${display.variable} ${body.variable} ${mono.variable} antialiased`}>
+    <html lang="en" data-theme="light" data-scroll-behavior="smooth"
+      className={`${serif.variable} ${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
+      <body className="antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

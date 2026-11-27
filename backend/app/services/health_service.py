@@ -10,10 +10,136 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from wealthos_core.health import HealthInputs, compute_health_score, sensitivity_analysis
+from wealthos_core.health_v2 import compute_health_score_v2
 from app.models import Transaction, TransactionType, User
 from app.services import goal_service, portfolio_service, risk_service
+from app.services.market_service import market_cache
 
 BEHAVIOUR_WINDOW_DAYS = 365
+
+# Allocation drift needs at least this many month-end observations to mean
+# anything: two points give one change, which is an event rather than a drift.
+MIN_MONTHS_FOR_DRIFT = 4
+
+
+def _allocation_drift(db: Session, user: User) -> tuple[float, str]:
+    """Annualised share of the portfolio that changed asset class over a year.
+
+    Defined as the mean month-to-month L1 distance between successive
+    asset-class weight vectors, halved and annualised. Halving is what makes
+    the number readable: moving ten percent of a portfolio from equity to
+    debt raises equity's weight by 0.10 and lowers debt's by 0.10, an L1
+    distance of 0.20, and the intuitive answer is "ten percent moved".
+
+    Two sources, and which one was used is reported rather than hidden:
+
+    ``transactions`` -- the real article. Quantities are accumulated from the
+    user's own recorded buys and sells, so the path reflects what they
+    actually did, and drift caused by trading is visible.
+
+    ``price_drift`` -- the fallback. ``monthly_history`` reconstructs the path
+    with *today's* quantities held constant across history, so it can only
+    show drift caused by prices moving, never by the investor acting. It is
+    still a real measurement of whether the mix has wandered, but it is a
+    different quantity and is labelled as one. ``docs/limitations.md``
+    records the same caveat for the rest of the reconstruction.
+
+    Returns ``(nan, "unavailable")`` when neither path has enough data. This
+    field was hardcoded to NaN before Phase 2, so the behaviour component
+    always scored on two of its three sub-scores.
+    """
+    observed = _drift_from_transactions(db, user)
+    if not np.isnan(observed):
+        return observed, "transactions"
+
+    from app.ml_runtime.features import monthly_history
+
+    history = monthly_history(db, user)
+    if history.empty or len(history) < MIN_MONTHS_FOR_DRIFT:
+        return float("nan"), "unavailable"
+
+    columns = [c for c in history.columns if c.endswith("_allocation")]
+    if not columns:
+        return float("nan"), "unavailable"
+
+    weights = history[columns].to_numpy(dtype="float64")
+    return _mean_annualised_l1(weights), "price_drift"
+
+
+def _drift_from_transactions(db: Session, user: User) -> float:
+    """The allocation path implied by the user's own recorded trades."""
+    rows = list(
+        db.scalars(
+            select(Transaction)
+            .where(Transaction.user_id == user.id, Transaction.asset_id.isnot(None))
+            .order_by(Transaction.date)
+        ).all()
+    )
+    directional = [
+        t for t in rows
+        if t.transaction_type in (TransactionType.BUY, TransactionType.SELL)
+        and t.quantity and t.asset is not None
+    ]
+    if not directional:
+        return float("nan")
+
+    months = sorted({(t.date.year, t.date.month) for t in directional})
+    if len(months) < MIN_MONTHS_FOR_DRIFT:
+        return float("nan")
+
+    symbols = sorted({t.asset.symbol for t in directional})
+    panel = market_cache.price_history(db, symbols)
+    if panel.empty:
+        return float("nan")
+    monthly_prices = panel.resample("ME").last().ffill()
+
+    classes = {t.asset.symbol: str(t.asset.asset_class).lower() for t in directional}
+    class_names = sorted(set(classes.values()))
+
+    held: dict[str, float] = {s: 0.0 for s in symbols}
+    path: list[list[float]] = []
+
+    for year, month in months:
+        for t in directional:
+            if (t.date.year, t.date.month) != (year, month):
+                continue
+            sign = 1.0 if t.transaction_type == TransactionType.BUY else -1.0
+            held[t.asset.symbol] = max(
+                0.0, held[t.asset.symbol] + sign * float(t.quantity)
+            )
+
+        stamp = pd.Timestamp(year=year, month=month, day=1) + pd.offsets.MonthEnd(0)
+        available = monthly_prices.loc[monthly_prices.index <= stamp]
+        if available.empty:
+            continue
+        prices = available.iloc[-1]
+
+        by_class = {name: 0.0 for name in class_names}
+        for symbol, quantity in held.items():
+            price = prices.get(symbol)
+            if quantity <= 0 or price is None or pd.isna(price):
+                continue
+            by_class[classes[symbol]] += quantity * float(price)
+
+        total = sum(by_class.values())
+        if total <= 0:
+            continue
+        path.append([by_class[name] / total for name in class_names])
+
+    if len(path) < MIN_MONTHS_FOR_DRIFT:
+        return float("nan")
+    return _mean_annualised_l1(np.asarray(path, dtype="float64"))
+
+
+def _mean_annualised_l1(weights: np.ndarray) -> float:
+    """Mean monthly L1 change in a weight path, halved and annualised."""
+    if weights.shape[0] < 2:
+        return float("nan")
+    steps = np.abs(np.diff(weights, axis=0)).sum(axis=1) / 2.0
+    steps = steps[np.isfinite(steps)]
+    if steps.size == 0:
+        return float("nan")
+    return float(np.mean(steps) * 12.0)
 
 
 def _behaviour_metrics(db: Session, user: User, portfolio_value: float) -> dict:
@@ -32,11 +158,17 @@ def _behaviour_metrics(db: Session, user: User, portfolio_value: float) -> dict:
         ).all()
     )
 
+    drift, drift_source = _allocation_drift(db, user)
+
     if not transactions:
         return {
             "annual_turnover": float("nan"),
             "contribution_consistency": float("nan"),
-            "allocation_drift": float("nan"),
+            # Drift does not need the 365-day transaction window the other two
+            # do -- it can come from the reconstructed price path -- so it is
+            # reported even here rather than blanked with the rest.
+            "allocation_drift": drift,
+            "allocation_drift_source": drift_source,
             "n_transactions": 0,
         }
 
@@ -65,9 +197,8 @@ def _behaviour_metrics(db: Session, user: User, portfolio_value: float) -> dict:
     return {
         "annual_turnover": float(turnover),
         "contribution_consistency": float(consistency),
-        # Needs a snapshot history to measure properly; computed in Phase 7
-        # once portfolio snapshots exist.
-        "allocation_drift": float("nan"),
+        "allocation_drift": drift,
+        "allocation_drift_source": drift_source,
         "n_transactions": len(transactions),
     }
 
@@ -137,25 +268,98 @@ def build_health_inputs(db: Session, user: User) -> tuple[HealthInputs, dict]:
     return inputs, context
 
 
-def health_score(db: Session, user: User, include_sensitivity: bool = False) -> dict:
-    """The decomposable Portfolio Health Score."""
-    inputs, context = build_health_inputs(db, user)
-    score = compute_health_score(inputs)
+# Which methodology the top-level fields describe. Both are always computed;
+# this only decides which one `total`, `grade` and `components` carry, so an
+# existing client keeps working unchanged while the comparison is available
+# to any caller that wants it.
+DEFAULT_METHODOLOGY = "v1"
+METHODOLOGIES = ("v1", "v2")
 
-    payload = score.as_dict()
-    payload["context"] = context
-    payload["weights"] = {
-        c["name"]: c["weight"] for c in payload["components"]
-    }
-    payload["methodology"] = (
+_METHODOLOGY_NOTES = {
+    "v1": (
         "A weighted average of six measured components, each a documented "
         "function of portfolio metrics rather than a learned model. "
         "Components whose inputs are unavailable are excluded and the "
         "remaining weights renormalised, so an unmeasurable component neither "
-        "helps nor penalises the score."
-    )
+        "helps nor penalises the score. Note that in this version the "
+        "per-component contributions are computed against raw weights while "
+        "the total uses the renormalised denominator, so where a component "
+        "could not be measured the contributions do not sum to the total."
+    ),
+    "v2": (
+        "The same six components and the same weights as v1, with six "
+        "measurement defects corrected: the holdings curve now implements the "
+        "8-and-25 rationale v1 only described, a drawdown inside the "
+        "investor's stated tolerance scores full marks instead of half, "
+        "liquidity measures the cash-and-debt buffer alongside the "
+        "asset-class blend so the component can discriminate, weight "
+        "dispersion is counted once in concentration rather than twice, every "
+        "narrative is derived from the sub-scores so text cannot contradict "
+        "the number, and contributions are computed against renormalised "
+        "weights so they sum to the total."
+    ),
+}
+
+
+def health_score(
+    db: Session,
+    user: User,
+    include_sensitivity: bool = False,
+    methodology: str = DEFAULT_METHODOLOGY,
+) -> dict:
+    """The decomposable Portfolio Health Score, in both methodologies.
+
+    Both versions are computed on every call and returned together under
+    ``versions``, because a score that changed without the old one visible
+    beside it is a score nobody can check. ``methodology`` selects only which
+    version populates the top-level fields.
+    """
+    if methodology not in METHODOLOGIES:
+        raise ValueError(
+            f"unknown methodology {methodology!r}; expected one of {METHODOLOGIES}"
+        )
+
+    inputs, context = build_health_inputs(db, user)
+    computed = {
+        "v1": compute_health_score(inputs).as_dict(),
+        "v2": compute_health_score_v2(inputs).as_dict(),
+    }
+
+    payload = dict(computed[methodology])
+    payload["methodology_version"] = methodology
+    payload["methodology"] = _METHODOLOGY_NOTES[methodology]
+    payload["context"] = context
+    payload["weights"] = {c["name"]: c["weight"] for c in payload["components"]}
+
+    payload["versions"] = {
+        version: {
+            "total": body["total"],
+            "grade": body["grade"],
+            "summary": body["summary"],
+            "missing_inputs": body["missing_inputs"],
+            "components": body["components"],
+            "methodology": _METHODOLOGY_NOTES[version],
+        }
+        for version, body in computed.items()
+    }
+
+    v1_total, v2_total = computed["v1"]["total"], computed["v2"]["total"]
+    payload["version_comparison"] = {
+        "v1_total": v1_total,
+        "v2_total": v2_total,
+        "difference": (
+            None if v1_total is None or v2_total is None
+            else round(v2_total - v1_total, 2)
+        ),
+        "note": (
+            "Both methodologies use identical inputs and identical component "
+            "weights, so any difference is attributable to the measurement "
+            "changes in v2 rather than to re-weighting."
+        ),
+    }
 
     if include_sensitivity:
-        payload["sensitivity"] = sensitivity_analysis(inputs)
+        scorer = compute_health_score_v2 if methodology == "v2" else compute_health_score
+        payload["sensitivity"] = sensitivity_analysis(inputs, compute=scorer)
 
     return payload

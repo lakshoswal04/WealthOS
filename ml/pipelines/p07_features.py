@@ -37,6 +37,7 @@ import numpy as np
 import pandas as pd
 
 from wealthos_core import BENCHMARK_SYMBOL
+from wealthos_core.anomaly import derive_anomaly_features
 
 from .common import (
     silence_accelerate_matmul_warnings,
@@ -149,25 +150,17 @@ def build_anomaly_features(snapshots: pd.DataFrame) -> pd.DataFrame:
 
     Change matters as much as level here. A 70% equity weight is ordinary;
     moving from 70% to 20% in one month is not, and only a delta can see
-    that.
+    that. Three lag features carry what no single month can: a dormancy break
+    is a large contribution *after a silence*, and the silence is the part
+    that makes it one.
+
+    The derivations themselves live in ``wealthos_core.anomaly`` so that the
+    serving path computes the identical columns. They were duplicated here
+    and in ``insight_service`` until Phase 3a, which meant a feature added to
+    training was silently zero-filled at inference.
     """
-    frame = snapshots.sort_values(["investor_id", "date"]).copy()
-    grouped = frame.groupby("investor_id")
-
-    for column in ALLOCATION_COLUMNS + ["hhi", "top_holding_weight", "n_holdings"]:
-        frame[f"delta_{column}"] = grouped[column].diff()
-
-    # Total absolute allocation movement: one number for "how much did this
-    # portfolio rearrange itself this month".
-    frame["allocation_shift"] = (
-        frame[[f"delta_{c}" for c in ALLOCATION_COLUMNS]].abs().sum(axis=1) / 2.0
-    )
-
-    frame["contribution_ratio"] = (
-        frame["net_contribution"] / frame["total_value"].replace(0, np.nan)
-    )
-    frame["turnover_ratio"] = frame["turnover"] / (
-        grouped["turnover"].transform("median").replace(0, np.nan)
+    frame = derive_anomaly_features(
+        snapshots.sort_values(["investor_id", "date"]), group_key="investor_id"
     )
 
     feature_columns = (
@@ -176,7 +169,9 @@ def build_anomaly_features(snapshots: pd.DataFrame) -> pd.DataFrame:
         + ["allocation_shift", "hhi", "delta_hhi", "top_holding_weight",
            "delta_top_holding_weight", "n_holdings", "delta_n_holdings",
            "turnover", "turnover_ratio", "n_trades", "contribution_ratio",
-           "period_return", "current_drawdown", "volatility"]
+           "period_return", "current_drawdown", "volatility",
+           "months_since_contribution", "delta_contribution_ratio",
+           "recent_funding_rate"]
     )
 
     frame["split"] = _assign_split(frame["date"])

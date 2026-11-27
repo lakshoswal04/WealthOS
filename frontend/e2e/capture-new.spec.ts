@@ -22,7 +22,7 @@ async function seed(page: Page) {
   await page.getByLabel("Annual income (₹)").fill("1800000");
   await page.getByLabel("Monthly savings (₹)").fill("45000");
   await page.getByRole("button", { name: "Create account" }).click();
-  await page.waitForURL("**/import");
+  await page.waitForURL("**/home");
 
   await page.setInputFiles('input[type="file"]', {
     name: "holdings.csv", mimeType: "text/csv", buffer: Buffer.from(CSV),
@@ -30,7 +30,7 @@ async function seed(page: Page) {
   await page.getByRole("button", { name: "Import" }).click();
   await page.getByText("Imported", { exact: true }).waitFor({ timeout: 20_000 });
 
-  await page.goto("/goals");
+  await page.goto("/analysis/goals");
   await page.getByRole("button", { name: "New goal" }).click();
   await page.getByLabel("Name").fill("Retirement");
   await page.getByLabel("Target amount (₹)").fill("25000000");
@@ -53,16 +53,16 @@ test("new and redesigned pages", async ({ page }) => {
   await seed(page);
 
   for (const [path, name] of [
-    ["/overview", "overview"],
-    ["/research", "research"],
-    ["/data-quality", "data-quality"],
+    ["/analysis/overview", "overview"],
+    ["/analysis/model-lab", "research"],
+    ["/analysis/data-quality", "data-quality"],
   ] as [string, string][]) {
     await page.goto(path);
     await page.waitForTimeout(4000);
     await page.screenshot({ path: `../docs/screenshots/${name}.png`, fullPage: true });
   }
 
-  await page.goto("/goals");
+  await page.goto("/analysis/goals");
   await page.waitForTimeout(1500);
   await page.getByText("Retirement").first().click();
   await page.getByText("What would it take?").waitFor({ timeout: 30_000 });

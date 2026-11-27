@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-15T23:21:19.570201+00:00",
+  "generated_at": "2026-11-26T03:30:59.536108+00:00",
   "n_investors": 10000,
   "seed": 42,
   "archetype_counts": {
@@ -28,14 +28,14 @@
     "p90": 3.397
   },
   "anomalies": {
-    "months": 3556,
+    "months": 3596,
     "investors": 1200,
     "by_type": {
-      "turnover_spike": 742,
-      "dormancy_break": 734,
-      "panic_sell": 717,
-      "concentration_spike": 690,
-      "allocation_shock": 673
+      "allocation_shock": 736,
+      "dormancy_break": 735,
+      "panic_sell": 723,
+      "turnover_spike": 709,
+      "concentration_spike": 693
     },
     "caveat": "Injected, not observed. They are deliberately unambiguous, so detection scores against them are an upper bound on real-world performance."
   },

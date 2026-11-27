@@ -11,10 +11,35 @@ scipy==1.18.1          # 1.15.x ships a macOS binary that fails to dlopen on Dar
 # --- classical ML ---
 scikit-learn==1.7.2
 xgboost==3.0.5
+# A second gradient-booster, so the forecast comparison is not one library's
+# opinion of itself. LightGBM's leaf-wise growth behaves differently from
+# XGBoost's level-wise on small, noisy panels, which is exactly the regime
+# the short-horizon forecasts sit in.
+lightgbm==4.6.0
 joblib==1.5.2
+
+# --- cryptography ---
+# Fernet, for encrypting linked-account tokens at rest. A database dump
+# containing a usable brokerage credential is the failure this prevents.
+cryptography==46.0.3
+
+# --- hyperparameter search ---
+# Replaces hand-picked configurations in the forecast pipeline. The previous
+# four XGBoost configs all early-stopped at iteration 0 on three of four
+# horizons, so the reported short-horizon weakness measured an untrained
+# model rather than a ceiling.
+optuna==4.6.0
 
 # --- deep learning ---
 torch==2.8.0
+
+# --- swing-trading models (stages 13-19) ---
+# GARCH(1,1) for the volatility forecaster's classical baseline.
+arch==9.0.0
+# Gaussian HMM for the market-regime detector. Only the fitted parameters are
+# used at inference: the filtered state probabilities come from our own forward
+# pass, because hmmlearn's predict_proba is smoothed and would see the future.
+hmmlearn==0.3.3
 
 # --- web / API ---
 fastapi==0.118.0
@@ -34,7 +59,13 @@ bcrypt==4.3.0
 PyJWT==2.10.1
 
 # --- LLM (Wealth Copilot) ---
-anthropic==0.69.0
+# Either provider works (LLM_PROVIDER); see app/services/llm. 0.69 did not
+# accept the `fallbacks` / `output_config` arguments the Claude path sends.
+anthropic==0.125.0
+google-genai==3.6.1
+
+# --- live market data (delayed quotes, intraday candles, fundamentals) ---
+yfinance==1.8.0
 
 # --- plotting (ml reports / notebooks) ---
 matplotlib==3.10.6

@@ -1,233 +1,17 @@
 "use client";
 
-import clsx from "clsx";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
-import { useApi, useAuth } from "@/lib/auth";
-import { rupeesCompact } from "@/lib/format";
+/**
+ * The application frame now lives in components/trade/app-shell.tsx (chat
+ * sidebar, index ticker, trading navigation). This module keeps the names
+ * the analytics pages import, so they did not need rewriting when they
+ * moved under /analysis.
+ */
 
-/** Navigation is grouped so the dashboard reads as a wealth service with a
- *  research wing, rather than a flat list of eight equal pages. */
-const NAV_GROUPS: { label: string; items: { href: string; label: string; hint: string }[] }[] = [
-  {
-    label: "Wealth",
-    items: [
-      { href: "/overview", label: "Overview", hint: "Wealth at a glance" },
-      { href: "/portfolio", label: "Portfolio", hint: "Holdings and allocation" },
-      { href: "/risk", label: "Risk", hint: "Volatility, drawdown, correlation" },
-      { href: "/goals", label: "Goals", hint: "Targets and projections" },
-    ],
-  },
-  {
-    label: "Intelligence",
-    items: [
-      { href: "/insights", label: "Insights", hint: "Profile, anomalies, forecast" },
-      { href: "/copilot", label: "Copilot", hint: "Ask about your portfolio" },
-    ],
-  },
-  {
-    label: "Research",
-    items: [
-      { href: "/research", label: "Model Lab", hint: "How the models were built" },
-      { href: "/data-quality", label: "Data Quality", hint: "Sources and validation" },
-    ],
-  },
-  {
-    label: "Account",
-    items: [
-      { href: "/import", label: "Import", hint: "Upload holdings" },
-      { href: "/profile", label: "Profile", hint: "Your investor details" },
-    ],
-  },
-];
+import { editorial } from "@/lib/editorial";
 
-const ALL_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
+export { AppShell as Shell } from "@/components/trade/app-shell";
 
-export function Shell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const { user, loading, signOut } = useAuth();
-  const [open, setOpen] = useState(false);
-
-  // A protected page must not flash its chrome before the session resolves.
-  useEffect(() => {
-    if (!loading && !user && typeof window !== "undefined") {
-      window.location.href = "/login";
-    }
-  }, [loading, user]);
-
-  if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-[13px] text-[var(--ink-secondary)]">
-        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[var(--surface-3)] border-t-[var(--accent)]" />
-        <span className="ml-3">Loading your portfolio…</span>
-      </div>
-    );
-  }
-
-  const current = ALL_ITEMS.find((i) => i.href === pathname);
-
-  return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[246px_1fr]">
-      {/* ── sidebar ── */}
-      <aside
-        className={clsx(
-          "fixed inset-y-0 left-0 z-40 w-[246px] border-r border-[var(--hairline)]",
-          "bg-[var(--surface-1)] transition-transform duration-300 lg:static lg:translate-x-0",
-          open ? "translate-x-0" : "-translate-x-full",
-        )}
-      >
-        <div className="flex h-full flex-col">
-          <div className="border-b border-[var(--hairline)] px-5 py-5">
-            <Link href="/" className="block">
-              <div className="display text-[21px] leading-none tracking-tight">
-                Wealth<span className="metal">OS</span>
-              </div>
-              <div className="mt-2 text-[9.5px] uppercase tracking-[0.2em] text-[var(--ink-faint)]">
-                Wealth Intelligence
-              </div>
-            </Link>
-          </div>
-
-          <nav className="flex-1 overflow-y-auto px-3 py-4">
-            {NAV_GROUPS.map((group) => (
-              <div key={group.label} className="mb-5 last:mb-0">
-                <div className="px-3 pb-1.5 text-[9.5px] font-semibold uppercase tracking-[0.17em] text-[var(--ink-faint)]">
-                  {group.label}
-                </div>
-                {group.items.map((item) => {
-                  const active = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setOpen(false)}
-                      aria-current={active ? "page" : undefined}
-                      className={clsx(
-                        "group relative mb-0.5 block rounded-[var(--radius-sm)] px-3 py-2 transition-colors",
-                        active
-                          ? "bg-[var(--surface-3)] text-[var(--ink-primary)]"
-                          : "text-[var(--ink-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--ink-primary)]",
-                      )}
-                    >
-                      {active && (
-                        <span className="absolute inset-y-1.5 left-0 w-[2px] rounded-full bg-[var(--accent)]" />
-                      )}
-                      <span className="block text-[13.5px] font-medium">{item.label}</span>
-                      <span className="block text-[10.5px] leading-snug text-[var(--ink-faint)]">
-                        {item.hint}
-                      </span>
-                    </Link>
-                  );
-                })}
-              </div>
-            ))}
-          </nav>
-
-          <div className="border-t border-[var(--hairline)] p-3">
-            <div className="flex items-center gap-2.5 rounded-[var(--radius-sm)] bg-[var(--surface-2)] px-3 py-2.5">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[var(--accent-bright)] to-[var(--accent-dim)] text-[11px] font-semibold text-[var(--accent-ink)]">
-                {(user.full_name || user.email).slice(0, 1).toUpperCase()}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[12.5px] text-[var(--ink-primary)]">
-                  {user.full_name || user.email.split("@")[0]}
-                </div>
-                <button
-                  onClick={signOut}
-                  className="text-[10.5px] text-[var(--ink-muted)] transition-colors hover:text-[var(--accent)]"
-                >
-                  Sign out
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {open && (
-        <div className="fixed inset-0 z-30 bg-black/70 backdrop-blur-sm lg:hidden"
-             onClick={() => setOpen(false)} />
-      )}
-
-      {/* ── content ── */}
-      <div className="min-w-0">
-        <TopBar title={current?.label} onMenu={() => setOpen((v) => !v)} />
-
-        <main className="mx-auto w-full max-w-[1220px] px-4 py-7 sm:px-7 lg:py-9">
-          {children}
-        </main>
-
-        <footer className="mx-auto w-full max-w-[1220px] px-4 pb-12 sm:px-7">
-          <hr className="rule-fade mb-4" />
-          <p className="text-[11px] leading-relaxed text-[var(--ink-faint)]">
-            WealthOS is an academic research prototype built for the Polaris School
-            of Technology OJT programme. It explains computed portfolio metrics and
-            does not provide investment advice. Investor-level data in
-            demonstrations is synthetic; market prices are real and
-            corporate-action adjusted.
-          </p>
-        </footer>
-      </div>
-    </div>
-  );
-}
-
-/** A persistent bar carrying the portfolio's headline value. On a wealth
- *  service the balance should never be more than a glance away. */
-function TopBar({ title, onMenu }: { title?: string; onMenu: () => void }) {
-  const summary = useApi(() => api.portfolio().catch(() => null), []);
-
-  return (
-    <header className="sticky top-0 z-20 border-b border-[var(--hairline)] bg-[color-mix(in_oklab,var(--surface-0)_82%,transparent)] backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-[1220px] items-center gap-3 px-4 py-3 sm:px-7">
-        <button
-          onClick={onMenu}
-          aria-label="Toggle navigation"
-          className="rounded-[var(--radius-sm)] border border-[var(--hairline-strong)] px-2.5 py-1.5 text-[12px] text-[var(--ink-secondary)] lg:hidden"
-        >
-          Menu
-        </button>
-        <span className="display text-[16px] lg:hidden">
-          Wealth<span className="metal">OS</span>
-        </span>
-
-        <span className="hidden text-[12.5px] text-[var(--ink-muted)] lg:inline">{title}</span>
-
-        <div className="ml-auto flex items-center gap-5">
-          {summary.data && summary.data.n_holdings > 0 && (
-            <>
-              <div className="text-right">
-                <div className="text-[9.5px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
-                  Portfolio
-                </div>
-                <div className="tabular text-[14px] leading-tight text-[var(--ink-primary)]">
-                  {rupeesCompact(summary.data.total_value)}
-                </div>
-              </div>
-              <div className="hidden text-right sm:block">
-                <div className="text-[9.5px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
-                  Gain
-                </div>
-                <div className={clsx(
-                  "tabular text-[14px] leading-tight",
-                  summary.data.unrealized_gain >= 0
-                    ? "text-[var(--good-ink)]" : "text-[var(--critical-ink)]",
-                )}>
-                  {summary.data.unrealized_gain_pct >= 0 ? "+" : ""}
-                  {(summary.data.unrealized_gain_pct * 100).toFixed(2)}%
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </header>
-  );
-}
-
-/** Page heading used across the dashboard. */
+/** Page heading used across the analytics pages. */
 export function PageHead({ title, lede, aside, eyebrow }: {
   title: string; lede?: string; aside?: React.ReactNode; eyebrow?: string;
 }) {
@@ -235,15 +19,15 @@ export function PageHead({ title, lede, aside, eyebrow }: {
     <div className="rise mb-7 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {eyebrow && (
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
+          <div className="label mb-3 text-[var(--accent)]">
             {eyebrow}
           </div>
         )}
-        <h1 className="display text-[32px] leading-none tracking-tight text-[var(--ink-primary)]">
-          {title}
+        <h1 className="display text-display text-[var(--ink-primary)]">
+          {editorial(title)}
         </h1>
         {lede && (
-          <p className="mt-2.5 max-w-2xl text-[13.5px] leading-relaxed text-[var(--ink-secondary)]">
+          <p className="mt-3 max-w-2xl text-body-lg leading-relaxed text-[var(--ink-secondary)]">
             {lede}
           </p>
         )}

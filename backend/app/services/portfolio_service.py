@@ -452,6 +452,7 @@ def import_holdings_csv(
         running["purchase_date"] = min(dates) if dates else None
 
     created = updated = 0
+    transactions_recorded = 0
     for record in merged.values():
         _, is_new = upsert_holding(
             db, user, record["asset"], record["quantity"],
@@ -460,7 +461,49 @@ def import_holdings_csv(
         db.flush()  # make the new row visible to the next lookup
         created += int(is_new)
         updated += int(not is_new)
+
+        # A CSV row carrying a purchase date is a record of a purchase, so
+        # record it as one.
+        #
+        # Until Phase 4 nothing wrote to `transactions` except the explicit
+        # POST /transactions endpoint, so for anyone who onboarded by CSV --
+        # the documented path, and the one the demonstration uses -- the
+        # table was empty. That had consequences beyond a missing feature:
+        # behavioural profiling fell back to the reconstruction, which holds
+        # quantities fixed and so reports zero turnover, pushing every live
+        # user towards the passive clusters whatever they actually do.
+        #
+        # Only rows with a date are recorded. Inventing one would put a
+        # fabricated event in the user's own history, and a holding without a
+        # purchase date is a position of unknown vintage, not a purchase made
+        # today.
+        if record["purchase_date"] is not None:
+            db.add(Transaction(
+                user_id=user.id,
+                asset_id=record["asset"].id,
+                transaction_type=TransactionType.BUY,
+                date=record["purchase_date"],
+                quantity=record["quantity"],
+                price=record["average_price"],
+                value=record["quantity"] * record["average_price"],
+                fees=0.0,
+            ))
+            transactions_recorded += 1
     db.commit()
+
+    if transactions_recorded:
+        warnings.append(
+            f"Recorded {transactions_recorded} purchase "
+            f"{'transaction' if transactions_recorded == 1 else 'transactions'} "
+            "from the dated rows, so behavioural analysis can use your own "
+            "history rather than inferring it."
+        )
+    elif created or updated:
+        warnings.append(
+            "No purchase dates were given, so no transaction history was "
+            "recorded. Behavioural features will be inferred from price "
+            "history, which cannot see trading activity."
+        )
 
     return ImportResult(
         accepted=True, rows_read=rows_read, rows_imported=len(parsed),

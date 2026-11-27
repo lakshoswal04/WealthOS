@@ -139,38 +139,51 @@ class TestAnomalyDetector:
         assert all(0.0 <= entry["recall"] <= 1.0 for entry in by_type.values())
 
     def test_dormancy_recall_does_not_regress(self):
-        """A floor under the weakest anomaly type, so it cannot slip silently.
+        """A floor under what used to be the weakest anomaly type.
 
-        Set at the measured baseline of 0.4667 rather than at an aspiration.
-        Raise it as the detector improves -- that is the point of a ratchet.
+        Ratchet history, which is the useful part of this test:
 
-        The earlier comment here said dormancy breaks are "genuinely hard to
-        separate from lumpy saving". Measurement says otherwise: in the test
-        split, contribution_ratio for a dormancy break spans 0.30 to 0.79
-        while the maximum across 289,000 normal rows is 0.2006, so the two
-        classes do not overlap at all. The recall is low because the anomaly
-        score is a flat mean over 24 features, which dilutes a deviation that
-        appears in only two of them -- the class mean error lands at 5.842655
-        against a threshold of 5.84296525, straddling the cut by 0.0003.
+          0.4667  the Phase 0 baseline, set at the measurement rather than at
+                  an aspiration.
+          0.5795  per-feature z-scoring of the reconstruction error, measured
+                  on the unchanged model and the unchanged dataset so the
+                  scoring change is isolated. See
+                  ml/reports/anomaly_aggregation_study.json.
+          0.9692  after the generator was fixed to create the silence the
+                  label describes, and three lag features were added so that
+                  silence is visible in the feature table.
+
+        The old comment here claimed dormancy breaks are "genuinely hard to
+        separate from lumpy saving". They are not, and they never were: in the
+        original test split, contribution_ratio for a dormancy break spanned
+        0.30 to 0.79 while the maximum across 289,000 normal rows was 0.2006.
+        Two separate defects produced the low number. The score was a flat
+        mean over 24 features of unequal reconstruction difficulty, which
+        buried a deviation appearing in two of them -- the class mean error
+        landed at 5.842655 against a threshold of 5.84296525, straddling the
+        cut by 0.0003. And the generator wrote the large contribution without
+        ever zeroing the months before it, so the row labelled
+        "dormancy_break" was a large contribution and nothing more.
+
+        The floor is set below the measurement because the dataset was
+        regenerated: part of the jump from 0.5795 to 0.9692 is that the labels
+        now describe what is actually in the data. That is a correction, not a
+        gain in modelling skill, and the two should not be conflated.
         """
         by_type = _report("anomaly_detection")["by_anomaly_type"]
-        assert by_type["dormancy_break"]["recall"] >= 0.4667
+        assert by_type["dormancy_break"]["recall"] >= 0.95
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "Known defect, fixed in the anomaly rework: dormancy_break sits "
-            "0.005% from the threshold. strict=True means this test FAILS "
-            "once the aggregation is fixed, which is the signal to delete "
-            "this marker rather than let the guard quietly stop guarding."
-        ),
-    )
     def test_no_anomaly_type_sits_on_the_decision_threshold(self):
         """A class whose mean error equals the threshold is a coin flip.
 
         Separation is what makes a recall figure meaningful: if the mean
         reconstruction error of a type lands within 1% of the cut, roughly
         half its rows fall on each side for no reason the model understands.
+
+        This carried `xfail(strict=True)` through Phase 0 because
+        dormancy_break sat 0.005% from the cut. It failed by passing once the
+        rework landed, which is what strict mode is for: a guard that starts
+        succeeding has to be noticed, not silently satisfied. Marker retired.
         """
         report = _report("anomaly_detection")
         threshold = report["threshold"]["value"]
@@ -195,11 +208,28 @@ class TestForecasting:
         import joblib
         return joblib.load(path)
 
-    def test_the_xgboost_slot_holds_an_xgboost_model(self, artifact):
-        # A variable-shadowing bug once stored the GRU under this key, so the
-        # type is asserted rather than assumed.
+    def test_the_tabular_slot_holds_the_model_the_artifact_names(self, artifact):
+        """The slot and the label must agree.
+
+        A variable-shadowing bug once stored the GRU under this key, so the
+        type is asserted rather than assumed. Since Phase 3b the family is
+        chosen between XGBoost and LightGBM on walk-forward evidence, so the
+        assertion is consistency between `tabular_model` and what is actually
+        stored -- a stronger check than naming one family, because it catches
+        a mislabelled artifact as well as a mistyped one.
+
+        The key stays "xgboost" for backward compatibility with artifacts the
+        serving path already loads.
+        """
+        import lightgbm as lgb
         import xgboost as xgb
-        assert isinstance(artifact["xgboost"], xgb.XGBRegressor)
+
+        families = {"xgboost": xgb.XGBRegressor, "lightgbm": lgb.LGBMRegressor}
+        named = artifact.get("tabular_model", "xgboost")
+        assert named in families, named
+        assert isinstance(artifact["xgboost"], families[named]), (
+            f"artifact says {named} but holds {type(artifact['xgboost']).__name__}"
+        )
 
     def test_artifact_carries_both_feature_contracts(self, artifact):
         assert artifact["tabular_features"]
@@ -249,7 +279,9 @@ class TestForecasting:
         # leads with, so it must exist.
         report = _report("forecast_12m")
         assert "baseline_mean_drift" in report["results"]
-        assert "skill_vs_mean_baseline" in report["results"]["xgboost"]
+        # The tabular model is keyed by its chosen family, not by "xgboost".
+        chosen = report["tabular_chosen"]
+        assert "skill_vs_mean_baseline" in report["results"][chosen]
         assert "skill_vs_mean_baseline" in report["best_model"]
 
     def test_the_best_model_actually_beats_the_baseline(self):
@@ -261,7 +293,8 @@ class TestForecasting:
     def test_scale_inflated_and_honest_metrics_are_both_reported(self):
         # Reporting only the rupee-value R-squared would overstate the result
         # by an order of magnitude.
-        results = _report("forecast_12m")["results"]["xgboost"]
+        report = _report("forecast_12m")
+        results = report["results"][report["tabular_chosen"]]
         assert results["value"]["r2"] > 0.9       # scale-dominated, as expected
         assert results["growth"]["r2"] < 0.9      # the real measure, far lower
         assert {"mae", "rmse", "mape_pct", "r2"} <= set(results["growth"])

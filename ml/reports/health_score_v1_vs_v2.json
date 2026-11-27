@@ -1,0 +1,539 @@
+{
+  "generated_at": "2026-11-26T03:20:52.800127+00:00",
+  "purpose": "Evidence for the Health Score rework. Both methodologies use identical inputs and identical component weights, so every difference below is attributable to a measurement change rather than to re-weighting.",
+  "weights": {
+    "v1": {
+      "diversification": 20.0,
+      "risk": 20.0,
+      "concentration": 15.0,
+      "liquidity": 10.0,
+      "goal_alignment": 20.0,
+      "behaviour": 15.0
+    },
+    "v2": {
+      "diversification": 20.0,
+      "risk": 20.0,
+      "concentration": 15.0,
+      "liquidity": 10.0,
+      "goal_alignment": 20.0,
+      "behaviour": 15.0
+    },
+    "identical": true,
+    "rationale": "Deliberately unchanged. Fixing a measure is a better answer than re-weighting around a broken one, and holding the weights fixed is what makes the comparison interpretable."
+  },
+  "v2_parameters": {
+    "holdings_curve": [
+      [
+        1.0,
+        0.0
+      ],
+      [
+        8.0,
+        50.0
+      ],
+      [
+        25.0,
+        100.0
+      ]
+    ],
+    "cash_buffer_target": 0.1,
+    "drawdown_breach_multiple": 2.0
+  },
+  "scenarios": [
+    {
+      "scenario": "textbook_balanced",
+      "description": "28 holdings, 8 sectors, 4 asset classes, goals on track",
+      "expectation": "Should score at the top of the range. Nothing is wrong with it.",
+      "tier": "sound",
+      "v1_total": 90.2761,
+      "v2_total": 94.9685,
+      "difference": 4.69,
+      "missing_inputs": [],
+      "v1_components": {
+        "diversification": 96.381,
+        "risk": 82.0,
+        "concentration": 100.0,
+        "liquidity": 76.2,
+        "goal_alignment": 88.2143,
+        "behaviour": 95.5807
+      },
+      "v2_components": {
+        "diversification": 97.1429,
+        "risk": 100.0,
+        "concentration": 98.3333,
+        "liquidity": 88.1,
+        "goal_alignment": 88.2143,
+        "behaviour": 95.5807
+      },
+      "v1_contribution_sum": 90.2761,
+      "v2_contribution_sum": 94.9685
+    },
+    {
+      "scenario": "diversified_no_buffer",
+      "description": "As textbook, but nothing in cash or debt",
+      "expectation": "Should score below textbook_balanced and above the concentrated cases. This is the scenario v1 could barely distinguish: its liquidity component moved about three points.",
+      "tier": "sound",
+      "v1_total": 88.6828,
+      "v2_total": 88.1719,
+      "difference": -0.51,
+      "missing_inputs": [],
+      "v1_components": {
+        "diversification": 89.7143,
+        "risk": 82.0,
+        "concentration": 100.0,
+        "liquidity": 73.6,
+        "goal_alignment": 88.2143,
+        "behaviour": 95.5807
+      },
+      "v2_components": {
+        "diversification": 88.8095,
+        "risk": 100.0,
+        "concentration": 98.3333,
+        "liquidity": 36.8,
+        "goal_alignment": 88.2143,
+        "behaviour": 95.5807
+      },
+      "v1_contribution_sum": 88.6828,
+      "v2_contribution_sum": 88.1719
+    },
+    {
+      "scenario": "concentrated_equity",
+      "description": "6 holdings, 2 sectors, one position at 38%",
+      "expectation": "Should score poorly on diversification, concentration, risk and liquidity at once \u2014 the failures are correlated in reality and the score should reflect that rather than averaging them away.",
+      "tier": "poor",
+      "v1_total": 35.0896,
+      "v2_total": 34.4872,
+      "difference": -0.6,
+      "missing_inputs": [],
+      "v1_components": {
+        "diversification": 22.3584,
+        "risk": 13.0,
+        "concentration": 18.2963,
+        "liquidity": 70.0,
+        "goal_alignment": 40.0,
+        "behaviour": 68.4898
+      },
+      "v2_components": {
+        "diversification": 18.2143,
+        "risk": 26.0,
+        "concentration": 25.8056,
+        "liquidity": 35.0,
+        "goal_alignment": 40.0,
+        "behaviour": 68.4898
+      },
+      "v1_contribution_sum": 35.0896,
+      "v2_contribution_sum": 34.4872
+    },
+    {
+      "scenario": "single_holding",
+      "description": "One stock, nothing else",
+      "expectation": "The worst scorable case. Correlation is NaN because a single holding has no pairs to correlate \u2014 unmeasurable, not zero.",
+      "tier": "severe",
+      "v1_total": 18.25,
+      "v2_total": 14.75,
+      "difference": -3.5,
+      "missing_inputs": [],
+      "v1_components": {
+        "diversification": 0.0,
+        "risk": 0.0,
+        "concentration": 0.0,
+        "liquidity": 70.0,
+        "goal_alignment": 0.0,
+        "behaviour": 75.0
+      },
+      "v2_components": {
+        "diversification": 0.0,
+        "risk": 0.0,
+        "concentration": 0.0,
+        "liquidity": 35.0,
+        "goal_alignment": 0.0,
+        "behaviour": 75.0
+      },
+      "v1_contribution_sum": 18.25,
+      "v2_contribution_sum": 14.75
+    },
+    {
+      "scenario": "risk_mismatch_too_hot",
+      "description": "Well-built portfolio, but the investor is conservative",
+      "expectation": "Diversification and concentration should stay high while risk falls: the portfolio is fine, it is the wrong portfolio for this investor. Also the case v1 handled worst \u2014 it scored a conservative investor 50 on risk for a drawdown sitting exactly at their own stated tolerance. Held identical to too_cold except for tolerance and the two risk measures.",
+      "tier": "compromised",
+      "v1_total": 73.8761,
+      "v2_total": 74.9685,
+      "difference": 1.09,
+      "missing_inputs": [],
+      "v1_components": {
+        "diversification": 96.381,
+        "risk": 0.0,
+        "concentration": 100.0,
+        "liquidity": 76.2,
+        "goal_alignment": 88.2143,
+        "behaviour": 95.5807
+      },
+      "v2_components": {
+        "diversification": 97.1429,
+        "risk": 0.0,
+        "concentration": 98.3333,
+        "liquidity": 88.1,
+        "goal_alignment": 88.2143,
+        "behaviour": 95.5807
+      },
+      "v1_contribution_sum": 73.8761,
+      "v2_contribution_sum": 74.9685
+    },
+    {
+      "scenario": "risk_mismatch_too_cold",
+      "description": "Aggressive investor holding a portfolio that barely moves",
+      "expectation": "Should be penalised, but far less harshly than too_hot: undershooting risk costs return, overshooting can cost capital, and _band_score encodes that asymmetry with a 0.6 under-penalty against 1.0 over. Derived from the textbook portfolio by changing only the tolerance and the two risk measures, so the comparison with too_hot isolates the risk component instead of confounding it with a different portfolio.",
+      "tier": "sound",
+      "v1_total": 89.519,
+      "v2_total": 91.1114,
+      "difference": 1.59,
+      "missing_inputs": [],
+      "v1_components": {
+        "diversification": 96.381,
+        "risk": 78.2143,
+        "concentration": 100.0,
+        "liquidity": 76.2,
+        "goal_alignment": 88.2143,
+        "behaviour": 95.5807
+      },
+      "v2_components": {
+        "diversification": 97.1429,
+        "risk": 80.7143,
+        "concentration": 98.3333,
+        "liquidity": 88.1,
+        "goal_alignment": 88.2143,
+        "behaviour": 95.5807
+      },
+      "v1_contribution_sum": 89.519,
+      "v2_contribution_sum": 91.1114
+    },
+    {
+      "scenario": "conservative_appropriate",
+      "description": "Low-volatility portfolio held by a conservative investor",
+      "expectation": "Should score well. The same volatility that is a mismatch for an aggressive investor is correct for this one, so the score must depend on the stated tolerance and not on the volatility alone.",
+      "tier": "sound",
+      "v1_total": 87.3587,
+      "v2_total": 91.2822,
+      "difference": 3.92,
+      "missing_inputs": [],
+      "v1_components": {
+        "diversification": 88.99,
+        "risk": 81.25,
+        "concentration": 99.1667,
+        "liquidity": 79.0,
+        "goal_alignment": 78.9286,
+        "behaviour": 98.3333
+      },
+      "v2_components": {
+        "diversification": 86.6387,
+        "risk": 100.0,
+        "concentration": 96.4583,
+        "liquidity": 89.5,
+        "goal_alignment": 78.9286,
+        "behaviour": 98.3333
+      },
+      "v1_contribution_sum": 87.3587,
+      "v2_contribution_sum": 91.2822
+    },
+    {
+      "scenario": "churner",
+      "description": "Diversified holdings, traded constantly",
+      "expectation": "Only behaviour should fall. It carries weight 15, so the total should drop noticeably without collapsing \u2014 the holdings really are fine.",
+      "tier": "compromised",
+      "v1_total": 78.0436,
+      "v2_total": 82.736,
+      "difference": 4.69,
+      "missing_inputs": [],
+      "v1_components": {
+        "diversification": 96.381,
+        "risk": 82.0,
+        "concentration": 100.0,
+        "liquidity": 76.2,
+        "goal_alignment": 88.2143,
+        "behaviour": 14.0303
+      },
+      "v2_components": {
+        "diversification": 97.1429,
+        "risk": 100.0,
+        "concentration": 98.3333,
+        "liquidity": 88.1,
+        "goal_alignment": 88.2143,
+        "behaviour": 14.0303
+      },
+      "v1_contribution_sum": 78.0436,
+      "v2_contribution_sum": 82.736
+    },
+    {
+      "scenario": "no_goals",
+      "description": "Good portfolio, no goals set",
+      "expectation": "Goal alignment must be reported missing, not scored zero, and the remaining weights renormalised. An unset goal is an absence of information about the user, not a fault in the portfolio.",
+      "tier": "sound",
+      "v1_total": 90.7916,
+      "v2_total": 96.6571,
+      "difference": 5.87,
+      "missing_inputs": [
+        "goal_alignment"
+      ],
+      "v1_components": {
+        "diversification": 96.381,
+        "risk": 82.0,
+        "concentration": 100.0,
+        "liquidity": 76.2,
+        "goal_alignment": null,
+        "behaviour": 95.5807
+      },
+      "v2_components": {
+        "diversification": 97.1429,
+        "risk": 100.0,
+        "concentration": 98.3333,
+        "liquidity": 88.1,
+        "goal_alignment": null,
+        "behaviour": 95.5807
+      },
+      "v1_contribution_sum": 72.6333,
+      "v2_contribution_sum": 96.6571
+    },
+    {
+      "scenario": "thin_history",
+      "description": "Newly opened account: holdings known, no price history yet",
+      "expectation": "Risk, goal alignment and behaviour should all be reported missing. The score must come from what is known and say what is not.",
+      "tier": "compromised",
+      "v1_total": 73.9749,
+      "v2_total": 74.8206,
+      "difference": 0.85,
+      "missing_inputs": [
+        "risk",
+        "goal_alignment",
+        "behaviour"
+      ],
+      "v1_components": {
+        "diversification": 64.5269,
+        "risk": null,
+        "concentration": 86.3889,
+        "liquidity": 74.25,
+        "goal_alignment": null,
+        "behaviour": null
+      },
+      "v2_components": {
+        "diversification": 60.8777,
+        "risk": null,
+        "concentration": 85.2083,
+        "liquidity": 87.125,
+        "goal_alignment": null,
+        "behaviour": null
+      },
+      "v1_contribution_sum": 33.2887,
+      "v2_contribution_sum": 74.8206
+    },
+    {
+      "scenario": "empty",
+      "description": "An account with nothing in it",
+      "expectation": "Unscorable. Grade Unknown and a null total \u2014 not a zero, which would read as a verdict on a portfolio that does not exist.",
+      "tier": "unscorable",
+      "v1_total": null,
+      "v2_total": null,
+      "difference": null,
+      "missing_inputs": [
+        "diversification",
+        "risk",
+        "concentration",
+        "liquidity",
+        "goal_alignment",
+        "behaviour"
+      ],
+      "v1_components": {
+        "diversification": null,
+        "risk": null,
+        "concentration": null,
+        "liquidity": null,
+        "goal_alignment": null,
+        "behaviour": null
+      },
+      "v2_components": {
+        "diversification": null,
+        "risk": null,
+        "concentration": null,
+        "liquidity": null,
+        "goal_alignment": null,
+        "behaviour": null
+      },
+      "v1_contribution_sum": 0.0,
+      "v2_contribution_sum": 0.0
+    }
+  ],
+  "tiers": {
+    "sound": [
+      "textbook_balanced",
+      "no_goals",
+      "conservative_appropriate",
+      "risk_mismatch_too_cold",
+      "diversified_no_buffer"
+    ],
+    "compromised": [
+      "churner",
+      "risk_mismatch_too_hot",
+      "thin_history"
+    ],
+    "poor": [
+      "concentrated_equity"
+    ],
+    "severe": [
+      "single_holding"
+    ]
+  },
+  "component_discrimination": {
+    "v1": {
+      "diversification": {
+        "range": 96.381,
+        "std_dev": 33.4711,
+        "min": 0.0,
+        "max": 96.381,
+        "cannot_discriminate": false
+      },
+      "risk": {
+        "range": 82.0,
+        "std_dev": 36.4458,
+        "min": 0.0,
+        "max": 82.0,
+        "cannot_discriminate": false
+      },
+      "concentration": {
+        "range": 100.0,
+        "std_dev": 36.075,
+        "min": 0.0,
+        "max": 100.0,
+        "cannot_discriminate": false
+      },
+      "liquidity": {
+        "range": 9.0,
+        "std_dev": 2.7434,
+        "min": 70.0,
+        "max": 79.0,
+        "cannot_discriminate": true
+      },
+      "goal_alignment": {
+        "range": 88.2143,
+        "std_dev": 30.6972,
+        "min": 0.0,
+        "max": 88.2143,
+        "cannot_discriminate": false
+      },
+      "behaviour": {
+        "range": 84.303,
+        "std_dev": 25.9023,
+        "min": 14.0303,
+        "max": 98.3333,
+        "cannot_discriminate": false
+      }
+    },
+    "v2": {
+      "diversification": {
+        "range": 97.1429,
+        "std_dev": 34.3762,
+        "min": 0.0,
+        "max": 97.1429,
+        "cannot_discriminate": false
+      },
+      "risk": {
+        "range": 100.0,
+        "std_dev": 42.5448,
+        "min": 0.0,
+        "max": 100.0,
+        "cannot_discriminate": false
+      },
+      "concentration": {
+        "range": 98.3333,
+        "std_dev": 34.1337,
+        "min": 0.0,
+        "max": 98.3333,
+        "cannot_discriminate": false
+      },
+      "liquidity": {
+        "range": 54.5,
+        "std_dev": 24.0968,
+        "min": 35.0,
+        "max": 89.5,
+        "cannot_discriminate": false
+      },
+      "goal_alignment": {
+        "range": 88.2143,
+        "std_dev": 30.6972,
+        "min": 0.0,
+        "max": 88.2143,
+        "cannot_discriminate": false
+      },
+      "behaviour": {
+        "range": 84.303,
+        "std_dev": 25.9023,
+        "min": 14.0303,
+        "max": 98.3333,
+        "cannot_discriminate": false
+      }
+    }
+  },
+  "probe_double_counting": {
+    "method": "Two portfolios with identical holdings, sectors, asset classes and pairwise correlation, differing only in weight dispersion. Any movement in diversification is work concentration already does.",
+    "v1": {
+      "diversification_moved": 13.6667,
+      "concentration_moved": 53.6667,
+      "double_counted": true
+    },
+    "v2": {
+      "diversification_moved": 0.0,
+      "concentration_moved": 57.3333,
+      "double_counted": false
+    }
+  },
+  "probe_liquidity": {
+    "method": "The same portfolio with and without an 18% cash-and-debt buffer. Having no buffer means meeting an unexpected need by selling growth assets, possibly after a fall.",
+    "v1_total_gap": 1.5933,
+    "v2_total_gap": 6.7967,
+    "buffer_target": 0.1
+  },
+  "probe_drawdown_at_tolerance": {
+    "method": "A conservative investor whose portfolio fell exactly 12%, the drawdown that profile declares it tolerates.",
+    "tolerance": 0.12,
+    "v1_drawdown_subscore": 50.0,
+    "v2_drawdown_subscore": 100.0,
+    "breach_multiple": 2.0,
+    "finding": "v1 scored the investor's own stated limit at half marks. A tolerance is a constraint, not a target: v2 awards full marks inside it and decays to zero at twice it."
+  },
+  "sensitivity": {
+    "v1": {
+      "nudges": 139,
+      "saturated": 42,
+      "saturated_share": 0.3022,
+      "by_input": {
+        "annualized_volatility": 7,
+        "top_1_weight": 7,
+        "top_5_weight": 7,
+        "max_sector_weight": 7,
+        "n_holdings": 6,
+        "annual_turnover": 3,
+        "max_drawdown": 2,
+        "hhi_normalized": 1,
+        "goal_progress_ratio": 1,
+        "goal_funding_ratio": 1
+      }
+    },
+    "v2": {
+      "nudges": 139,
+      "saturated": 48,
+      "saturated_share": 0.3453,
+      "by_input": {
+        "max_drawdown": 8,
+        "annualized_volatility": 7,
+        "top_1_weight": 7,
+        "top_5_weight": 7,
+        "max_sector_weight": 7,
+        "n_holdings": 6,
+        "annual_turnover": 3,
+        "hhi_normalized": 1,
+        "goal_progress_ratio": 1,
+        "goal_funding_ratio": 1
+      }
+    },
+    "interpretation": "v2 shows MORE saturated input nudges than v1, and that is the intended behaviour, not a regression. Its drawdown score is flat inside the investor's tolerance (the constraint is met) and flat past twice it (the constraint is destroyed); only the band between carries information. The measure that matters is whether a component can discriminate at all -- see component_discrimination, where v1's liquidity is the only saturated component in either version."
+  }
+}

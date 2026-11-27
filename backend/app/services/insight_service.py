@@ -14,6 +14,8 @@ import pandas as pd
 import torch
 from sqlalchemy.orm import Session
 
+from wealthos_core.anomaly import aggregate_error, derive_anomaly_features
+from app.ml_runtime import behaviour as live_behaviour
 from app.ml_runtime import features as live_features
 from app.ml_runtime.registry import registry
 from app.models import User
@@ -50,7 +52,12 @@ def investor_profile(db: Session, user: User) -> dict:
             ),
         }
 
-    profile = live_features.behavioural_profile(history, user)
+    reconstructed = live_features.behavioural_profile(history, user)
+    # Prefer what the investor actually did over what holding today's
+    # positions would have implied, and label every feature either way.
+    profile, provenance = live_behaviour.behavioural_provenance(
+        db, user, reconstructed, history
+    )
     columns = artifact["feature_columns"]
     vector = pd.DataFrame([[profile.get(c, 0.0) for c in columns]], columns=columns)
     vector = vector.replace([np.inf, -np.inf], 0.0).fillna(0.0)
@@ -89,6 +96,10 @@ def investor_profile(db: Session, user: User) -> dict:
         "match_confidence": round(max(0.0, min(confidence, 1.0)), 3),
         "distinguishing_traits": matched["distinguishing_traits"],
         "investor_features": {k: round(float(v), 4) for k, v in profile.items()},
+        "feature_provenance": provenance,
+        "reconstructed_features": {
+            k: round(float(v), 4) for k, v in reconstructed.items()
+        },
         "largest_differences_from_cluster": differences,
         "stated_risk_tolerance": str(user.risk_tolerance) if user.risk_tolerance else None,
         "method": (
@@ -96,9 +107,14 @@ def investor_profile(db: Session, user: User) -> dict:
             "10,000 investors. Cluster names were derived from fitted centroids."
         ),
         "caveat": (
-            "Behaviour is reconstructed by valuing current holdings back through "
-            "price history, so it reflects the portfolio held today rather than "
-            "a replay of past positions."
+            "Portfolio state -- allocations, concentration, holding count -- is "
+            "read from today's holdings and is exact. Behavioural features are "
+            "taken from recorded transactions where the record is long enough "
+            "to describe a habit, and reconstructed otherwise; "
+            "`feature_provenance` says which, feature by feature, and carries "
+            "the share of the period the transaction record covers. "
+            "Reconstruction holds quantities fixed, so any feature it supplies "
+            "for turnover or trade frequency is biased towards zero."
         ),
     }
 
@@ -120,25 +136,29 @@ def detect_anomalies(db: Session, user: User, limit: int = 24) -> dict:
         }
 
     columns = artifact["feature_columns"]
-    frame = history.sort_values("date").copy()
-
-    allocation_columns = [
-        "equity_allocation", "etf_allocation", "gold_allocation",
-        "debt_allocation", "cash_allocation",
-    ]
-    for column in allocation_columns + ["hhi", "top_holding_weight", "n_holdings"]:
-        frame[f"delta_{column}"] = frame[column].diff()
-    frame["allocation_shift"] = (
-        frame[[f"delta_{c}" for c in allocation_columns]].abs().sum(axis=1) / 2.0
-    )
-    median_turnover = frame["turnover"].median()
-    frame["turnover_ratio"] = (
-        frame["turnover"] / median_turnover if median_turnover else 0.0
-    )
+    # One definition of the derivations, shared with p07_features. These were
+    # reimplemented here until Phase 3a, so the two drifted apart the moment a
+    # feature was added to training: `reindex` below fills an unknown column
+    # with zero without complaint, and the model would have scored a vector
+    # that silently disagreed with the one it was fitted on.
+    frame = derive_anomaly_features(history.sort_values("date"), group_key=None)
 
     usable = frame.dropna(subset=["delta_equity_allocation"]).copy()
     if usable.empty:
         return {"available": False, "reason": "Not enough consecutive months to compare."}
+
+    missing = [c for c in columns if c not in usable.columns]
+    if missing:
+        # Fail loudly. Scoring against zero-filled columns produces a
+        # confident number from a feature vector the model has never seen.
+        return {
+            "available": False,
+            "reason": (
+                "The deployed model expects features this service does not "
+                f"compute ({', '.join(missing)}), so no score can be trusted. "
+                "The model artifact and the application are out of step."
+            ),
+        }
 
     matrix = usable.reindex(columns=columns).replace([np.inf, -np.inf], np.nan).fillna(0.0)
     scaled = artifact["scaler"].transform(matrix)
@@ -146,7 +166,25 @@ def detect_anomalies(db: Session, user: User, limit: int = 24) -> dict:
     with torch.no_grad():
         tensor = torch.tensor(scaled, dtype=torch.float32)
         rebuilt = artifact["model"](tensor)
-        errors = ((rebuilt - tensor) ** 2).mean(dim=1).numpy()
+        squared = ((rebuilt - tensor) ** 2).numpy()
+
+    # The aggregation is part of the model, carried in the artifact. Older
+    # artifacts predate it and were scored with a flat mean, so that is the
+    # fallback -- reducing the error differently from training would compute a
+    # different number from the same weights.
+    how = artifact.get("aggregation", "mean")
+    reference = None
+    if how.startswith("zscore_"):
+        reference_mean = artifact.get("error_reference_mean")
+        reference_std = artifact.get("error_reference_std")
+        if reference_mean is None or reference_std is None:
+            how = "mean"
+        else:
+            reference = {
+                "mean": np.asarray(reference_mean, dtype="float64"),
+                "std": np.asarray(reference_std, dtype="float64"),
+            }
+    errors = aggregate_error(squared, how, reference)
 
     threshold = float(artifact["threshold"])
     usable["anomaly_score"] = errors
@@ -154,7 +192,7 @@ def detect_anomalies(db: Session, user: User, limit: int = 24) -> dict:
 
     # Which features the model reconstructed worst explains *why* a month
     # looked unusual, rather than only that it did.
-    per_feature_error = ((rebuilt - tensor) ** 2).numpy()
+    per_feature_error = squared
 
     detected = []
     for position, (_, row) in enumerate(usable.iterrows()):
@@ -247,6 +285,25 @@ def wealth_forecast(db: Session, user: User, horizon: int = 12) -> dict:
     predictions: dict[str, dict] = {}
 
     tabular_columns = artifact["tabular_features"]
+
+    # `reindex(columns=...)` against the artifact's own stored column list is
+    # what guarantees the prediction is aligned, since the array handed to the
+    # model is positional. Checking the columns actually exist turns a silent
+    # zero-fill into a refusal: reindex invents a NaN column for a name the
+    # frame does not have, and a model scoring a fabricated feature returns a
+    # confident number from nothing.
+    absent = [c for c in tabular_columns if c not in frame.columns]
+    if absent:
+        return {
+            "available": False,
+            "reason": (
+                "The deployed forecast model expects features this service "
+                f"does not compute ({', '.join(absent)}), so no projection "
+                "can be trusted. The artifact and the application are out of "
+                "step."
+            ),
+        }
+
     tabular_row = (
         frame.reindex(columns=tabular_columns)
         .fillna(artifact["tabular_medians"])
@@ -254,8 +311,9 @@ def wealth_forecast(db: Session, user: User, horizon: int = 12) -> dict:
         .fillna(0.0)
         .tail(1)
     )
+    tabular_name = artifact.get("tabular_model", "xgboost")
     growth = float(artifact["xgboost"].predict(tabular_row.to_numpy())[0])
-    predictions["xgboost"] = {
+    predictions[tabular_name] = {
         "excess_log_growth": round(growth, 6),
         "projected_value": round(baseline * float(np.exp(growth)), 2),
     }
@@ -314,6 +372,27 @@ def wealth_forecast(db: Session, user: User, horizon: int = 12) -> dict:
         },
         "model_predictions": predictions,
         "models_used": list(predictions),
+        # Walk-forward evidence, carried from the training run.
+        #
+        # At some horizons the trained model does not beat a constant forecast
+        # across folds, and at 1 month it does not. Presenting its number
+        # without saying so would be presenting a figure the evidence does not
+        # support, so the recommendation travels with the projection and the UI
+        # can show the baseline instead.
+        "recommendation": {
+            "recommended_source": artifact.get("recommended", "unknown"),
+            "model_beats_baseline": (
+                artifact.get("recommended") not in (None, "baseline_mean_drift")
+            ),
+            "walk_forward_mean_skill": artifact.get("walk_forward_mean_skill"),
+            "note": (
+                "Skill is measured against the training-window mean across "
+                "expanding walk-forward folds, not against a single held-out "
+                "block. Where the recommended source is the baseline, the "
+                "model's projection is still shown for comparison but should "
+                "not be read as a better estimate than the constant one."
+            ),
+        },
         "assumptions": {
             "baseline": (
                 "Current value plus the recent average monthly contribution "

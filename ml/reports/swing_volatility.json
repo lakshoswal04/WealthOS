@@ -1,0 +1,674 @@
+{
+  "generated_at": "2026-11-26T19:49:33.387152+00:00",
+  "version": "1.0.0",
+  "question": "How volatile will each stock be over the next 10 sessions (annualised)?",
+  "target": "Annualised realised volatility of daily log returns over sessions t+1..t+10",
+  "models": [
+    "naive_rv22",
+    "har",
+    "garch",
+    "lgbm"
+  ],
+  "overall_common_rows": {
+    "naive_rv22": {
+      "qlike": 0.47283,
+      "r2_log_vs_train_mean": 0.071869,
+      "mae_vol": 0.105823,
+      "bias_vol": 0.00901,
+      "rows": 300642
+    },
+    "har": {
+      "qlike": 0.369805,
+      "r2_log_vs_train_mean": 0.170074,
+      "mae_vol": 0.097308,
+      "bias_vol": 0.013211,
+      "rows": 300642
+    },
+    "garch": {
+      "qlike": 0.362765,
+      "r2_log_vs_train_mean": 0.056924,
+      "mae_vol": 0.106128,
+      "bias_vol": 0.036112,
+      "rows": 300642
+    },
+    "lgbm": {
+      "qlike": 0.377471,
+      "r2_log_vs_train_mean": 0.268842,
+      "mae_vol": 0.0904,
+      "bias_vol": -0.00943,
+      "rows": 300642
+    }
+  },
+  "qlike_by_year": {
+    "naive_rv22": {
+      "2013": 0.46612,
+      "2014": 0.407911,
+      "2015": 0.417112,
+      "2016": 0.436698,
+      "2017": 0.566879,
+      "2018": 0.393928,
+      "2019": 0.46257,
+      "2020": 0.676832,
+      "2021": 0.395315,
+      "2022": 0.372712,
+      "2023": 0.468876,
+      "2024": 0.556814,
+      "2025": 0.451641,
+      "2026": 0.534715
+    },
+    "har": {
+      "2013": 0.335722,
+      "2014": 0.312133,
+      "2015": 0.339969,
+      "2016": 0.330658,
+      "2017": 0.424672,
+      "2018": 0.303036,
+      "2019": 0.360522,
+      "2020": 0.555312,
+      "2021": 0.316647,
+      "2022": 0.29737,
+      "2023": 0.389192,
+      "2024": 0.430422,
+      "2025": 0.355457,
+      "2026": 0.410903
+    },
+    "garch": {
+      "2013": 0.334773,
+      "2014": 0.302917,
+      "2015": 0.317207,
+      "2016": 0.305716,
+      "2017": 0.401481,
+      "2018": 0.27999,
+      "2019": 0.32024,
+      "2020": 0.631214,
+      "2021": 0.307352,
+      "2022": 0.286154,
+      "2023": 0.412622,
+      "2024": 0.38126,
+      "2025": 0.397621,
+      "2026": 0.372377
+    },
+    "lgbm": {
+      "2013": 0.388039,
+      "2014": 0.323287,
+      "2015": 0.376614,
+      "2016": 0.335316,
+      "2017": 0.404269,
+      "2018": 0.312554,
+      "2019": 0.367722,
+      "2020": 0.522523,
+      "2021": 0.325595,
+      "2022": 0.288271,
+      "2023": 0.38955,
+      "2024": 0.424166,
+      "2025": 0.3399,
+      "2026": 0.484078
+    }
+  },
+  "folds": [
+    {
+      "index": 0,
+      "test_year": 2013,
+      "train_start": "2008-01-04",
+      "train_end": "2012-12-07",
+      "test_start": "2013-01-01",
+      "test_end": "2013-12-31",
+      "n_train_dates": 1209,
+      "n_test_dates": 248,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.46612,
+          "r2_log_vs_train_mean": 0.101356,
+          "mae_vol": 0.104156,
+          "bias_vol": 0.00582,
+          "rows": 20336
+        },
+        "har": {
+          "qlike": 0.335722,
+          "r2_log_vs_train_mean": 0.207282,
+          "mae_vol": 0.096763,
+          "bias_vol": 0.015949,
+          "rows": 20336
+        },
+        "garch": {
+          "qlike": 0.334773,
+          "r2_log_vs_train_mean": 0.013887,
+          "mae_vol": 0.112477,
+          "bias_vol": 0.05173,
+          "rows": 20336
+        },
+        "lgbm": {
+          "qlike": 0.388039,
+          "r2_log_vs_train_mean": 0.280693,
+          "mae_vol": 0.092381,
+          "bias_vol": -0.021828,
+          "rows": 20336
+        }
+      }
+    },
+    {
+      "index": 1,
+      "test_year": 2014,
+      "train_start": "2008-01-04",
+      "train_end": "2013-12-09",
+      "test_start": "2014-01-01",
+      "test_end": "2014-12-31",
+      "n_train_dates": 1457,
+      "n_test_dates": 242,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.407911,
+          "r2_log_vs_train_mean": 0.019748,
+          "mae_vol": 0.104105,
+          "bias_vol": 0.006908,
+          "rows": 19839
+        },
+        "har": {
+          "qlike": 0.312133,
+          "r2_log_vs_train_mean": 0.12598,
+          "mae_vol": 0.096999,
+          "bias_vol": 0.016081,
+          "rows": 19839
+        },
+        "garch": {
+          "qlike": 0.302917,
+          "r2_log_vs_train_mean": 0.017759,
+          "mae_vol": 0.106185,
+          "bias_vol": 0.041122,
+          "rows": 19839
+        },
+        "lgbm": {
+          "qlike": 0.323287,
+          "r2_log_vs_train_mean": 0.229179,
+          "mae_vol": 0.089742,
+          "bias_vol": -0.012555,
+          "rows": 19839
+        }
+      }
+    },
+    {
+      "index": 2,
+      "test_year": 2015,
+      "train_start": "2008-01-04",
+      "train_end": "2014-12-09",
+      "test_start": "2015-01-01",
+      "test_end": "2015-12-31",
+      "n_train_dates": 1699,
+      "n_test_dates": 246,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.417112,
+          "r2_log_vs_train_mean": -0.033042,
+          "mae_vol": 0.108898,
+          "bias_vol": 0.011424,
+          "rows": 20159
+        },
+        "har": {
+          "qlike": 0.339969,
+          "r2_log_vs_train_mean": 0.078335,
+          "mae_vol": 0.099988,
+          "bias_vol": 0.016231,
+          "rows": 20159
+        },
+        "garch": {
+          "qlike": 0.317207,
+          "r2_log_vs_train_mean": 0.077737,
+          "mae_vol": 0.101225,
+          "bias_vol": 0.025856,
+          "rows": 20159
+        },
+        "lgbm": {
+          "qlike": 0.376614,
+          "r2_log_vs_train_mean": 0.168915,
+          "mae_vol": 0.092589,
+          "bias_vol": -0.015792,
+          "rows": 20159
+        }
+      }
+    },
+    {
+      "index": 3,
+      "test_year": 2016,
+      "train_start": "2008-01-04",
+      "train_end": "2015-12-09",
+      "test_start": "2016-01-01",
+      "test_end": "2016-12-30",
+      "n_train_dates": 1945,
+      "n_test_dates": 246,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.441228,
+          "r2_log_vs_train_mean": 0.062122,
+          "mae_vol": 0.103643,
+          "bias_vol": 0.009277,
+          "rows": 20298
+        },
+        "har": {
+          "qlike": 0.335074,
+          "r2_log_vs_train_mean": 0.15961,
+          "mae_vol": 0.096418,
+          "bias_vol": 0.018216,
+          "rows": 20298
+        },
+        "garch": {
+          "qlike": 0.305716,
+          "r2_log_vs_train_mean": 0.153343,
+          "mae_vol": 0.096593,
+          "bias_vol": 0.029314,
+          "rows": 20172
+        },
+        "lgbm": {
+          "qlike": 0.339858,
+          "r2_log_vs_train_mean": 0.244527,
+          "mae_vol": 0.090529,
+          "bias_vol": -0.003738,
+          "rows": 20298
+        }
+      }
+    },
+    {
+      "index": 4,
+      "test_year": 2017,
+      "train_start": "2008-01-04",
+      "train_end": "2016-12-09",
+      "test_start": "2017-01-02",
+      "test_end": "2017-12-29",
+      "n_train_dates": 2191,
+      "n_test_dates": 248,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.569719,
+          "r2_log_vs_train_mean": 0.182364,
+          "mae_vol": 0.099312,
+          "bias_vol": 0.011844,
+          "rows": 20867
+        },
+        "har": {
+          "qlike": 0.426685,
+          "r2_log_vs_train_mean": 0.226785,
+          "mae_vol": 0.095721,
+          "bias_vol": 0.030041,
+          "rows": 20867
+        },
+        "garch": {
+          "qlike": 0.401481,
+          "r2_log_vs_train_mean": 0.127221,
+          "mae_vol": 0.104484,
+          "bias_vol": 0.058183,
+          "rows": 20336
+        },
+        "lgbm": {
+          "qlike": 0.405955,
+          "r2_log_vs_train_mean": 0.242788,
+          "mae_vol": 0.093932,
+          "bias_vol": 0.030056,
+          "rows": 20867
+        }
+      }
+    },
+    {
+      "index": 5,
+      "test_year": 2018,
+      "train_start": "2008-01-04",
+      "train_end": "2017-12-07",
+      "test_start": "2018-01-01",
+      "test_end": "2018-12-31",
+      "n_train_dates": 2439,
+      "n_test_dates": 246,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.398691,
+          "r2_log_vs_train_mean": 0.052853,
+          "mae_vol": 0.102787,
+          "bias_vol": 0.006324,
+          "rows": 21238
+        },
+        "har": {
+          "qlike": 0.304769,
+          "r2_log_vs_train_mean": 0.180705,
+          "mae_vol": 0.093069,
+          "bias_vol": 0.008494,
+          "rows": 21238
+        },
+        "garch": {
+          "qlike": 0.27999,
+          "r2_log_vs_train_mean": 0.21109,
+          "mae_vol": 0.092153,
+          "bias_vol": 0.017084,
+          "rows": 20660
+        },
+        "lgbm": {
+          "qlike": 0.313601,
+          "r2_log_vs_train_mean": 0.247578,
+          "mae_vol": 0.088584,
+          "bias_vol": -0.010731,
+          "rows": 21238
+        }
+      }
+    },
+    {
+      "index": 6,
+      "test_year": 2019,
+      "train_start": "2008-01-04",
+      "train_end": "2018-12-07",
+      "test_start": "2019-01-01",
+      "test_end": "2019-12-31",
+      "n_train_dates": 2685,
+      "n_test_dates": 243,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.458386,
+          "r2_log_vs_train_mean": 0.033342,
+          "mae_vol": 0.105919,
+          "bias_vol": 0.011531,
+          "rows": 21928
+        },
+        "har": {
+          "qlike": 0.358367,
+          "r2_log_vs_train_mean": 0.144411,
+          "mae_vol": 0.097204,
+          "bias_vol": 0.013223,
+          "rows": 21928
+        },
+        "garch": {
+          "qlike": 0.32024,
+          "r2_log_vs_train_mean": 0.132642,
+          "mae_vol": 0.099837,
+          "bias_vol": 0.030891,
+          "rows": 20654
+        },
+        "lgbm": {
+          "qlike": 0.366276,
+          "r2_log_vs_train_mean": 0.239959,
+          "mae_vol": 0.090573,
+          "bias_vol": -0.009533,
+          "rows": 21928
+        }
+      }
+    },
+    {
+      "index": 7,
+      "test_year": 2020,
+      "train_start": "2008-01-04",
+      "train_end": "2019-12-09",
+      "test_start": "2020-01-01",
+      "test_end": "2020-12-31",
+      "n_train_dates": 2928,
+      "n_test_dates": 251,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.676725,
+          "r2_log_vs_train_mean": 0.214613,
+          "mae_vol": 0.165829,
+          "bias_vol": 0.008466,
+          "rows": 22841
+        },
+        "har": {
+          "qlike": 0.554868,
+          "r2_log_vs_train_mean": 0.381607,
+          "mae_vol": 0.138093,
+          "bias_vol": -0.041009,
+          "rows": 22841
+        },
+        "garch": {
+          "qlike": 0.631214,
+          "r2_log_vs_train_mean": 0.328446,
+          "mae_vol": 0.143033,
+          "bias_vol": -0.048034,
+          "rows": 22339
+        },
+        "lgbm": {
+          "qlike": 0.52251,
+          "r2_log_vs_train_mean": 0.427247,
+          "mae_vol": 0.131868,
+          "bias_vol": -0.04487,
+          "rows": 22841
+        }
+      }
+    },
+    {
+      "index": 8,
+      "test_year": 2021,
+      "train_start": "2008-01-04",
+      "train_end": "2020-12-09",
+      "test_start": "2021-01-01",
+      "test_end": "2021-12-31",
+      "n_train_dates": 3179,
+      "n_test_dates": 248,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.394579,
+          "r2_log_vs_train_mean": 0.096719,
+          "mae_vol": 0.102763,
+          "bias_vol": 0.012451,
+          "rows": 22707
+        },
+        "har": {
+          "qlike": 0.315845,
+          "r2_log_vs_train_mean": 0.185587,
+          "mae_vol": 0.095028,
+          "bias_vol": 0.012633,
+          "rows": 22707
+        },
+        "garch": {
+          "qlike": 0.307352,
+          "r2_log_vs_train_mean": 0.079793,
+          "mae_vol": 0.103314,
+          "bias_vol": 0.039942,
+          "rows": 22564
+        },
+        "lgbm": {
+          "qlike": 0.324751,
+          "r2_log_vs_train_mean": 0.254392,
+          "mae_vol": 0.090402,
+          "bias_vol": -0.007524,
+          "rows": 22707
+        }
+      }
+    },
+    {
+      "index": 9,
+      "test_year": 2022,
+      "train_start": "2008-01-04",
+      "train_end": "2021-12-10",
+      "test_start": "2022-01-03",
+      "test_end": "2022-12-30",
+      "n_train_dates": 3427,
+      "n_test_dates": 248,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.381507,
+          "r2_log_vs_train_mean": 0.065402,
+          "mae_vol": 0.101996,
+          "bias_vol": 0.009087,
+          "rows": 23564
+        },
+        "har": {
+          "qlike": 0.304534,
+          "r2_log_vs_train_mean": 0.165951,
+          "mae_vol": 0.09429,
+          "bias_vol": 0.011759,
+          "rows": 23564
+        },
+        "garch": {
+          "qlike": 0.286154,
+          "r2_log_vs_train_mean": 0.038411,
+          "mae_vol": 0.099147,
+          "bias_vol": 0.039024,
+          "rows": 22560
+        },
+        "lgbm": {
+          "qlike": 0.298473,
+          "r2_log_vs_train_mean": 0.290694,
+          "mae_vol": 0.086416,
+          "bias_vol": -0.011147,
+          "rows": 23564
+        }
+      }
+    },
+    {
+      "index": 10,
+      "test_year": 2023,
+      "train_start": "2008-01-04",
+      "train_end": "2022-12-09",
+      "test_start": "2023-01-02",
+      "test_end": "2023-12-29",
+      "n_train_dates": 3675,
+      "n_test_dates": 245,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.484818,
+          "r2_log_vs_train_mean": 0.349878,
+          "mae_vol": 0.090967,
+          "bias_vol": 0.008756,
+          "rows": 23672
+        },
+        "har": {
+          "qlike": 0.398663,
+          "r2_log_vs_train_mean": 0.329214,
+          "mae_vol": 0.090228,
+          "bias_vol": 0.028052,
+          "rows": 23672
+        },
+        "garch": {
+          "qlike": 0.412622,
+          "r2_log_vs_train_mean": 0.096244,
+          "mae_vol": 0.110915,
+          "bias_vol": 0.072892,
+          "rows": 22785
+        },
+        "lgbm": {
+          "qlike": 0.401906,
+          "r2_log_vs_train_mean": 0.444537,
+          "mae_vol": 0.080732,
+          "bias_vol": 0.002616,
+          "rows": 23672
+        }
+      }
+    },
+    {
+      "index": 11,
+      "test_year": 2024,
+      "train_start": "2008-01-04",
+      "train_end": "2023-12-07",
+      "test_start": "2024-01-01",
+      "test_end": "2024-12-31",
+      "n_train_dates": 3920,
+      "n_test_dates": 246,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.555607,
+          "r2_log_vs_train_mean": -0.220919,
+          "mae_vol": 0.119189,
+          "bias_vol": 0.011404,
+          "rows": 23933
+        },
+        "har": {
+          "qlike": 0.429657,
+          "r2_log_vs_train_mean": 0.015042,
+          "mae_vol": 0.104904,
+          "bias_vol": 0.011495,
+          "rows": 23933
+        },
+        "garch": {
+          "qlike": 0.38126,
+          "r2_log_vs_train_mean": -0.038828,
+          "mae_vol": 0.110965,
+          "bias_vol": 0.038924,
+          "rows": 23605
+        },
+        "lgbm": {
+          "qlike": 0.42346,
+          "r2_log_vs_train_mean": 0.190723,
+          "mae_vol": 0.093817,
+          "bias_vol": -0.014981,
+          "rows": 23933
+        }
+      }
+    },
+    {
+      "index": 12,
+      "test_year": 2025,
+      "train_start": "2008-01-04",
+      "train_end": "2024-12-09",
+      "test_start": "2025-01-01",
+      "test_end": "2025-12-31",
+      "n_train_dates": 4166,
+      "n_test_dates": 248,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.448468,
+          "r2_log_vs_train_mean": 0.335822,
+          "mae_vol": 0.080999,
+          "bias_vol": 0.01062,
+          "rows": 24346
+        },
+        "har": {
+          "qlike": 0.353619,
+          "r2_log_vs_train_mean": 0.30726,
+          "mae_vol": 0.082033,
+          "bias_vol": 0.028846,
+          "rows": 24346
+        },
+        "garch": {
+          "qlike": 0.397621,
+          "r2_log_vs_train_mean": 0.02407,
+          "mae_vol": 0.10509,
+          "bias_vol": 0.067711,
+          "rows": 24053
+        },
+        "lgbm": {
+          "qlike": 0.33835,
+          "r2_log_vs_train_mean": 0.443969,
+          "mae_vol": 0.071948,
+          "bias_vol": 0.005875,
+          "rows": 24346
+        }
+      }
+    },
+    {
+      "index": 13,
+      "test_year": 2026,
+      "train_start": "2008-01-04",
+      "train_end": "2025-12-09",
+      "test_start": "2026-01-01",
+      "test_end": "2026-11-09",
+      "n_train_dates": 4414,
+      "n_test_dates": 210,
+      "scores": {
+        "naive_rv22": {
+          "qlike": 0.532195,
+          "r2_log_vs_train_mean": -0.154383,
+          "mae_vol": 0.09799,
+          "bias_vol": 0.002466,
+          "rows": 20790
+        },
+        "har": {
+          "qlike": 0.408894,
+          "r2_log_vs_train_mean": 0.052364,
+          "mae_vol": 0.086479,
+          "bias_vol": 0.01026,
+          "rows": 20790
+        },
+        "garch": {
+          "qlike": 0.372377,
+          "r2_log_vs_train_mean": -0.087164,
+          "mae_vol": 0.09696,
+          "bias_vol": 0.038168,
+          "rows": 20580
+        },
+        "lgbm": {
+          "qlike": 0.480965,
+          "r2_log_vs_train_mean": 0.178106,
+          "mae_vol": 0.079389,
+          "bias_vol": -0.022936,
+          "rows": 20790
+        }
+      }
+    }
+  ],
+  "best_by_qlike": "garch",
+  "serving_model": "har",
+  "serving_note": "GARCH needs per-stock state and refits, so serving uses the better of HAR and LightGBM; GARCH is reported as the classical comparison.",
+  "improvement_vs_naive_qlike": 0.232778
+}

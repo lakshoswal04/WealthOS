@@ -1,0 +1,348 @@
+"use client";
+
+import { useState } from "react";
+import { api } from "@/lib/api";
+import { useApi } from "@/lib/auth";
+import { percent, rupeesCompact, scoreColor, shortDate, titleCase } from "@/lib/format";
+import {
+  Badge, Card, CardBody, CardHeader, ErrorNote, LoadingRegion, Meter,
+  SkeletonChart, SkeletonStats, SkeletonText, Stat, Unavailable,
+} from "@/components/ui";
+import { PageHead } from "@/components/ui/shell";
+import { AnomalyTimeline, ClusterComparison, HealthBreakdown } from "@/components/charts";
+import { AlertsPanel } from "@/components/ui/alerts";
+
+export default function InsightsPage() {
+  const [horizon, setHorizon] = useState(12);
+  const profile = useApi(() => api.investorProfile(), []);
+  const anomalies = useApi(() => api.anomalies(), []);
+  const forecast = useApi(() => api.forecast(horizon), [horizon]);
+  const health = useApi(() => api.healthScore(true), []);
+
+  return (
+    <>
+      <PageHead
+        title="Insights"
+        lede="What the models see: your behavioural profile, unusual months, and where the portfolio may be heading."
+      />
+
+      <AlertsPanel />
+
+      {/* ── health score ── */}
+      <Card className="rise">
+        <CardHeader
+          title="Portfolio Health Score"
+          subtitle={health.data?.summary}
+          action={health.data && health.data.total !== null && (
+            <Badge tone={health.data.total >= 70 ? "good" : health.data.total >= 55 ? "warning" : "serious"}>
+              {health.data.total.toFixed(0)} / 100 · {health.data.grade}
+            </Badge>
+          )}
+        />
+        <CardBody>
+          {health.loading && (
+            <LoadingRegion label="Loading the portfolio health score">
+              <SkeletonChart height={180} title={false} />
+              <SkeletonText lines={4} />
+            </LoadingRegion>
+          )}
+          {health.error && <ErrorNote message={health.error} />}
+          {health.data && (
+            <>
+              {health.data.total === null ? (
+                <Unavailable reason="A health score is not available yet. Import holdings or add the missing portfolio information to begin measuring it." />
+              ) : (
+                <HealthBreakdown components={health.data.components} />
+              )}
+
+              <div className="mt-5 space-y-2.5">
+                {health.data.components.map((component) => (
+                  <div key={component.name}
+                       className="rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-body font-medium text-[var(--ink-primary)]">
+                        {titleCase(component.name)}
+                      </span>
+                      <span className="tabular text-small text-[var(--ink-secondary)]">
+                        {component.score === null
+                          ? "not measured"
+                          : `${component.score.toFixed(1)} / 100 · ${component.contribution.toFixed(1)} of ${component.weight} pts`}
+                      </span>
+                    </div>
+                    {component.score !== null && (
+                      <div className="mt-2">
+                        {/* Same status colours as the chart above, so a
+                            component does not look different in two places. */}
+                        <Meter value={component.score} color={scoreColor(component.score)} />
+                      </div>
+                    )}
+                    <p className="mt-2 text-caption leading-relaxed text-[var(--ink-secondary)]">
+                      {component.reason}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {health.data.sensitivity && health.data.sensitivity.length > 0 && (
+                <div className="mt-5">
+                  <h3 className="text-small font-medium uppercase tracking-[0.08em] text-[var(--ink-muted)]">
+                    What moves the score
+                  </h3>
+                  <p className="mt-1 text-caption text-[var(--ink-secondary)]">
+                    Each input nudged 10% up and down; the swing is how many points the total moves.
+                  </p>
+                  <ul className="mt-3 space-y-1.5">
+                    {health.data.sensitivity.slice(0, 6).map((row) => (
+                      <li key={row.input} className="flex items-center justify-between gap-3 text-small">
+                        <span className="text-[var(--ink-secondary)]">{titleCase(row.input)}</span>
+                        <span className="flex items-center gap-2">
+                          <span className="tabular text-[var(--ink-primary)]">±{row.swing.toFixed(2)} pts</span>
+                          <span className="text-caption text-[var(--ink-muted)]">{row.direction}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {health.data.version_comparison && (
+                <div className="mt-5 rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
+                  <h3 className="text-small font-medium text-[var(--ink-primary)]">Methodology comparison</h3>
+                  <p className="mt-2 text-small text-[var(--ink-secondary)]">
+                    Version 1: {health.data.version_comparison.v1_total?.toFixed(1) ?? "not available"} · Version 2: {health.data.version_comparison.v2_total?.toFixed(1) ?? "not available"}
+                    {health.data.version_comparison.difference != null && ` · Difference: ${health.data.version_comparison.difference > 0 ? "+" : ""}${health.data.version_comparison.difference.toFixed(1)} points`}
+                  </p>
+                  <p className="mt-1 text-caption text-[var(--ink-muted)]">{health.data.version_comparison.note} The breakdown above uses {health.data.methodology_version ?? "v1"}.</p>
+                </div>
+              )}
+
+              <p className="mt-5 border-t border-[var(--hairline)] pt-3 text-caption leading-relaxed text-[var(--ink-muted)]">
+                {health.data.methodology}
+              </p>
+            </>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* ── investor profile ── */}
+      <Card className="rise mt-5">
+        <CardHeader
+          title="Investor profile"
+          subtitle="Which behavioural group this portfolio resembles, from a K-Means model fitted on 10,000 simulated investors."
+          action={profile.data?.available && profile.data.cluster_name && (
+            <Badge tone="accent">{profile.data.cluster_name}</Badge>
+          )}
+        />
+        <CardBody>
+          {profile.loading && (
+            <LoadingRegion label="Loading your investor profile">
+              <SkeletonStats count={3} />
+              <div className="mt-5"><SkeletonChart height={220} title={false} /></div>
+            </LoadingRegion>
+          )}
+          {profile.error && <ErrorNote message={profile.error} />}
+          {profile.data && !profile.data.available && <Unavailable reason={profile.data.reason} />}
+          {profile.data?.available && (
+            <>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Stat label="Group" value={profile.data.cluster_name ?? "—"}
+                      sub={`${percent(profile.data.cluster_share ?? 0, 1)} of the cohort`} />
+                <Stat label="Match confidence" value={percent(profile.data.match_confidence ?? 0, 0)}
+                      sub="distance to the next-closest group" />
+                <Stat label="Stated tolerance"
+                      value={titleCase(profile.data.stated_risk_tolerance ?? "not set")}
+                      sub="from your profile" />
+              </div>
+
+              {profile.data.largest_differences_from_cluster && (
+                <div className="mt-5">
+                  <h3 className="mb-2 text-small font-medium uppercase tracking-[0.08em] text-[var(--ink-muted)]">
+                    Where you differ most from the group
+                  </h3>
+                  <ClusterComparison rows={profile.data.largest_differences_from_cluster} />
+                </div>
+              )}
+
+              {profile.data.caveat && (
+                <p className="mt-4 text-caption leading-relaxed text-[var(--ink-muted)]">
+                  {profile.data.caveat}
+                </p>
+              )}
+              {profile.data.feature_provenance && (
+                <div className="mt-4 rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
+                  <h3 className="text-small font-medium text-[var(--ink-primary)]">Where the behavioural inputs come from</h3>
+                  <ul className="mt-2 space-y-1">{Object.entries(profile.data.feature_provenance.sources).map(([name, source]) => (
+                    <li key={name} className="flex justify-between gap-3 text-small"><span className="text-[var(--ink-secondary)]">{titleCase(name)}</span><span className="text-[var(--ink-primary)]">{titleCase(source)}</span></li>
+                  ))}</ul>
+                  <p className="mt-3 text-caption text-[var(--ink-secondary)]">Recorded transaction coverage: {percent(profile.data.feature_provenance.confidence, 0)}. {profile.data.feature_provenance.confidence_basis}</p>
+                  <p className="mt-2 text-caption text-[var(--ink-muted)]">{profile.data.feature_provenance.note}</p>
+                </div>
+              )}
+            </>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* ── anomalies ── */}
+      <Card className="rise mt-5">
+        <CardHeader
+          title="Unusual activity"
+          subtitle="Months an autoencoder trained only on normal portfolios could not reconstruct."
+          action={anomalies.data?.available && (
+            <Badge tone={anomalies.data.anomalies_found ? "warning" : "good"}>
+              {anomalies.data.anomalies_found} flagged of {anomalies.data.months_examined}
+            </Badge>
+          )}
+        />
+        <CardBody>
+          {anomalies.loading && (
+            <LoadingRegion label="Checking for unusual months">
+              <SkeletonChart height={160} title={false} />
+            </LoadingRegion>
+          )}
+          {anomalies.error && <ErrorNote message={anomalies.error} />}
+          {anomalies.data && !anomalies.data.available && <Unavailable reason={anomalies.data.reason} />}
+          {anomalies.data?.available && (
+            <>
+              <AnomalyTimeline
+                timeline={anomalies.data.timeline ?? []}
+                threshold={anomalies.data.threshold ?? 0}
+              />
+              {anomalies.data.anomalies && anomalies.data.anomalies.length > 0 ? (
+                <ul className="mt-4 space-y-2">
+                  {anomalies.data.anomalies.map((anomaly) => (
+                    <li key={anomaly.date}
+                        className="rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-body text-[var(--ink-primary)]">{shortDate(anomaly.date)}</span>
+                        <Badge tone={anomaly.severity === "critical" ? "critical"
+                          : anomaly.severity === "warning" ? "warning" : "neutral"}>
+                          {anomaly.severity}
+                        </Badge>
+                      </div>
+                      <p className="mt-1.5 text-caption text-[var(--ink-secondary)]">
+                        Driven by {anomaly.contributing_features.map((f) => titleCase(f.feature)).join(", ")}.
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-4 text-center text-body text-[var(--ink-secondary)]">
+                  Nothing unusual found in the months examined.
+                </p>
+              )}
+              {anomalies.data.caveat && (
+                <p className="mt-4 text-caption leading-relaxed text-[var(--ink-muted)]">
+                  {anomalies.data.caveat}
+                </p>
+              )}
+            </>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* ── forecast ── */}
+      <Card className="rise mt-5">
+        <CardHeader
+          title="Wealth forecast"
+          subtitle="Projected value from the trained models, against a baseline that assumes zero market return."
+          action={
+            /* A tablist, so the selected horizon is announced rather than
+               conveyed by colour alone. Without aria-selected a screen
+               reader hears four identical buttons and no indication which
+               one the chart is showing. */
+            <div role="tablist" aria-label="Forecast horizon" className="flex gap-1">
+              {[1, 3, 6, 12].map((h) => (
+                <button
+                  key={h}
+                  role="tab"
+                  type="button"
+                  aria-selected={horizon === h}
+                  aria-label={`${h} month forecast`}
+                  onClick={() => setHorizon(h)}
+                  className={`rounded-[6px] border px-2.5 py-1 text-caption transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
+                    horizon === h
+                      ? "border-[var(--accent-dim)] bg-[color-mix(in_oklab,var(--accent)_14%,transparent)] text-[var(--accent)]"
+                      : "border-[var(--hairline)] text-[var(--ink-secondary)] hover:bg-[var(--surface-3)]"
+                  }`}
+                >
+                  {h}m
+                </button>
+              ))}
+            </div>
+          }
+        />
+        <CardBody>
+          {forecast.loading && (
+            <LoadingRegion label="Loading the wealth forecast">
+              <SkeletonStats count={3} />
+              <div className="mt-5"><SkeletonChart height={240} title={false} /></div>
+            </LoadingRegion>
+          )}
+          {forecast.error && <ErrorNote message={forecast.error} />}
+          {forecast.data && !forecast.data.available && <Unavailable reason={forecast.data.reason} />}
+          {forecast.data?.available && (
+            <>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Stat label="Today" value={rupeesCompact(forecast.data.current_value)} />
+                <Stat label="Baseline" value={rupeesCompact(forecast.data.baseline_value)}
+                      sub="value plus contributions, zero return" />
+                <Stat label="Model ensemble" value={rupeesCompact(forecast.data.projected_value)}
+                      sub={`${percent(forecast.data.projected_growth_over_baseline ?? 0, 2, true)} over baseline`} />
+              </div>
+
+              {forecast.data.recommendation && (
+                <div className="mt-4 rounded-[8px] border border-[var(--accent-dim)] bg-[var(--accent-wash)] p-4 text-small text-[var(--ink-secondary)]">
+                  <p className="font-medium text-[var(--ink-primary)]">Evaluation recommendation: {titleCase(forecast.data.recommendation.recommended_source)}</p>
+                  {!forecast.data.recommendation.model_beats_baseline && <p className="mt-1">The model did not beat the mean-drift baseline across the evaluation folds. The model ensemble above is shown for comparison; the mean-drift baseline value is not supplied by this endpoint. The zero-return baseline shown above is a different measure.</p>}
+                  <p className="mt-1">{forecast.data.recommendation.note}</p>
+                </div>
+              )}
+
+              {forecast.data.projection_range && (
+                <div className="mt-5 rounded-[8px] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
+                  <div className="flex items-baseline justify-between text-small">
+                    <span className="tabular text-[var(--ink-secondary)]">
+                      {rupeesCompact(forecast.data.projection_range.low)}
+                    </span>
+                    <span className="text-caption uppercase tracking-[0.08em] text-[var(--ink-muted)]">
+                      model range
+                    </span>
+                    <span className="tabular text-[var(--ink-secondary)]">
+                      {rupeesCompact(forecast.data.projection_range.high)}
+                    </span>
+                  </div>
+                  <div className="relative mt-2 h-1.5 rounded-full bg-[var(--surface-3)]">
+                    <div className="absolute inset-y-0 rounded-full bg-[var(--series-1)]" style={{ left: 0, right: 0 }} />
+                  </div>
+                  <p className="mt-2.5 text-caption text-[var(--ink-secondary)]">
+                    {forecast.data.projection_range.agreement}.
+                  </p>
+                </div>
+              )}
+
+              {forecast.data.model_predictions && (
+                <ul className="mt-4 space-y-1.5">
+                  {Object.entries(forecast.data.model_predictions).map(([model, prediction]) => (
+                    <li key={model} className="flex items-center justify-between gap-3 text-small">
+                      <span className="uppercase tracking-wide text-[var(--ink-secondary)]">{model}</span>
+                      <span className="tabular text-[var(--ink-primary)]">
+                        {rupeesCompact(prediction.projected_value)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {forecast.data.assumptions && (
+                <p className="mt-4 rounded-[7px] border border-[var(--accent-dim)] bg-[color-mix(in_oklab,var(--accent)_8%,transparent)] px-3 py-2 text-caption leading-relaxed text-[var(--accent)]">
+                  {forecast.data.assumptions.note}
+                </p>
+              )}
+            </>
+          )}
+        </CardBody>
+      </Card>
+    </>
+  );
+}

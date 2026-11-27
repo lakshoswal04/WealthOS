@@ -1,14 +1,53 @@
 # API reference
 
+Generated from the live route table by `python -m scripts.generate_api_docs`. Do not edit by hand: the previous version was written from a route listing and had drifted, missing twelve endpoints and leaving several without a description.
+
 Base URL `http://localhost:8010`, prefix `/api/v1`. Interactive docs at `/docs`.
 
-All endpoints except `/health`, `/api/v1/auth/*`, `/api/v1/portfolio/assets`,
-`/api/v1/models/status` and `/api/v1/copilot/capabilities` require
-`Authorization: Bearer <token>`.
+**45 endpoints**, of which 11 are public. Every other endpoint requires `Authorization: Bearer <token>` and is scoped to the signed-in user; `backend/tests/test_route_isolation.py` enumerates this same route table and asserts both properties, so this list cannot drift from what is enforced.
+
+## Public endpoints
+
+Each is public for a stated reason, because "it was already public" is how an endpoint quietly stops being protected.
+
+| Path | Why it needs no token |
+|---|---|
+| `/` | service metadata |
+| `/api/v1/auth/login` | signing in cannot require being signed in |
+| `/api/v1/auth/register` | creating an account cannot require one |
+| `/api/v1/copilot/capabilities` | which mode the Copilot is running in and which tools it has; service metadata, no user data |
+| `/api/v1/linked-accounts/providers` | static provider list and scopes |
+| `/api/v1/market/assets` | the tradable universe, identical for everyone |
+| `/api/v1/models/status` | which artifacts loaded; no user data |
+| `/api/v1/portfolio/assets` | the tradable universe, identical for everyone |
+| `/api/v1/research/reports` | published training evidence, no user data |
+| `/api/v1/research/reports/{name}` | published training evidence |
+| `/health` | liveness probe, used by Render |
+
+## account linking
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/v1/linked-accounts` | Linked accounts, with the last time each one actually synced. |
+| `POST` | `/api/v1/linked-accounts` | Exchange the authorisation code and store the link. |
+| `GET` | `/api/v1/linked-accounts/providers` | The simulated providers, and what live access would require. |
+| `POST` | `/api/v1/linked-accounts/start` | Begin authorisation. Returns a URL; nothing is contacted. |
+| `DELETE` | `/api/v1/linked-accounts/{account_id}` | Unlink an account and destroy its stored tokens. |
+| `POST` | `/api/v1/linked-accounts/{account_id}/sync` | Pull holdings and transactions now. |
+| `GET` | `/api/v1/linked-accounts/{account_id}/syncs` | Every sync attempt for this account, successes and failures alike. |
+
+## alerts
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/v1/alerts` | Alerts for the signed-in user, newest first. |
+| `POST` | `/api/v1/alerts/generate` | Run every rule against the current portfolio and store what it finds. |
+| `DELETE` | `/api/v1/alerts/{alert_id}` | Dismiss one alert permanently. |
+| `POST` | `/api/v1/alerts/{alert_id}/read` | Mark one alert as read. |
 
 ## analytics
 
-| Method | Path | Purpose |
+| Method | Path | Description |
 |---|---|---|
 | `GET` | `/api/v1/portfolio/analytics` | Returns, risk-adjusted ratios and trailing performance by window. |
 | `GET` | `/api/v1/portfolio/concentration` | Concentration by asset, sector and asset class, with plain-language notes. |
@@ -16,7 +55,7 @@ All endpoints except `/health`, `/api/v1/auth/*`, `/api/v1/portfolio/assets`,
 
 ## auth
 
-| Method | Path | Purpose |
+| Method | Path | Description |
 |---|---|---|
 | `POST` | `/api/v1/auth/login` | Exchange email and password for an access token. |
 | `GET` | `/api/v1/auth/me` |  |
@@ -25,14 +64,14 @@ All endpoints except `/health`, `/api/v1/auth/*`, `/api/v1/portfolio/assets`,
 
 ## copilot
 
-| Method | Path | Purpose |
+| Method | Path | Description |
 |---|---|---|
 | `GET` | `/api/v1/copilot/capabilities` | What the Copilot can do and how it is currently running. |
 | `POST` | `/api/v1/copilot/chat` | Ask a question about this portfolio. |
 
 ## goals
 
-| Method | Path | Purpose |
+| Method | Path | Description |
 |---|---|---|
 | `GET` | `/api/v1/goals` |  |
 | `POST` | `/api/v1/goals` |  |
@@ -40,11 +79,12 @@ All endpoints except `/health`, `/api/v1/auth/*`, `/api/v1/portfolio/assets`,
 | `PATCH` | `/api/v1/goals/{goal_id}` |  |
 | `DELETE` | `/api/v1/goals/{goal_id}` |  |
 | `GET` | `/api/v1/goals/{goal_id}/forecast` | Project one goal forward under explicitly stated assumptions. |
+| `POST` | `/api/v1/goals/{goal_id}/simulate` | Project a goal under assumptions the user chooses, with a range. |
 | `GET` | `/api/v1/health-score` | The decomposable Portfolio Health Score, with every component shown. |
 
 ## insights
 
-| Method | Path | Purpose |
+| Method | Path | Description |
 |---|---|---|
 | `GET` | `/api/v1/anomalies` | Months whose portfolio behaviour the autoencoder could not reconstruct. |
 | `GET` | `/api/v1/forecast` | Projected portfolio value, from the trained forecasting models. |
@@ -53,7 +93,7 @@ All endpoints except `/health`, `/api/v1/auth/*`, `/api/v1/portfolio/assets`,
 
 ## portfolio
 
-| Method | Path | Purpose |
+| Method | Path | Description |
 |---|---|---|
 | `GET` | `/api/v1/portfolio` | Total value, gain and allocation breakdowns for the Overview page. |
 | `GET` | `/api/v1/portfolio/assets` | The investable universe, for symbol pickers and import validation. |
@@ -65,56 +105,16 @@ All endpoints except `/health`, `/api/v1/auth/*`, `/api/v1/portfolio/assets`,
 | `GET` | `/api/v1/portfolio/transactions` |  |
 | `POST` | `/api/v1/portfolio/transactions` | Record a trade or an external cash flow. |
 
+## research
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/v1/research/reports` | Every training and data-quality report, grouped by page. |
+| `POST` | `/api/v1/research/reports/refresh` | Drop the cache, so a re-run of the pipelines is picked up. |
+| `GET` | `/api/v1/research/reports/{name}` | A single report by name. |
+
 ## system
 
-| Method | Path | Purpose |
+| Method | Path | Description |
 |---|---|---|
 | `GET` | `/health` | Liveness and dependency check. |
-
----
-
-## Conventions
-
-**Assumptions travel with numbers.** Every analytics response carries the
-risk-free rate, benchmark, observation count, window and method that
-produced its figures. A Sharpe ratio without its risk-free rate cannot be
-reproduced.
-
-**Model endpoints degrade rather than fail.** When an artifact is missing
-or a portfolio has too little history, the endpoint returns `200` with
-`available: false` and a `reason`, so one panel goes quiet instead of the
-page breaking.
-
-**Errors.**
-
-| Status | Meaning |
-|---|---|
-| `401` | Missing, malformed or expired token |
-| `404` | Not found, *or* belongs to another user — the two are not distinguished |
-| `409` | Email already registered |
-| `413` | Upload over 2 MB |
-| `422` | Validation failed, or not enough history to compute |
-| `500` | Logged server-side with a trace; the client gets a generic message |
-
-## Example
-
-```bash
-API=http://localhost:8010/api/v1
-
-TOKEN=$(curl -s -X POST $API/auth/register \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"you@example.com","password":"a-strong-password",
-       "age":32,"risk_tolerance":"moderate","monthly_savings":45000}' \
-  | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
-
-curl -s -X POST "$API/portfolio/import" \
-  -H "Authorization: Bearer $TOKEN" \
-  -F "file=@docs/sample-holdings.csv"
-
-curl -s "$API/portfolio/risk"  -H "Authorization: Bearer $TOKEN"
-curl -s "$API/health-score"    -H "Authorization: Bearer $TOKEN"
-
-curl -s -X POST "$API/copilot/chat" \
-  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"message":"Why is my portfolio risky?"}'
-```

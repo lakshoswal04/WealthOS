@@ -26,6 +26,7 @@ component has little room to discriminate.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -580,7 +581,9 @@ def compute_health_score(data: HealthInputs) -> HealthScore:
 
 
 def sensitivity_analysis(
-    data: HealthInputs, perturbation: float = 0.10
+    data: HealthInputs,
+    perturbation: float = 0.10,
+    compute: Callable[[HealthInputs], HealthScore] | None = None,
 ) -> list[dict]:
     """Measure how much each input moves the total score.
 
@@ -589,10 +592,16 @@ def sensitivity_analysis(
     absolute for inputs already expressed as a fraction) and the resulting
     change in the total is recorded. Inputs with a large swing are the ones
     actually driving the score.
+
+    ``compute`` selects the scoring function, defaulting to v1. Passing
+    ``compute_health_score_v2`` runs the identical analysis against v2, which
+    is how the two are compared for saturation without a second copy of this
+    logic going out of step with the first.
     """
     from dataclasses import replace
 
-    baseline = compute_health_score(data).total
+    scorer = compute or compute_health_score
+    baseline = scorer(data).total
     if np.isnan(baseline):
         return []
 
@@ -611,8 +620,8 @@ def sensitivity_analysis(
             continue
 
         step = abs(value) * perturbation if value else perturbation
-        up = compute_health_score(replace(data, **{name: value + step})).total
-        down = compute_health_score(replace(data, **{name: value - step})).total
+        up = scorer(replace(data, **{name: value + step})).total
+        down = scorer(replace(data, **{name: value - step})).total
 
         if np.isnan(up) or np.isnan(down):
             continue

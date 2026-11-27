@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-15T23:27:40.770735+00:00",
+  "generated_at": "2026-11-26T03:32:15.535819+00:00",
   "random_state": 42,
   "features": [
     "equity_allocation",
@@ -25,228 +25,373 @@
     "contribution_ratio",
     "period_return",
     "current_drawdown",
-    "volatility"
+    "volatility",
+    "months_since_contribution",
+    "delta_contribution_ratio",
+    "recent_funding_rate"
   ],
   "training": {
     "epochs_run": 30,
-    "best_holdout_loss": 0.086468,
+    "best_holdout_loss": 0.113815,
     "history": [
       {
         "epoch": 1,
-        "train_loss": 0.472521,
-        "holdout_loss": 0.234742
+        "train_loss": 0.50497,
+        "holdout_loss": 0.273588
       },
       {
         "epoch": 2,
-        "train_loss": 0.224088,
-        "holdout_loss": 0.162539
+        "train_loss": 0.226135,
+        "holdout_loss": 0.187202
       },
       {
         "epoch": 3,
-        "train_loss": 0.156021,
-        "holdout_loss": 0.139454
+        "train_loss": 0.178263,
+        "holdout_loss": 0.164256
       },
       {
         "epoch": 4,
-        "train_loss": 0.135847,
-        "holdout_loss": 0.131387
+        "train_loss": 0.163491,
+        "holdout_loss": 0.153997
       },
       {
         "epoch": 5,
-        "train_loss": 0.126017,
-        "holdout_loss": 0.119666
+        "train_loss": 0.155366,
+        "holdout_loss": 0.146811
       },
       {
         "epoch": 6,
-        "train_loss": 0.120484,
-        "holdout_loss": 0.114182
+        "train_loss": 0.149909,
+        "holdout_loss": 0.143257
       },
       {
         "epoch": 7,
-        "train_loss": 0.119721,
-        "holdout_loss": 0.11132
+        "train_loss": 0.145994,
+        "holdout_loss": 0.140345
       },
       {
         "epoch": 8,
-        "train_loss": 0.112728,
-        "holdout_loss": 0.110727
+        "train_loss": 0.142675,
+        "holdout_loss": 0.137376
       },
       {
         "epoch": 9,
-        "train_loss": 0.110153,
-        "holdout_loss": 0.106653
+        "train_loss": 0.140703,
+        "holdout_loss": 0.134773
       },
       {
         "epoch": 10,
-        "train_loss": 0.10768,
-        "holdout_loss": 0.10555
+        "train_loss": 0.137403,
+        "holdout_loss": 0.133546
       },
       {
         "epoch": 11,
-        "train_loss": 0.10538,
-        "holdout_loss": 0.103402
+        "train_loss": 0.135595,
+        "holdout_loss": 0.133135
       },
       {
         "epoch": 12,
-        "train_loss": 0.104307,
-        "holdout_loss": 0.100831
+        "train_loss": 0.133789,
+        "holdout_loss": 0.129449
       },
       {
         "epoch": 13,
-        "train_loss": 0.102199,
-        "holdout_loss": 0.10146
+        "train_loss": 0.131753,
+        "holdout_loss": 0.127587
       },
       {
         "epoch": 14,
-        "train_loss": 0.100821,
-        "holdout_loss": 0.107344
+        "train_loss": 0.130344,
+        "holdout_loss": 0.126171
       },
       {
         "epoch": 15,
-        "train_loss": 0.099851,
-        "holdout_loss": 0.09703
+        "train_loss": 0.128978,
+        "holdout_loss": 0.125077
       },
       {
         "epoch": 16,
-        "train_loss": 0.097672,
-        "holdout_loss": 0.09587
+        "train_loss": 0.127521,
+        "holdout_loss": 0.123318
       },
       {
         "epoch": 17,
-        "train_loss": 0.096469,
-        "holdout_loss": 0.094488
+        "train_loss": 0.126162,
+        "holdout_loss": 0.122264
       },
       {
         "epoch": 18,
-        "train_loss": 0.095812,
-        "holdout_loss": 0.093899
+        "train_loss": 0.125083,
+        "holdout_loss": 0.121768
       },
       {
         "epoch": 19,
-        "train_loss": 0.094905,
-        "holdout_loss": 0.093252
+        "train_loss": 0.124663,
+        "holdout_loss": 0.121023
       },
       {
         "epoch": 20,
-        "train_loss": 0.093399,
-        "holdout_loss": 0.091556
+        "train_loss": 0.122818,
+        "holdout_loss": 0.120142
       },
       {
         "epoch": 21,
-        "train_loss": 0.09259,
-        "holdout_loss": 0.092709
+        "train_loss": 0.122139,
+        "holdout_loss": 0.119022
       },
       {
         "epoch": 22,
-        "train_loss": 0.09261,
-        "holdout_loss": 0.090754
+        "train_loss": 0.121172,
+        "holdout_loss": 0.117739
       },
       {
         "epoch": 23,
-        "train_loss": 0.090705,
-        "holdout_loss": 0.089618
+        "train_loss": 0.120407,
+        "holdout_loss": 0.117826
       },
       {
         "epoch": 24,
-        "train_loss": 0.090703,
-        "holdout_loss": 0.090033
+        "train_loss": 0.119808,
+        "holdout_loss": 0.118717
       },
       {
         "epoch": 25,
-        "train_loss": 0.090088,
-        "holdout_loss": 0.088697
+        "train_loss": 0.119099,
+        "holdout_loss": 0.116767
       },
       {
         "epoch": 26,
-        "train_loss": 0.088997,
-        "holdout_loss": 0.087599
+        "train_loss": 0.118591,
+        "holdout_loss": 0.115396
       },
       {
         "epoch": 27,
-        "train_loss": 0.08894,
-        "holdout_loss": 0.089024
+        "train_loss": 0.117664,
+        "holdout_loss": 0.11589
       },
       {
         "epoch": 28,
-        "train_loss": 0.088081,
-        "holdout_loss": 0.088483
+        "train_loss": 0.117315,
+        "holdout_loss": 0.114489
       },
       {
         "epoch": 29,
-        "train_loss": 0.08828,
-        "holdout_loss": 0.086468
+        "train_loss": 0.116633,
+        "holdout_loss": 0.113815
       },
       {
         "epoch": 30,
-        "train_loss": 0.087199,
-        "holdout_loss": 0.087414
+        "train_loss": 0.116361,
+        "holdout_loss": 0.114049
       }
     ]
   },
+  "aggregation_study": {
+    "selected": "zscore_mean",
+    "candidates": [
+      {
+        "aggregation": "mean",
+        "validation_f1": 0.9323,
+        "validation_pr_auc": 0.9908,
+        "validation_roc_auc": 1.0,
+        "threshold": 11.82843054,
+        "selected": false
+      },
+      {
+        "aggregation": "max",
+        "validation_f1": 0.914,
+        "validation_pr_auc": 0.9831,
+        "validation_roc_auc": 0.9999,
+        "threshold": 131.1074282,
+        "selected": false
+      },
+      {
+        "aggregation": "top3_mean",
+        "validation_f1": 0.934,
+        "validation_pr_auc": 0.9897,
+        "validation_roc_auc": 1.0,
+        "threshold": 66.55293144,
+        "selected": false
+      },
+      {
+        "aggregation": "zscore_mean",
+        "validation_f1": 0.9415,
+        "validation_pr_auc": 0.9946,
+        "validation_roc_auc": 1.0,
+        "threshold": 11.14459224,
+        "selected": true
+      },
+      {
+        "aggregation": "zscore_max",
+        "validation_f1": 0.9424,
+        "validation_pr_auc": 0.9928,
+        "validation_roc_auc": 1.0,
+        "threshold": 290.91024282,
+        "selected": false
+      },
+      {
+        "aggregation": "zscore_top3_mean",
+        "validation_f1": 0.9407,
+        "validation_pr_auc": 0.9944,
+        "validation_roc_auc": 1.0,
+        "threshold": 180.31272744,
+        "selected": false
+      }
+    ],
+    "rationale": "Chosen on validation PR-AUC among the aggregations that average across all features. Extremes (`max`) are rejected a priori: their operating point rests on one feature's tail and does not transfer between periods. Test was not consulted."
+  },
   "threshold": {
-    "value": 5.84296525,
-    "validation_f1": 0.9041,
+    "value": 11.14459224,
+    "validation_f1": 0.9415,
     "selected_on": "validation",
     "note": "Chosen on validation and applied unchanged to test. Tuning it on test would inflate every reported figure."
   },
   "autoencoder": {
-    "precision": 0.7962,
-    "recall": 0.887,
-    "f1": 0.8392,
-    "false_positive_rate": 0.00079,
-    "roc_auc": 0.9995,
-    "pr_auc": 0.9355,
-    "flagged": 1114,
-    "actual_anomalies": 1000,
+    "confusion_matrix": {
+      "true_positive": 1074,
+      "false_positive": 81,
+      "false_negative": 14,
+      "true_negative": 288820
+    },
+    "accuracy": 0.999672,
+    "precision": 0.9299,
+    "recall": 0.9871,
+    "f1": 0.9576,
+    "false_positive_rate": 0.00028,
+    "roc_auc": 1.0,
+    "pr_auc": 0.9956,
+    "flagged": 1155,
+    "actual_anomalies": 1088,
     "rows": 289989
   },
   "isolation_forest": {
-    "precision": 0.1783,
-    "recall": 0.638,
-    "f1": 0.2787,
-    "false_positive_rate": 0.01018,
-    "roc_auc": 0.9734,
-    "pr_auc": 0.3255,
-    "flagged": 3579,
-    "actual_anomalies": 1000,
+    "confusion_matrix": {
+      "true_positive": 529,
+      "false_positive": 1121,
+      "false_negative": 559,
+      "true_negative": 287780
+    },
+    "accuracy": 0.994207,
+    "precision": 0.3206,
+    "recall": 0.4862,
+    "f1": 0.3864,
+    "false_positive_rate": 0.00388,
+    "roc_auc": 0.9654,
+    "pr_auc": 0.2752,
+    "flagged": 1650,
+    "actual_anomalies": 1088,
     "rows": 289989
   },
   "autoencoder_vs_baseline": {
-    "pr_auc_improvement": 0.61,
+    "pr_auc_improvement": 0.7204,
     "autoencoder_wins": true
+  },
+  "threshold_transfer": {
+    "false_alert_budget": 0.001,
+    "threshold_at_budget": 6.18576571,
+    "validation_false_positive_rate": 0.001005,
+    "test_false_positive_rate": 0.00153,
+    "drift_multiple": 1.523,
+    "finding": "The score distribution is not stationary between the validation and test periods, so a threshold calibrated to a given false-alert rate on validation does not deliver that rate on test. This affects the shipped threshold too, and it is a property of the data rather than of the aggregation: the same threshold transfers cleanly across a time boundary placed inside validation. Any deployment should recalibrate the threshold on recent data rather than trust a fixed one."
+  },
+  "calibration": {
+    "method": "observed anomaly rate per score decile on the test split",
+    "monotonic": true,
+    "deciles": [
+      {
+        "score_from": -0.263174,
+        "score_to": -0.196158,
+        "rows": 28999,
+        "observed_anomaly_rate": 0.0
+      },
+      {
+        "score_from": -0.196158,
+        "score_to": -0.166266,
+        "rows": 28999,
+        "observed_anomaly_rate": 0.0
+      },
+      {
+        "score_from": -0.166266,
+        "score_to": -0.138393,
+        "rows": 28999,
+        "observed_anomaly_rate": 0.0
+      },
+      {
+        "score_from": -0.138393,
+        "score_to": -0.1093,
+        "rows": 28999,
+        "observed_anomaly_rate": 0.0
+      },
+      {
+        "score_from": -0.1093,
+        "score_to": -0.075872,
+        "rows": 28999,
+        "observed_anomaly_rate": 0.0
+      },
+      {
+        "score_from": -0.075872,
+        "score_to": -0.034217,
+        "rows": 28999,
+        "observed_anomaly_rate": 0.0
+      },
+      {
+        "score_from": -0.034217,
+        "score_to": 0.023847,
+        "rows": 28999,
+        "observed_anomaly_rate": 0.0
+      },
+      {
+        "score_from": 0.023847,
+        "score_to": 0.120099,
+        "rows": 28999,
+        "observed_anomaly_rate": 0.0
+      },
+      {
+        "score_from": 0.120099,
+        "score_to": 0.35702,
+        "rows": 28999,
+        "observed_anomaly_rate": 0.0
+      },
+      {
+        "score_from": 0.35702,
+        "score_to": 1750.111089,
+        "rows": 28999,
+        "observed_anomaly_rate": 0.037519
+      }
+    ]
   },
   "by_anomaly_type": {
     "allocation_shock": {
-      "occurrences": 200,
-      "detected": 193,
-      "recall": 0.965,
-      "mean_error": 52.70837
+      "occurrences": 218,
+      "detected": 211,
+      "recall": 0.9679,
+      "mean_error": 163.264902
     },
     "concentration_spike": {
-      "occurrences": 193,
-      "detected": 193,
+      "occurrences": 208,
+      "detected": 208,
       "recall": 1.0,
-      "mean_error": 183.364029
+      "mean_error": 695.303379
     },
     "dormancy_break": {
-      "occurrences": 195,
-      "detected": 91,
-      "recall": 0.4667,
-      "mean_error": 5.842655
+      "occurrences": 227,
+      "detected": 220,
+      "recall": 0.9692,
+      "mean_error": 47.972644
     },
     "panic_sell": {
-      "occurrences": 199,
-      "detected": 197,
-      "recall": 0.9899,
-      "mean_error": 118.770241
+      "occurrences": 218,
+      "detected": 218,
+      "recall": 1.0,
+      "mean_error": 296.088121
     },
     "turnover_spike": {
-      "occurrences": 213,
-      "detected": 213,
+      "occurrences": 217,
+      "detected": 217,
       "recall": 1.0,
-      "mean_error": 425.787262
+      "mean_error": 257.146278
     }
   },
-  "normal_mean_error": 0.132295,
+  "normal_mean_error": 0.061721,
   "caveat": "Anomalies are injected and deliberately unambiguous. These scores are an upper bound on performance against real, subtler behaviour."
 }

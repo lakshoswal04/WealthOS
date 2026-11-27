@@ -35,7 +35,8 @@ def test_model_status_reports_what_is_loaded(client):
     status = client.get("/api/v1/models/status").json()
     assert "available" in status and "all_loaded" in status
     assert set(status["available"]) == {
-        "investor_clustering", "anomaly_autoencoder", "forecast_12m"
+        "investor_clustering", "anomaly_autoencoder", "forecast_12m",
+        "swing_ranker", "swing_vol", "swing_regime",
     }
 
 

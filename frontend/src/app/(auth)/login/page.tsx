@@ -27,12 +27,9 @@ export default function LoginPage() {
 
   return (
     <div className="rise">
-      <div className="mb-7 lg:hidden">
-        <div className="display text-[24px]">Wealth<span className="text-[var(--accent)]">OS</span></div>
-      </div>
 
-      <h1 className="display text-[26px] leading-tight">Sign in</h1>
-      <p className="mt-1.5 text-[13px] text-[var(--ink-secondary)]">
+      <h1 className="display text-[44px] leading-none">Welcome <em>back.</em></h1>
+      <p className="mt-1.5 text-body text-[var(--ink-secondary)]">
         Pick up where your portfolio left off.
       </p>
 
@@ -57,7 +54,7 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-[12.5px] text-[var(--ink-secondary)]">
+      <p className="mt-6 text-small text-[var(--ink-secondary)]">
         No account yet?{" "}
         <Link href="/register" className="text-[var(--accent)] underline-offset-2 hover:underline">
           Create one

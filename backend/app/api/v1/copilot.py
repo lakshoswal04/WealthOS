@@ -48,7 +48,8 @@ def capabilities() -> dict:
     """What the Copilot can do and how it is currently running."""
     return {
         "mode": "llm" if settings.copilot_enabled else "deterministic_fallback",
-        "model": settings.copilot_model if settings.copilot_enabled else "template-explainer",
+        "provider": settings.llm_provider_active or "template",
+        "model": settings.llm_model if settings.copilot_enabled else "template-explainer",
         "tools": [
             {"name": t["name"], "description": t["description"]}
             for t in copilot_tools.TOOL_SCHEMAS
@@ -59,7 +60,8 @@ def capabilities() -> dict:
             "rather than presented as fact."
         ),
         "limits": [
-            "Read-only: it cannot change holdings, goals or place trades.",
+            "Read-only: it cannot change holdings or goals, and cannot place trades. "
+            "It can propose a paper order, which is placed only when the user presses Confirm.",
             "It does not give investment advice.",
             "Forecasts are projections under stated assumptions, not predictions.",
         ],

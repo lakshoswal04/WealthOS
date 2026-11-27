@@ -13,29 +13,49 @@
  *    because it has a meaningful zero; magnitude uses a single hue.
  */
 
+import { useEffect, useState } from "react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart,
   Pie, PieChart, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart,
   Tooltip, XAxis, YAxis, ZAxis,
 } from "recharts";
-import { ASSET_CLASS_COLOR, CHART, SERIES, seriesColor } from "@/lib/viz";
+import {
+  ASSET_CLASS_COLOR, AXIS, CHART, GRID, GRID_VERTICAL, LEGEND, SERIES,
+  STATIC_SERIES, STATUS, TOOLTIP_LABEL_STYLE, TOOLTIP_STYLE, decimate,
+  divergingColor, seriesColor,
+} from "@/lib/viz";
 import { monthLabel, percent, rupeesCompact, titleCase } from "@/lib/format";
 
-const AXIS = {
-  stroke: CHART.axis,
-  tick: { fill: CHART.inkMuted, fontSize: 11 },
-  tickLine: false,
-  axisLine: { stroke: CHART.grid },
-};
+/* AXIS, TOOLTIP_STYLE, GRID, LEGEND, STATIC_SERIES and decimate all live in
+   lib/viz.ts now. They were defined privately here, which is why the chart
+   greys had drifted from the interface greys and the tooltip card was a
+   hard-coded #11161d rather than the card surface. */
 
-const TOOLTIP_STYLE = {
-  background: "#11161d",
-  border: "1px solid #2b3540",
-  borderRadius: 8,
-  fontSize: 12,
-  color: CHART.inkPrimary,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
-};
+/**
+ * A viewport-aware width for a category Y axis.
+ *
+ * These were fixed at 128-168px. On a 360px phone a 168px axis is 47% of the
+ * viewport, leaving the bars less room than their own labels, so the chart
+ * stopped being readable exactly where space was tightest. Below the `sm`
+ * breakpoint the labels are truncated by the axis instead.
+ */
+function useCategoryAxisWidth(desktop: number): number {
+  const [width, setWidth] = useState(desktop);
+  useEffect(() => {
+    const measure = () => {
+      const viewport = window.innerWidth;
+      setWidth(
+        viewport < 480 ? Math.min(desktop, 84)
+        : viewport < 640 ? Math.min(desktop, 104)
+        : desktop,
+      );
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [desktop]);
+  return width;
+}
 
 function Frame({ height = 260, children }: { height?: number; children: React.ReactElement }) {
   return (
@@ -76,6 +96,7 @@ export function AllocationDonut({ data, byAssetClass = true }: {
           </Pie>
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
             formatter={(value: number, name: string) => [
               `${rupeesCompact(value)} · ${percent((colored.find(c => c.label === name)?.weight) ?? 0, 1)}`,
               titleCase(name),
@@ -87,7 +108,7 @@ export function AllocationDonut({ data, byAssetClass = true }: {
       {/* A legend carries identity, so colour is never the only cue. */}
       <ul className="w-full min-w-0 flex-1 space-y-2">
         {colored.map((slice) => (
-          <li key={slice.label} className="flex items-center justify-between gap-3 text-[12.5px]">
+          <li key={slice.label} className="flex items-center justify-between gap-3 text-small">
             <span className="flex min-w-0 items-center gap-2">
               <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: slice.fill }} />
               <span className="truncate text-[var(--ink-secondary)]">{titleCase(slice.label)}</span>
@@ -108,40 +129,38 @@ export function CumulativeReturnChart({ dates, portfolio, benchmark }: {
   dates: string[]; portfolio: number[]; benchmark: number[] | null;
 }) {
   // Thin to roughly 400 points: more marks than pixels only costs render time.
-  const step = Math.max(1, Math.floor(dates.length / 400));
-  const data = dates
-    .filter((_, i) => i % step === 0)
-    .map((date, i) => ({
-      date,
-      portfolio: portfolio[i * step],
-      benchmark: benchmark ? benchmark[i * step] : undefined,
-    }));
+  // One decimation helper, shared. The old loop dropped the final point
+  // whenever the length was not a multiple of the step, so a cumulative
+  // return chart could stop short of its own last observation.
+  const data = decimate(dates).map(({ value: date, index }) => ({
+    date,
+    portfolio: portfolio[index],
+    benchmark: benchmark ? benchmark[index] : undefined,
+  }));
 
   return (
     <Frame height={280}>
       <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
-        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <CartesianGrid {...GRID} />
         <XAxis dataKey="date" {...AXIS} minTickGap={48} tickFormatter={monthLabel} />
         <YAxis {...AXIS} width={52} tickFormatter={(v: number) => percent(v, 0)} />
         <ReferenceLine y={0} stroke={CHART.axis} strokeDasharray="3 3" />
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
           labelFormatter={monthLabel}
           formatter={(v: number, name: string) => [percent(v, 2), titleCase(name)]}
         />
-        <Legend
-          verticalAlign="top" align="right" height={28}
-          wrapperStyle={{ fontSize: 12, color: CHART.inkSecondary }}
-        />
+        <Legend verticalAlign="top" align="right" {...LEGEND} />
         <Line
           type="monotone" dataKey="portfolio" name="Your portfolio"
-          stroke={SERIES[0]} strokeWidth={2} dot={false} isAnimationActive={false}
+          stroke={SERIES[0]} strokeWidth={2} dot={false} {...STATIC_SERIES}
         />
         {benchmark && (
           <Line
             type="monotone" dataKey="benchmark" name="NIFTY 50"
             stroke={CHART.inkMuted} strokeWidth={2} strokeDasharray="4 3"
-            dot={false} isAnimationActive={false}
+            dot={false} {...STATIC_SERIES}
           />
         )}
       </LineChart>
@@ -152,10 +171,11 @@ export function CumulativeReturnChart({ dates, portfolio, benchmark }: {
 /* ───────────────────── drawdown ───────────────────── */
 
 export function DrawdownChart({ dates, drawdown }: { dates: string[]; drawdown: number[] }) {
-  const step = Math.max(1, Math.floor(dates.length / 400));
-  const data = dates
-    .filter((_, i) => i % step === 0)
-    .map((date, i) => ({ date, drawdown: drawdown[i * step] }));
+  // The trough is the point of this chart, so losing the last observation
+  // to an off-by-one in the old loop mattered here most of all.
+  const data = decimate(dates).map(({ value: date, index }) => ({
+    date, drawdown: drawdown[index],
+  }));
 
   return (
     <Frame height={220}>
@@ -163,21 +183,22 @@ export function DrawdownChart({ dates, drawdown }: { dates: string[]; drawdown: 
         <defs>
           <linearGradient id="ddFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={CHART.accent} stopOpacity={0.05} />
-            <stop offset="100%" stopColor="#e66767" stopOpacity={0.38} />
+            <stop offset="100%" stopColor={STATUS.critical} stopOpacity={0.38} />
           </linearGradient>
         </defs>
-        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <CartesianGrid {...GRID} />
         <XAxis dataKey="date" {...AXIS} minTickGap={48} tickFormatter={monthLabel} />
         <YAxis {...AXIS} width={52} tickFormatter={(v: number) => percent(v, 0)} />
         <ReferenceLine y={0} stroke={CHART.axis} />
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
           labelFormatter={monthLabel}
           formatter={(v: number) => [percent(v, 2), "Below peak"]}
         />
         <Area
-          type="monotone" dataKey="drawdown" stroke="#e66767" strokeWidth={2}
-          fill="url(#ddFill)" isAnimationActive={false}
+          type="monotone" dataKey="drawdown" stroke={STATUS.critical} strokeWidth={2}
+          fill="url(#ddFill)" {...STATIC_SERIES}
         />
       </AreaChart>
     </Frame>
@@ -188,19 +209,20 @@ export function DrawdownChart({ dates, drawdown }: { dates: string[]; drawdown: 
 
 export function SectorBar({ data }: { data: { label: string; weight: number }[] }) {
   const sorted = [...data].sort((a, b) => b.weight - a.weight).slice(0, 12);
+  const axisWidth = useCategoryAxisWidth(132);
   return (
     <Frame height={Math.max(180, sorted.length * 28)}>
       <BarChart data={sorted} layout="vertical" margin={{ top: 4, right: 48, bottom: 4, left: 8 }}>
-        <CartesianGrid stroke={CHART.grid} horizontal={false} />
+        <CartesianGrid {...GRID_VERTICAL} />
         <XAxis type="number" {...AXIS} tickFormatter={(v: number) => percent(v, 0)} />
-        <YAxis type="category" dataKey="label" {...AXIS} width={132} />
+        <YAxis type="category" dataKey="label" {...AXIS} width={axisWidth} />
         <Tooltip
-          contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+          contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
           formatter={(v: number) => [percent(v, 2), "Weight"]}
         />
         {/* One measure, one hue: a different colour per bar would imply a
             categorical distinction that is not there. */}
-        <Bar dataKey="weight" fill={SERIES[0]} radius={[0, 4, 4, 0]} isAnimationActive={false} />
+        <Bar dataKey="weight" fill={SERIES[0]} radius={[0, 4, 4, 0]} {...STATIC_SERIES} />
       </BarChart>
     </Frame>
   );
@@ -220,7 +242,7 @@ export function RiskReturnScatter({ points }: {
   return (
     <Frame height={300}>
       <ScatterChart margin={{ top: 12, right: 18, bottom: 16, left: 4 }}>
-        <CartesianGrid stroke={CHART.grid} />
+        <CartesianGrid {...GRID} vertical />
         <XAxis
           type="number" dataKey="x" name="Volatility" {...AXIS}
           unit="%" label={{ value: "Annualised volatility", position: "insideBottom",
@@ -234,7 +256,7 @@ export function RiskReturnScatter({ points }: {
         <ZAxis type="number" dataKey="z" range={[60, 460]} />
         <ReferenceLine y={0} stroke={CHART.axis} strokeDasharray="3 3" />
         <Tooltip
-          contentStyle={TOOLTIP_STYLE} cursor={{ strokeDasharray: "3 3", stroke: CHART.axis }}
+          contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ strokeDasharray: "3 3", stroke: CHART.axis }}
           formatter={(value: number, name: string) =>
             name === "Volatility" || name === "Return"
               ? [`${value.toFixed(2)}%`, name] : [value, name]}
@@ -245,10 +267,10 @@ export function RiskReturnScatter({ points }: {
             return (
               <div style={TOOLTIP_STYLE} className="px-3 py-2">
                 <div className="font-medium">{p.symbol}</div>
-                <div className="tabular mt-1 text-[11.5px] text-[var(--ink-secondary)]">
+                <div className="tabular mt-1 text-caption text-[var(--ink-secondary)]">
                   Return {p.y.toFixed(2)}% · Volatility {p.x.toFixed(2)}%
                 </div>
-                <div className="tabular text-[11.5px] text-[var(--ink-secondary)]">
+                <div className="tabular text-caption text-[var(--ink-secondary)]">
                   Weight {(p.weight * 100).toFixed(1)}%
                 </div>
               </div>
@@ -258,7 +280,7 @@ export function RiskReturnScatter({ points }: {
         {/* A single series: the marks are one population, distinguished by
             position and size rather than by hue. Labels carry identity. */}
         <Scatter data={data} fill={SERIES[0]} fillOpacity={0.75}
-                 stroke={CHART.surface} strokeWidth={2} isAnimationActive={false} />
+                 stroke={CHART.surface} strokeWidth={2} {...STATIC_SERIES} />
       </ScatterChart>
     </Frame>
   );
@@ -270,24 +292,25 @@ export function CorrelationHeatmap({ symbols, matrix }: {
   symbols: string[]; matrix: (number | null)[][];
 }) {
   // Correlation runs -1 to +1 around a meaningful zero, so it takes a
-  // diverging ramp: two hues with a neutral grey midpoint, never a rainbow.
-  const color = (v: number | null) => {
-    if (v === null || Number.isNaN(v)) return "#1a212a";
-    const t = Math.max(-1, Math.min(1, v));
-    const mix = Math.abs(t) * 100;
-    return t >= 0
-      ? `color-mix(in oklab, #2b333d ${100 - mix}%, #3987e5 ${mix}%)`
-      : `color-mix(in oklab, #2b333d ${100 - mix}%, #d95926 ${mix}%)`;
-  };
+  // diverging ramp: two hues with a neutral midpoint, never a rainbow.
+  //
+  // This was re-implemented inline while lib/viz.ts exported an unused
+  // `divergingColor` doing the same thing, so the two could disagree about
+  // what zero looks like. One ramp now.
+  const color = (v: number | null) =>
+    v === null || Number.isNaN(v) ? CHART.grid : divergingColor(v);
 
   return (
     <div className="overflow-x-auto">
       <table className="border-separate" style={{ borderSpacing: 2 }}>
+        <caption className="sr-only">
+          Correlation matrix of your holdings, from minus one to plus one
+        </caption>
         <thead>
           <tr>
             <th className="sticky left-0 z-10 bg-[var(--surface-2)]" />
             {symbols.map((s) => (
-              <th key={s} className="px-1 pb-1 text-[10px] font-normal text-[var(--ink-muted)]">
+              <th key={s} className="px-1 pb-1 text-micro font-normal text-[var(--ink-muted)]">
                 <span className="block origin-bottom-left -rotate-45 whitespace-nowrap">{s}</span>
               </th>
             ))}
@@ -296,7 +319,7 @@ export function CorrelationHeatmap({ symbols, matrix }: {
         <tbody>
           {symbols.map((row, i) => (
             <tr key={row}>
-              <th className="sticky left-0 z-10 bg-[var(--surface-2)] pr-2 text-right text-[10.5px] font-normal text-[var(--ink-secondary)]">
+              <th className="sticky left-0 z-10 bg-[var(--surface-2)] pr-2 text-right text-micro font-normal text-[var(--ink-secondary)]">
                 {row}
               </th>
               {symbols.map((col, j) => {
@@ -304,12 +327,12 @@ export function CorrelationHeatmap({ symbols, matrix }: {
                 return (
                   <td key={col} title={`${row} vs ${col}: ${v === null ? "—" : v.toFixed(3)}`}>
                     <div
-                      className="tabular flex h-8 w-11 items-center justify-center rounded-[3px] text-[10px]"
+                      className="tabular flex h-8 w-11 items-center justify-center rounded-[3px] text-micro"
                       style={{
                         background: color(v),
                         // The value is printed, so the cell is never readable
                         // by colour alone.
-                        color: Math.abs(v ?? 0) > 0.55 ? "#f2f5f8" : "#93a0ae",
+                        color: Math.abs(v ?? 0) > 0.55 ? CHART.inkPrimary : CHART.inkSecondary,
                       }}
                     >
                       {v === null ? "—" : v.toFixed(2)}
@@ -321,10 +344,13 @@ export function CorrelationHeatmap({ symbols, matrix }: {
           ))}
         </tbody>
       </table>
-      <div className="mt-3 flex items-center gap-3 text-[11px] text-[var(--ink-muted)]">
+      <div className="mt-3 flex items-center gap-3 text-caption text-[var(--ink-muted)]">
         <span>−1 moves opposite</span>
         <span className="h-2.5 w-28 rounded-full"
-              style={{ background: "linear-gradient(90deg,#d95926,#2b333d,#3987e5)" }} />
+              style={{
+                background:
+                  `linear-gradient(90deg, ${SERIES[1]}, var(--surface-3), ${SERIES[0]})`,
+              }} />
         <span>+1 moves together</span>
       </div>
     </div>
@@ -336,10 +362,11 @@ export function CorrelationHeatmap({ symbols, matrix }: {
 export function GoalProjectionChart({ path, target }: {
   path: { months: number[]; projected_value: number[] }; target: number;
 }) {
-  const step = Math.max(1, Math.floor(path.months.length / 180));
-  const data = path.months
-    .filter((_, i) => i % step === 0)
-    .map((month, i) => ({ month, value: path.projected_value[i * step] }));
+  // 180 rather than 400 here, because a goal path is monthly and a fifteen
+  // year goal is 180 points to begin with.
+  const data = decimate(path.months, 180).map(({ value: month, index }) => ({
+    month, value: path.projected_value[index],
+  }));
 
   return (
     <Frame height={240}>
@@ -350,7 +377,7 @@ export function GoalProjectionChart({ path, target }: {
             <stop offset="100%" stopColor={SERIES[2]} stopOpacity={0.02} />
           </linearGradient>
         </defs>
-        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <CartesianGrid {...GRID} />
         <XAxis dataKey="month" {...AXIS} minTickGap={40}
                tickFormatter={(m: number) => `${Math.round(m / 12)}y`} />
         <YAxis {...AXIS} width={64} tickFormatter={rupeesCompact} />
@@ -361,11 +388,12 @@ export function GoalProjectionChart({ path, target }: {
         />
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
           labelFormatter={(m: number) => `Month ${m}`}
           formatter={(v: number) => [rupeesCompact(v), "Projected"]}
         />
         <Area type="monotone" dataKey="value" stroke={SERIES[2]} strokeWidth={2}
-              fill="url(#goalFill)" isAnimationActive={false} />
+              fill="url(#goalFill)" {...STATIC_SERIES} />
       </AreaChart>
     </Frame>
   );
@@ -380,27 +408,29 @@ export function HealthBreakdown({ components }: {
     .filter((c) => c.score !== null)
     .map((c) => ({ name: titleCase(c.name), score: c.score as number, weight: c.weight }));
 
+  const axisWidth = useCategoryAxisWidth(128);
   return (
     <Frame height={Math.max(180, data.length * 34)}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 44, bottom: 4, left: 8 }}>
-        <CartesianGrid stroke={CHART.grid} horizontal={false} />
+        <CartesianGrid {...GRID_VERTICAL} />
         <XAxis type="number" domain={[0, 100]} {...AXIS} />
-        <YAxis type="category" dataKey="name" {...AXIS} width={128} />
+        <YAxis type="category" dataKey="name" {...AXIS} width={axisWidth} />
         <Tooltip
-          contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+          contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
           formatter={(v: number, _n, item) => [
             `${v.toFixed(1)} / 100 · worth ${(item.payload as { weight: number }).weight} pts`,
             "Score",
           ]}
         />
         <ReferenceLine x={70} stroke={CHART.axis} strokeDasharray="3 3" />
-        <Bar dataKey="score" radius={[0, 4, 4, 0]} isAnimationActive={false}>
+        <Bar dataKey="score" radius={[0, 4, 4, 0]} {...STATIC_SERIES}>
           {data.map((entry) => (
             <Cell
               key={entry.name}
               // Status colours, reserved for state and never reused as a
               // series hue. The numeric score is always shown alongside.
-              fill={entry.score >= 80 ? "#0ca30c" : entry.score >= 60 ? "#c98500" : "#d95926"}
+              fill={entry.score >= 80 ? STATUS.good
+                    : entry.score >= 60 ? STATUS.warning : STATUS.serious}
             />
           ))}
         </Bar>
@@ -417,7 +447,7 @@ export function AnomalyTimeline({ timeline, threshold }: {
   return (
     <Frame height={220}>
       <BarChart data={timeline} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
-        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <CartesianGrid {...GRID} />
         <XAxis dataKey="date" {...AXIS} minTickGap={28} tickFormatter={monthLabel} />
         <YAxis {...AXIS} width={48} />
         <ReferenceLine
@@ -426,13 +456,13 @@ export function AnomalyTimeline({ timeline, threshold }: {
             fill: CHART.accent, fontSize: 10.5 }}
         />
         <Tooltip
-          contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+          contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
           labelFormatter={monthLabel}
           formatter={(v: number) => [v.toFixed(4), "Reconstruction error"]}
         />
-        <Bar dataKey="score" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+        <Bar dataKey="score" radius={[3, 3, 0, 0]} {...STATIC_SERIES}>
           {timeline.map((point) => (
-            <Cell key={point.date} fill={point.is_anomaly ? "#e66767" : "#2f3b47"} />
+            <Cell key={point.date} fill={point.is_anomaly ? STATUS.critical : "var(--surface-4)"} />
           ))}
         </Bar>
       </BarChart>
@@ -450,18 +480,18 @@ export function ClusterComparison({ rows }: {
     You: r.investor,
     "Cluster average": r.cluster_average,
   }));
+  const axisWidth = useCategoryAxisWidth(150);
   return (
     <Frame height={Math.max(200, data.length * 46)}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 20, bottom: 4, left: 8 }}>
-        <CartesianGrid stroke={CHART.grid} horizontal={false} />
+        <CartesianGrid {...GRID_VERTICAL} />
         <XAxis type="number" {...AXIS} />
-        <YAxis type="category" dataKey="name" {...AXIS} width={150} />
-        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+        <YAxis type="category" dataKey="name" {...AXIS} width={axisWidth} />
+        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
                  formatter={(v: number) => v.toFixed(3)} />
-        <Legend verticalAlign="top" align="right" height={26}
-                wrapperStyle={{ fontSize: 12, color: CHART.inkSecondary }} />
-        <Bar dataKey="You" fill={SERIES[0]} radius={[0, 3, 3, 0]} isAnimationActive={false} />
-        <Bar dataKey="Cluster average" fill={SERIES[1]} radius={[0, 3, 3, 0]} isAnimationActive={false} />
+        <Legend verticalAlign="top" align="right" {...LEGEND} />
+        <Bar dataKey="You" fill={SERIES[0]} radius={[0, 3, 3, 0]} {...STATIC_SERIES} />
+        <Bar dataKey="Cluster average" fill={SERIES[1]} radius={[0, 3, 3, 0]} {...STATIC_SERIES} />
       </BarChart>
     </Frame>
   );
@@ -481,7 +511,7 @@ export function SilhouetteByK({ points, chosen }: {
   return (
     <Frame height={240}>
       <LineChart data={points} margin={{ top: 10, right: 14, bottom: 4, left: 4 }}>
-        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <CartesianGrid {...GRID} />
         <XAxis dataKey="k" {...AXIS}
                label={{ value: "clusters (k)", position: "insideBottom", offset: -2,
                         fill: CHART.inkMuted, fontSize: 11 }} />
@@ -493,7 +523,7 @@ export function SilhouetteByK({ points, chosen }: {
                  labelFormatter={(k: number) => `k = ${k}`}
                  formatter={(v: number) => [v.toFixed(4), "Silhouette"]} />
         <Line type="monotone" dataKey="silhouette" stroke={SERIES[0]} strokeWidth={2}
-              dot={{ r: 3, fill: SERIES[0] }} activeDot={{ r: 5 }} isAnimationActive={false} />
+              dot={{ r: 3, fill: SERIES[0] }} activeDot={{ r: 5 }} {...STATIC_SERIES} />
       </LineChart>
     </Frame>
   );
@@ -517,7 +547,7 @@ export function ClusterMapScatter({ points }: { points: ClusterPoint[] }) {
     <div>
       <Frame height={360}>
         <ScatterChart margin={{ top: 10, right: 16, bottom: 18, left: 4 }}>
-          <CartesianGrid stroke={CHART.grid} />
+          <CartesianGrid {...GRID} vertical />
           <XAxis type="number" dataKey="pc1" {...AXIS}
                  tickFormatter={(v: number) => v.toFixed(1)}
                  label={{ value: "principal component 1", position: "insideBottom",
@@ -527,14 +557,14 @@ export function ClusterMapScatter({ points }: { points: ClusterPoint[] }) {
                  label={{ value: "PC 2", angle: -90, position: "insideLeft",
                           fill: CHART.inkMuted, fontSize: 11 }} />
           <Tooltip
-            contentStyle={TOOLTIP_STYLE} cursor={{ strokeDasharray: "3 3", stroke: CHART.axis }}
+            contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ strokeDasharray: "3 3", stroke: CHART.axis }}
             content={({ payload }) => {
               if (!payload?.length) return null;
               const point = payload[0].payload as ClusterPoint;
               return (
                 <div style={TOOLTIP_STYLE} className="px-3 py-2">
                   <div className="font-medium">{point.cluster_name}</div>
-                  <div className="mt-1 text-[11.5px] text-[var(--ink-secondary)]">
+                  <div className="mt-1 text-caption text-[var(--ink-secondary)]">
                     generated as {titleCase(point.archetype)}
                   </div>
                 </div>
@@ -544,13 +574,13 @@ export function ClusterMapScatter({ points }: { points: ClusterPoint[] }) {
           {ordered.map(([cluster, group]) => (
             <Scatter key={cluster} name={group.name} data={group.data}
                      fill={seriesColor(cluster)} fillOpacity={0.6}
-                     isAnimationActive={false} />
+                     {...STATIC_SERIES} />
           ))}
         </ScatterChart>
       </Frame>
       <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
         {ordered.map(([cluster, group]) => (
-          <li key={cluster} className="flex items-center gap-2 text-[11.5px] text-[var(--ink-secondary)]">
+          <li key={cluster} className="flex items-center gap-2 text-caption text-[var(--ink-secondary)]">
             <span className="h-2.5 w-2.5 rounded-sm" style={{ background: seriesColor(cluster) }} />
             {group.name}
             <span className="text-[var(--ink-faint)]">{group.data.length}</span>
@@ -578,7 +608,7 @@ export function LossCurve({ history }: {
   return (
     <Frame height={230}>
       <LineChart data={data} margin={{ top: 10, right: 14, bottom: 4, left: 4 }}>
-        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <CartesianGrid {...GRID} />
         <XAxis dataKey="epoch" {...AXIS}
                label={{ value: "epoch", position: "insideBottom", offset: -2,
                         fill: CHART.inkMuted, fontSize: 11 }} />
@@ -586,12 +616,11 @@ export function LossCurve({ history }: {
         <Tooltip contentStyle={TOOLTIP_STYLE}
                  labelFormatter={(e: number) => `Epoch ${e}`}
                  formatter={(v: number, name: string) => [v.toFixed(6), titleCase(name)]} />
-        <Legend verticalAlign="top" align="right" height={26}
-                wrapperStyle={{ fontSize: 12, color: CHART.inkSecondary }} />
+        <Legend verticalAlign="top" align="right" {...LEGEND} />
         <Line type="monotone" dataKey="training" name="Training" stroke={SERIES[0]}
-              strokeWidth={2} dot={false} isAnimationActive={false} />
+              strokeWidth={2} dot={false} {...STATIC_SERIES} />
         <Line type="monotone" dataKey="holdout" name="Held out" stroke={SERIES[1]}
-              strokeWidth={2} strokeDasharray="4 3" dot={false} isAnimationActive={false} />
+              strokeWidth={2} strokeDasharray="4 3" dot={false} {...STATIC_SERIES} />
       </LineChart>
     </Frame>
   );
@@ -606,7 +635,7 @@ export function SkillByHorizon({ rows }: {
   return (
     <Frame height={280}>
       <LineChart data={rows} margin={{ top: 10, right: 16, bottom: 4, left: 4 }}>
-        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <CartesianGrid {...GRID} />
         <XAxis dataKey="horizon" {...AXIS} />
         <YAxis {...AXIS} width={54} tickFormatter={(v: number) => v.toFixed(2)} />
         <ReferenceLine y={0} stroke={CHART.axis} strokeDasharray="4 3"
@@ -614,12 +643,11 @@ export function SkillByHorizon({ rows }: {
                                 fill: CHART.inkMuted, fontSize: 10.5 }} />
         <Tooltip contentStyle={TOOLTIP_STYLE}
                  formatter={(v: number, name: string) => [v.toFixed(4), titleCase(name)]} />
-        <Legend verticalAlign="top" align="right" height={26}
-                wrapperStyle={{ fontSize: 12, color: CHART.inkSecondary }} />
+        <Legend verticalAlign="top" align="right" {...LEGEND} />
         {models.map((model, index) => (
           <Line key={model} type="monotone" dataKey={model} name={titleCase(model)}
                 stroke={seriesColor(index)} strokeWidth={2}
-                dot={{ r: 3 }} isAnimationActive={false} />
+                dot={{ r: 3 }} {...STATIC_SERIES} />
         ))}
       </LineChart>
     </Frame>
@@ -634,15 +662,14 @@ export function MetricComparisonBars({ metrics, seriesNames }: {
   return (
     <Frame height={260}>
       <BarChart data={metrics} margin={{ top: 10, right: 16, bottom: 4, left: 4 }}>
-        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <CartesianGrid {...GRID} />
         <XAxis dataKey="metric" {...AXIS} />
         <YAxis {...AXIS} width={48} domain={[0, 1]} tickFormatter={(v: number) => v.toFixed(1)} />
-        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
                  formatter={(v: number) => v.toFixed(4)} />
-        <Legend verticalAlign="top" align="right" height={26}
-                wrapperStyle={{ fontSize: 12, color: CHART.inkSecondary }} />
-        <Bar dataKey={seriesNames[0]} fill={SERIES[0]} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-        <Bar dataKey={seriesNames[1]} fill={SERIES[1]} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+        <Legend verticalAlign="top" align="right" {...LEGEND} />
+        <Bar dataKey={seriesNames[0]} fill={SERIES[0]} radius={[4, 4, 0, 0]} {...STATIC_SERIES} />
+        <Bar dataKey={seriesNames[1]} fill={SERIES[1]} radius={[4, 4, 0, 0]} {...STATIC_SERIES} />
       </BarChart>
     </Frame>
   );
@@ -660,16 +687,19 @@ export function CountMatrix({ rows, columns, values, rowLabel, columnLabel }: {
   return (
     <div className="overflow-x-auto">
       {columnLabel && (
-        <div className="mb-1.5 pl-[150px] text-[10.5px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
+        <div className="mb-1.5 pl-[150px] text-micro uppercase tracking-[0.12em] text-[var(--ink-faint)]">
           {columnLabel}
         </div>
       )}
       <table className="border-separate" style={{ borderSpacing: 2 }}>
+        <caption className="sr-only">
+          Feature values by cluster, shaded by magnitude
+        </caption>
         <thead>
           <tr>
             <th className="sticky left-0 z-10 bg-[var(--surface-2)]" />
             {columns.map((column) => (
-              <th key={column} className="px-1 pb-1 text-[10px] font-normal text-[var(--ink-muted)]">
+              <th key={column} className="px-1 pb-1 text-micro font-normal text-[var(--ink-muted)]">
                 {column}
               </th>
             ))}
@@ -678,7 +708,7 @@ export function CountMatrix({ rows, columns, values, rowLabel, columnLabel }: {
         <tbody>
           {rows.map((row, i) => (
             <tr key={row}>
-              <th className="sticky left-0 z-10 w-[150px] bg-[var(--surface-2)] pr-2.5 text-right text-[10.5px] font-normal text-[var(--ink-secondary)]">
+              <th className="sticky left-0 z-10 w-[150px] bg-[var(--surface-2)] pr-2.5 text-right text-micro font-normal text-[var(--ink-secondary)]">
                 {row}
               </th>
               {columns.map((column, j) => {
@@ -687,10 +717,11 @@ export function CountMatrix({ rows, columns, values, rowLabel, columnLabel }: {
                 return (
                   <td key={column} title={`${row} → ${column}: ${value}`}>
                     <div
-                      className="tabular flex h-9 w-14 items-center justify-center rounded-[3px] text-[10.5px]"
+                      className="tabular flex h-9 w-14 items-center justify-center rounded-[3px] text-micro"
                       style={{
-                        background: `color-mix(in oklab, #1a212a ${(1 - intensity) * 100}%, ${SERIES[0]} ${intensity * 100}%)`,
-                        color: intensity > 0.45 ? "#f2f5f8" : "#64707e",
+                        background:
+                          `color-mix(in oklab, ${CHART.grid} ${(1 - intensity) * 100}%, ${SERIES[0]} ${intensity * 100}%)`,
+                        color: intensity > 0.45 ? CHART.inkPrimary : CHART.inkMuted,
                       }}
                     >
                       {value || "·"}
@@ -703,7 +734,7 @@ export function CountMatrix({ rows, columns, values, rowLabel, columnLabel }: {
         </tbody>
       </table>
       {rowLabel && (
-        <div className="mt-2 text-[10.5px] uppercase tracking-[0.12em] text-[var(--ink-faint)]">
+        <div className="mt-2 text-micro uppercase tracking-[0.12em] text-[var(--ink-faint)]">
           {rowLabel}
         </div>
       )}
@@ -718,16 +749,17 @@ export function MagnitudeBars({ items, format, color, domain }: {
   format?: (v: number) => string; color?: string; domain?: [number, number];
 }) {
   const data = [...items].sort((a, b) => b.value - a.value);
+  const axisWidth = useCategoryAxisWidth(168);
   return (
     <Frame height={Math.max(160, data.length * 30)}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 52, bottom: 4, left: 8 }}>
-        <CartesianGrid stroke={CHART.grid} horizontal={false} />
+        <CartesianGrid {...GRID_VERTICAL} />
         <XAxis type="number" {...AXIS} domain={domain ?? [0, "auto"]}
                tickFormatter={format ?? ((v: number) => v.toFixed(2))} />
-        <YAxis type="category" dataKey="label" {...AXIS} width={168} />
-        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+        <YAxis type="category" dataKey="label" {...AXIS} width={axisWidth} />
+        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
                  formatter={(v: number) => (format ?? ((x: number) => x.toFixed(4)))(v)} />
-        <Bar dataKey="value" fill={color ?? SERIES[0]} radius={[0, 4, 4, 0]} isAnimationActive={false} />
+        <Bar dataKey="value" fill={color ?? SERIES[0]} radius={[0, 4, 4, 0]} {...STATIC_SERIES} />
       </BarChart>
     </Frame>
   );
@@ -742,11 +774,10 @@ export function ProjectionFan({ months, bands, deterministic, target }: {
   deterministic?: number[];
   target: number;
 }) {
-  const step = Math.max(1, Math.floor(months.length / 200));
-  const data = months
-    .filter((_, i) => i % step === 0)
-    .map((month, i) => {
-      const index = i * step;
+  // The fourth copy of the same loop, with a fourth divisor. All four now
+  // go through `decimate`.
+  const data = decimate(months, 200)
+    .map(({ value: month, index }) => {
       const p10 = bands.p10?.[index] ?? 0;
       const p25 = bands.p25?.[index] ?? 0;
       const p75 = bands.p75?.[index] ?? 0;
@@ -768,7 +799,7 @@ export function ProjectionFan({ months, bands, deterministic, target }: {
   return (
     <Frame height={300}>
       <AreaChart data={data} margin={{ top: 10, right: 16, bottom: 4, left: 8 }}>
-        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <CartesianGrid {...GRID} />
         <XAxis dataKey="month" {...AXIS} minTickGap={42}
                tickFormatter={(m: number) => (m >= 12 ? `${Math.round(m / 12)}y` : `${m}m`)} />
         <YAxis {...AXIS} width={66} tickFormatter={rupeesCompact} />
@@ -777,6 +808,7 @@ export function ProjectionFan({ months, bands, deterministic, target }: {
                                 fill: CHART.accent, fontSize: 11 }} />
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
           labelFormatter={(m: number) => `Month ${m}`}
           content={({ payload, label }) => {
             if (!payload?.length) return null;
@@ -786,7 +818,7 @@ export function ProjectionFan({ months, bands, deterministic, target }: {
                 <div className="mb-1 font-medium">Month {label}</div>
                 {([["p90", "Best 10%"], ["p75", "Upper quartile"], ["median", "Median"],
                    ["p25", "Lower quartile"], ["p10", "Worst 10%"]] as const).map(([key, name]) => (
-                  <div key={key} className="tabular flex justify-between gap-6 text-[11.5px]">
+                  <div key={key} className="tabular flex justify-between gap-6 text-caption">
                     <span className="text-[var(--ink-secondary)]">{name}</span>
                     <span>{rupeesCompact(point[key as keyof typeof point] as number)}</span>
                   </div>
@@ -796,18 +828,18 @@ export function ProjectionFan({ months, bands, deterministic, target }: {
           }}
         />
         {/* The transparent base lifts the stack to the p10 line. */}
-        <Area dataKey="base" stackId="fan" stroke="none" fill="transparent" isAnimationActive={false} />
+        <Area dataKey="base" stackId="fan" stroke="none" fill="transparent" {...STATIC_SERIES} />
         <Area dataKey="outer" stackId="fan" stroke="none"
-              fill={SERIES[0]} fillOpacity={0.14} isAnimationActive={false} />
+              fill={SERIES[0]} fillOpacity={0.14} {...STATIC_SERIES} />
         <Area dataKey="inner" stackId="fan" stroke="none"
-              fill={SERIES[0]} fillOpacity={0.28} isAnimationActive={false} />
+              fill={SERIES[0]} fillOpacity={0.28} {...STATIC_SERIES} />
         <Area dataKey="outerTop" stackId="fan" stroke="none"
-              fill={SERIES[0]} fillOpacity={0.14} isAnimationActive={false} />
+              fill={SERIES[0]} fillOpacity={0.14} {...STATIC_SERIES} />
         <Area dataKey="median" stroke={SERIES[0]} strokeWidth={2} fill="none"
-              isAnimationActive={false} />
+              {...STATIC_SERIES} />
         {deterministic && (
           <Area dataKey="expected" stroke={CHART.inkMuted} strokeWidth={1.5}
-                strokeDasharray="4 3" fill="none" isAnimationActive={false} />
+                strokeDasharray="4 3" fill="none" {...STATIC_SERIES} />
         )}
       </AreaChart>
     </Frame>

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.security import decode_access_token
 from app.db.session import get_db
 from app.models import User
+from app.services.market_data import Feed, feed_for
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -57,3 +58,11 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def get_feed(user: CurrentUser, db: DbSession) -> Feed:
+    """The requesting user's market-data feed (Upstox if connected)."""
+    return feed_for(db, user)
+
+
+CurrentFeed = Annotated[Feed, Depends(get_feed)]

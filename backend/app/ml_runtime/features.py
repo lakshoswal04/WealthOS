@@ -120,11 +120,34 @@ def monthly_history(db: Session, user: User) -> pd.DataFrame:
     frame["max_drawdown"] = (wealth / peak - 1).cummin().to_numpy()
     frame["cumulative_return"] = (wealth - 1).to_numpy()
 
-    # A reconstructed history has no trading activity to measure: the user's
-    # positions are taken as fixed. Turnover is therefore reported from
-    # recorded transactions only, and is zero when there are none.
-    frame["turnover"] = 0.0
-    frame["n_trades"] = 0.0
+    # Trading activity from the recorded transactions, not zero.
+    #
+    # These two were hard-coded to 0.0 with a comment explaining that a
+    # reconstructed history has no trading to measure. True of the
+    # reconstruction, but the `transactions` table does record trades, and
+    # zeroing them had two consequences worth naming. The clustering model
+    # saw every live user as a buy-and-hold investor, biasing the assignment
+    # towards the passive archetypes. And the anomaly detector -- trained on
+    # a synthetic cohort where turnover varies -- was served a column that
+    # was constant zero for every real user, which is a train/serve
+    # distribution mismatch rather than merely a missing feature.
+    directional = db.scalars(
+        select(Transaction).where(
+            Transaction.user_id == user.id,
+            Transaction.transaction_type.in_(
+                [TransactionType.BUY, TransactionType.SELL]
+            ),
+        )
+    ).all()
+    traded = pd.Series(0.0, index=total.index)
+    trades = pd.Series(0.0, index=total.index)
+    for entry in directional:
+        stamp = pd.Timestamp(entry.date) + pd.offsets.MonthEnd(0)
+        if stamp in traded.index:
+            traded.loc[stamp] += float(entry.value or 0.0)
+            trades.loc[stamp] += 1.0
+    frame["turnover"] = traded.to_numpy()
+    frame["n_trades"] = trades.to_numpy()
     frame["contribution_ratio"] = (
         frame["net_contribution"] / frame["total_value"].replace(0, np.nan)
     ).fillna(0.0)

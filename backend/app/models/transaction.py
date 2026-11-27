@@ -5,7 +5,9 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, Date, Float, ForeignKey, Index, String
+from sqlalchemy import (
+    CheckConstraint, Date, Float, ForeignKey, Index, String, UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
@@ -41,10 +43,28 @@ class Transaction(Base, TimestampMixin):
     value: Mapped[float] = mapped_column(Float, nullable=False)
     fees: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
 
+    # The provider's own identifier for this trade, when it came from a linked
+    # account. Null for anything the user entered or imported from CSV.
+    #
+    # This exists so a repeated sync is idempotent. Matching on
+    # (date, symbol, value) instead would be wrong in a way that loses data:
+    # two genuine trades in the same stock on the same day at the same price
+    # are two trades, and content matching merges them into one.
+    external_id: Mapped[str | None] = mapped_column(String(128))
+    external_source: Mapped[str | None] = mapped_column(String(32))
+
     user: Mapped["User"] = relationship(back_populates="transactions")
     asset: Mapped["Asset"] = relationship(back_populates="transactions")
 
     __table_args__ = (
+        # A provider's trade id is unique per user, so a repeated sync cannot
+        # insert the same trade twice even if the dedupe query is wrong.
+        # Enforcing it here rather than only in the service means a bug
+        # becomes an error instead of a duplicated portfolio.
+        UniqueConstraint(
+            "user_id", "external_id",
+            name="uq_transactions_user_external_id",
+        ),
         Index("ix_transactions_user_date", "user_id", "date"),
         CheckConstraint("quantity IS NULL OR quantity > 0", name="quantity_positive"),
         CheckConstraint("price IS NULL OR price > 0", name="price_positive"),

@@ -1,0 +1,189 @@
+{
+  "generated_at": "2026-11-26T03:31:21.111351+00:00",
+  "purpose": "Isolate the effect of the reconstruction-error aggregation on anomaly detection. Every figure below comes from the UNCHANGED v1 autoencoder weights and the UNCHANGED v1 feature table, so nothing moves except how per-feature error is reduced to one score. The dataset was regenerated afterwards to fix the dormancy generator, which is why this study is kept as a separate artifact rather than folded into the retrained report.",
+  "baseline": {
+    "aggregation": "mean",
+    "note": "what the shipped model used"
+  },
+  "selected": "zscore_mean",
+  "selection_rationale": "Chosen on validation PR-AUC among the aggregations that average across all features. Extreme reducers (`max`) were ruled out a priori because their operating point rests on a single feature's tail. Test was not used for selection, and the test columns are published here so that choice can be checked rather than taken on trust.",
+  "findings": [
+    "Plain `max` is WORSE than the mean it was meant to improve on (test F1 0.7914 against 0.8392, dormancy recall 0.3897 against 0.4667). The dilution hypothesis alone was wrong: an unnormalised max returns whichever feature is hardest to reconstruct, which is largely the same feature on every row. The improvement comes from per-feature normalisation, not from the choice of reducer.",
+    "`zscore_mean` improves every headline metric without trading precision: F1 0.8392 to 0.8500, PR-AUC 0.9355 to 0.9539, recall 0.8870 to 0.9150, precision 0.7962 to 0.7936 (flat), false-positive rate unchanged at 0.0008, dormancy recall 0.4667 to 0.5795.",
+    "`zscore_max` scores best on EVERY validation criterion tried -- PR-AUC 0.9866, F1 0.9559, a nested time-split inside validation (F1 0.9311), and recall at a fixed false-alert budget (0.9831) -- and has the worst test F1 of the z-scored variants at 0.7486, its precision collapsing to 0.6269. Validation could not detect this, which is the argument for preferring an averaging reducer on stability grounds rather than letting a 0.003 PR-AUC difference decide.",
+    "A threshold calibrated to a 0.1% false-alert rate on validation realises 0.475% on test with the mean aggregation and 1.024% with zscore_max -- 5x and 10x the intended budget. The same threshold transfers cleanly across a time boundary placed inside validation (drift 0.65-1.84x), so this is drift between the validation and test periods rather than a property of any aggregation. It affects the shipped threshold too and is reported in the retrained model's `threshold_transfer` section.",
+    "Dormancy recall improves from 0.4667 to 0.5795 on the aggregation change alone, which confirms the scoring artifact was real but is not the whole story. The class mean error sat 0.0003 below the threshold; the remaining gap needs the generator fix, because the generator never created the quiet stretch the label describes."
+  ],
+  "candidates": [
+    {
+      "aggregation": "mean",
+      "test_precision": 0.7962,
+      "test_recall": 0.887,
+      "test_f1": 0.8392,
+      "test_pr_auc": 0.9355,
+      "test_roc_auc": 0.9995,
+      "test_false_positive_rate": 0.00079,
+      "recall_by_type": {
+        "allocation_shock": 0.965,
+        "concentration_spike": 1.0,
+        "dormancy_break": 0.4667,
+        "panic_sell": 0.9899,
+        "turnover_spike": 1.0
+      },
+      "validation_pr_auc": 0.9721,
+      "validation_f1": 0.9041,
+      "nested_late_validation": {
+        "f1": 0.8998,
+        "precision": 0.8893,
+        "recall": 0.9107
+      }
+    },
+    {
+      "aggregation": "max",
+      "test_precision": 0.7419,
+      "test_recall": 0.848,
+      "test_f1": 0.7914,
+      "test_pr_auc": 0.9028,
+      "test_roc_auc": 0.9992,
+      "test_false_positive_rate": 0.00102,
+      "recall_by_type": {
+        "allocation_shock": 0.87,
+        "concentration_spike": 1.0,
+        "dormancy_break": 0.3897,
+        "panic_sell": 0.9648,
+        "turnover_spike": 1.0
+      },
+      "validation_pr_auc": 0.9634,
+      "validation_f1": 0.8781,
+      "nested_late_validation": {
+        "f1": 0.8757,
+        "precision": 0.9516,
+        "recall": 0.811
+      }
+    },
+    {
+      "aggregation": "top3_mean",
+      "test_precision": 0.7615,
+      "test_recall": 0.875,
+      "test_f1": 0.8143,
+      "test_pr_auc": 0.9203,
+      "test_roc_auc": 0.9994,
+      "test_false_positive_rate": 0.00095,
+      "recall_by_type": {
+        "allocation_shock": 0.935,
+        "concentration_spike": 1.0,
+        "dormancy_break": 0.441,
+        "panic_sell": 0.9849,
+        "turnover_spike": 1.0
+      },
+      "validation_pr_auc": 0.9679,
+      "validation_f1": 0.8954,
+      "nested_late_validation": {
+        "f1": 0.8931,
+        "precision": 0.8962,
+        "recall": 0.89
+      }
+    },
+    {
+      "aggregation": "zscore_max",
+      "test_precision": 0.6269,
+      "test_recall": 0.929,
+      "test_f1": 0.7486,
+      "test_pr_auc": 0.9389,
+      "test_roc_auc": 0.9994,
+      "test_false_positive_rate": 0.00191,
+      "recall_by_type": {
+        "allocation_shock": 1.0,
+        "concentration_spike": 1.0,
+        "dormancy_break": 0.6359,
+        "panic_sell": 1.0,
+        "turnover_spike": 1.0
+      },
+      "validation_pr_auc": 0.9866,
+      "validation_f1": 0.9559,
+      "nested_late_validation": {
+        "f1": 0.9311,
+        "precision": 0.9112,
+        "recall": 0.9519
+      }
+    },
+    {
+      "aggregation": "zscore_top3_mean",
+      "test_precision": 0.6664,
+      "test_recall": 0.927,
+      "test_f1": 0.7754,
+      "test_pr_auc": 0.9418,
+      "test_roc_auc": 0.9995,
+      "test_false_positive_rate": 0.00161,
+      "recall_by_type": {
+        "allocation_shock": 1.0,
+        "concentration_spike": 1.0,
+        "dormancy_break": 0.6256,
+        "panic_sell": 1.0,
+        "turnover_spike": 1.0
+      },
+      "validation_pr_auc": 0.9843,
+      "validation_f1": 0.9404,
+      "nested_late_validation": {
+        "f1": 0.9207,
+        "precision": 0.904,
+        "recall": 0.9381
+      }
+    },
+    {
+      "aggregation": "zscore_mean",
+      "test_precision": 0.7936,
+      "test_recall": 0.915,
+      "test_f1": 0.85,
+      "test_pr_auc": 0.9539,
+      "test_roc_auc": 0.9996,
+      "test_false_positive_rate": 0.00082,
+      "recall_by_type": {
+        "allocation_shock": 0.985,
+        "concentration_spike": 1.0,
+        "dormancy_break": 0.5795,
+        "panic_sell": 1.0,
+        "turnover_spike": 1.0
+      },
+      "validation_pr_auc": 0.9837,
+      "validation_f1": 0.9352,
+      "nested_late_validation": {
+        "f1": 0.9143,
+        "precision": 0.8947,
+        "recall": 0.9347
+      }
+    },
+    {
+      "aggregation": "p99_max",
+      "test_precision": 0.9973,
+      "test_recall": 0.734,
+      "test_f1": 0.8456,
+      "test_pr_auc": 0.8922,
+      "test_roc_auc": 0.999,
+      "test_false_positive_rate": 1e-05,
+      "recall_by_type": {
+        "allocation_shock": 0.755,
+        "concentration_spike": 0.9948,
+        "dormancy_break": 0.0,
+        "panic_sell": 0.8945,
+        "turnover_spike": 1.0
+      }
+    },
+    {
+      "aggregation": "p99_top3_mean",
+      "test_precision": 0.9986,
+      "test_recall": 0.737,
+      "test_f1": 0.8481,
+      "test_pr_auc": 0.9076,
+      "test_roc_auc": 0.9992,
+      "test_false_positive_rate": 0.0,
+      "recall_by_type": {
+        "allocation_shock": 0.76,
+        "concentration_spike": 0.9948,
+        "dormancy_break": 0.0051,
+        "panic_sell": 0.8995,
+        "turnover_spike": 1.0
+      }
+    }
+  ]
+}

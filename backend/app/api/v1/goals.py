@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -103,6 +105,23 @@ def get_health_score(
         default=False,
         description="Include a sensitivity analysis showing how much each input moves the score",
     ),
+    methodology: Literal["v1", "v2"] = Query(
+        default=health_service.DEFAULT_METHODOLOGY,
+        description=(
+            "Which scoring methodology populates the top-level fields. Both "
+            "are always computed and returned under `versions`, so this only "
+            "chooses the headline; it never hides the other one."
+        ),
+    ),
 ) -> dict:
-    """The decomposable Portfolio Health Score, with every component shown."""
-    return health_service.health_score(db, user, include_sensitivity=sensitivity)
+    """The decomposable Portfolio Health Score, with every component shown.
+
+    Two methodologies are reported side by side. v1 is the original; v2
+    corrects six measurement defects in it, using the same inputs and the
+    same component weights so the difference is attributable to the
+    measurements rather than to re-weighting. See
+    `wealthos_core/health_v2.py` for what changed and why.
+    """
+    return health_service.health_score(
+        db, user, include_sensitivity=sensitivity, methodology=methodology
+    )
