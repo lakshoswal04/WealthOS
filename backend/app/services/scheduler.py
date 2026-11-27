@@ -50,6 +50,12 @@ def start() -> None:
     _started = True
 
     def loop() -> None:
+        # On low-memory (free-plan) hosting, give the first page loads after a
+        # cold start the CPU before the heavier daily jobs run.
+        from app.core.config import settings
+
+        if settings.low_memory and _stop.wait(120):
+            return
         while not _stop.is_set():
             result = tick()
             ran = result.get("autopilot")

@@ -6,8 +6,8 @@ import { unavailableFrom, type Unavailable } from "@/lib/clients/http";
 /**
  * Load an endpoint and keep it fresh.
  *
- * Polling pauses while the tab is hidden: a background tab hammering the
- * API every few seconds is wasted work on both ends. The previous value is
+ * Polling pauses while the tab is hidden, and never overlaps itself: a
+ * background tab, or a request stacked on a slow one, is wasted work on both ends. The previous value is
  * kept on screen while a refresh is in flight, so tickers update in place
  * instead of flashing to a spinner.
  */
@@ -18,8 +18,10 @@ export function usePoll<T>(loader: () => Promise<T>, intervalMs: number | null, 
   const [loading, setLoading] = useState(true);
   const loaderRef = useRef(loader);
   loaderRef.current = loader;
+  const inFlight = useRef(false);
 
   const load = useCallback(async () => {
+    inFlight.current = true;
     try {
       const next = await loaderRef.current();
       setData(next);
@@ -31,6 +33,7 @@ export function usePoll<T>(loader: () => Promise<T>, intervalMs: number | null, 
       // Stale data must not sit beside a "now unavailable" message.
       setData(null);
     } finally {
+      inFlight.current = false;
       setLoading(false);
     }
   }, []);
@@ -42,7 +45,9 @@ export function usePoll<T>(loader: () => Promise<T>, intervalMs: number | null, 
     void load();
     if (!intervalMs) return () => { cancelled = true; };
     const id = window.setInterval(() => {
-      if (!cancelled && document.visibilityState === "visible") void load();
+      // Skip a tick while the previous request is still running: on a slow
+      // server, stacking requests only makes every one of them slower.
+      if (!cancelled && !inFlight.current && document.visibilityState === "visible") void load();
     }, intervalMs);
     return () => { cancelled = true; window.clearInterval(id); };
     // eslint-disable-next-line react-hooks/exhaustive-deps

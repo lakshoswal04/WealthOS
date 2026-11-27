@@ -1,0 +1,25 @@
+# Render's free plan puts the API to sleep after 15 idle minutes, and the
+# next visitor then waits about a minute for it to wake. A ping every 10
+# minutes keeps it awake (one always-on free service fits in Render's 750
+# free hours a month).
+#
+# Set the repository variable API_URL (Settings -> Secrets and variables ->
+# Actions -> Variables), e.g. https://wealthos-api-xxxx.onrender.com
+name: Keep API awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping /health
+        env:
+          API_URL: ${{ vars.API_URL }}
+        run: |
+          if [ -z "$API_URL" ]; then echo "API_URL is not set; nothing to ping."; exit 0; fi
+          curl -fsS --max-time 120 "$API_URL/health" -o /dev/null -w "health %{http_code} in %{time_total}s\n"

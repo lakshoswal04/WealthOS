@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.v1 import (
@@ -104,8 +105,11 @@ async def lifespan(app: FastAPI):
             steps = [live_market_service.index_strip, screener_service.warm, master.ensure,
                      research_service.calendar, research_service.news, daily_jobs]
             if settings.low_memory:
-                # The Upstox instrument file is large; load it when options are first used.
-                steps.remove(master.ensure)
+                # Free-plan hosting has a sliver of CPU. Load the Upstox instrument
+                # file, news and calendar when first opened rather than at boot, so
+                # the first requests after a cold start are not queued behind them.
+                for step in (master.ensure, research_service.calendar, research_service.news):
+                    steps.remove(step)
             for step in steps:
                 try:
                     step()
@@ -133,6 +137,10 @@ app = FastAPI(
     docs_url="/docs",
     openapi_url="/openapi.json",
 )
+
+# Compress JSON responses: the research and signal payloads shrink ~5x, which
+# matters on a slow free-tier link.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 app.add_middleware(
     CORSMiddleware,
