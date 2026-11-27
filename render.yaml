@@ -25,8 +25,14 @@ services:
         fromDatabase: { name: wealthos-db, property: connectionString }
       - key: JWT_SECRET_KEY
         generateValue: true          # Render generates and stores it
+      - key: GEMINI_API_KEY
+        sync: false                  # set by hand in the Render dashboard; never committed
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+      - key: LLM_PROVIDER
+        value: auto                  # Gemini when its key is set, else Claude
       - key: ANTHROPIC_API_KEY
-        sync: false                  # set by hand; never committed
+        sync: false                  # optional alternative to Gemini
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
