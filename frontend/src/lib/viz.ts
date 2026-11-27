@@ -131,7 +131,7 @@ export const TOOLTIP_STYLE = {
   borderRadius: 8,
   fontSize: 12,
   color: CHART.inkPrimary,
-  boxShadow: "0 8px 24px rgb(0 0 0 / 0.45)",
+  boxShadow: "var(--lift-2)",
 } as const;
 
 export const TOOLTIP_LABEL_STYLE = { color: CHART.inkSecondary } as const;

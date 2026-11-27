@@ -13,12 +13,12 @@ export function Card({ className, tone = "default", children, ...rest }:
     <div
       {...rest}
       className={clsx(
-        "wealth-card grain edge-lit relative overflow-hidden rounded-[var(--radius)] border backdrop-blur-[2px]",
+        "wealth-card relative overflow-hidden rounded-[var(--radius-lg)] border",
         tone === "accent"
-          ? "border-[var(--accent-dim)] bg-[var(--glass-strong)] shadow-[var(--glow-accent)]"
+          ? "border-[var(--accent-dim)] bg-[var(--surface-1)] shadow-[var(--glow-accent)]"
           : tone === "flat"
             ? "border-[var(--hairline)] bg-[var(--surface-1)]"
-            : "border-[var(--hairline)] bg-[var(--glass)] shadow-[var(--lift-2)]",
+            : "border-[var(--hairline)] bg-[var(--surface-1)] shadow-[var(--lift-1)]",
         className,
       )}
     >
@@ -31,10 +31,10 @@ export function CardHeader({ title, subtitle, action, eyebrow }: {
   title: ReactNode; subtitle?: ReactNode; action?: ReactNode; eyebrow?: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] px-5 py-4">
+    <div className="flex items-start justify-between gap-4 border-b border-[var(--hairline)] px-6 py-5">
       <div className="min-w-0">
         {eyebrow && (
-          <div className="mb-1 text-micro font-medium uppercase tracking-[0.16em] text-[var(--accent)]">
+          <div className="label mb-1 text-[var(--accent)]">
             {eyebrow}
           </div>
         )}
@@ -51,7 +51,7 @@ export function CardHeader({ title, subtitle, action, eyebrow }: {
 }
 
 export function CardBody({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={clsx("px-5 py-4", className)}>{children}</div>;
+  return <div className={clsx("px-6 py-5", className)}>{children}</div>;
 }
 
 export function Section({ title, lede, children, id }: {
@@ -78,13 +78,13 @@ export function Stat({ label, value, sub, tone, hint, size = "md" }: {
   label: string; value: ReactNode; sub?: ReactNode; tone?: string; hint?: string;
   size?: "sm" | "md" | "lg";
 }) {
-  const sizes = { sm: "text-h3", md: "text-h1", lg: "text-display" };
+  const sizes = { sm: "text-h3", md: "text-h2", lg: "text-display" };
   return (
     <div className="min-w-0" title={hint}>
-      <div className="text-micro font-medium uppercase tracking-[0.13em] text-[var(--ink-muted)]">
+      <div className="label text-[var(--ink-muted)]">
         {label}
       </div>
-      <div className={clsx("tabular mt-2 leading-none", sizes[size], tone ?? "text-[var(--ink-primary)]")}>
+      <div className={clsx("serif tabular mt-2 leading-none", sizes[size], tone ?? "text-[var(--ink-primary)]")}>
         {value}
       </div>
       {sub && <div className="mt-2 text-small leading-snug text-[var(--ink-secondary)]">{sub}</div>}
@@ -102,7 +102,7 @@ export function Meter({ value, max = 100, color }: { value: number; max?: number
         className="meter-fill h-full rounded-full transition-[width] duration-[900ms] ease-[var(--ease)]"
         style={{
           width: `${pct}%`,
-          background: color ?? "linear-gradient(90deg, var(--accent-dim), var(--accent))",
+          background: color ?? "var(--accent)",
         }}
       />
     </div>

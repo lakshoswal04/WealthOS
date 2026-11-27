@@ -63,7 +63,7 @@ export default function PortfolioPage() {
       <div className="grid gap-8 lg:grid-cols-[1fr_auto]">
         <div>
           <div className="text-small uppercase tracking-[0.1em] text-[var(--ink-muted)]">Current value</div>
-          <div className="tabular mt-2 text-[44px] font-semibold leading-none">{inr(segValue)}</div>
+          <div className="serif tabular mt-3 text-[60px] leading-none">{inr(segValue)}</div>
           <div className="mt-3 text-body-lg">
             <span className="text-[var(--ink-muted)]">Total returns </span>
             <span className={clsx("tabular", tone(segReturn))}>{inrSigned(segReturn)} ({pct(segInvested ? (segReturn / segInvested) * 100 : 0)})</span>

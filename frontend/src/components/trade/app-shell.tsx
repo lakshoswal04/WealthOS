@@ -8,6 +8,7 @@ import {
 } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { editorial } from "@/lib/editorial";
 import { useDismiss, usePoll } from "@/lib/hooks";
 import { account, paper as paperClient, trade, type ChatThread, type Instrument, type Quote } from "@/lib/trade-api";
 import { num, pct, tone } from "@/lib/tfmt";
@@ -120,10 +121,6 @@ const IDEAS_MENU: MenuSection[] = [
 
 export function AppShell({ children, bare = false }: { children: ReactNode; bare?: boolean }) {
   const { user, loading } = useAuth();
-  useEffect(() => {
-    const saved = window.localStorage.getItem("wealthos.theme");
-    if (saved === "light" || saved === "terminal") document.documentElement.dataset.theme = saved;
-  }, []);
 
   useEffect(() => {
     if (!loading && !user && typeof window !== "undefined") window.location.href = "/login";
@@ -224,7 +221,7 @@ function ChatSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: {
       <div className={clsx("flex items-center px-4 pb-3 pt-4", collapsed ? "flex-col gap-3" : "justify-between")}>
         <Link href="/home" aria-label="WealthOS home" className="flex items-center gap-2">
           <Logo />
-          {!collapsed && <span className="display text-body-lg">Wealth<span className="metal">OS</span></span>}
+          {!collapsed && <span className="display text-h3 font-normal">Wealth<span className="metal">OS</span></span>}
         </Link>
         <div className={clsx("flex items-center gap-1 text-[var(--ink-secondary)]", collapsed && "flex-col")}>
           <button aria-label="Search chats" onClick={() => { if (collapsed) onToggle(); setSearching((v) => !v); }}
@@ -308,8 +305,8 @@ export function Logo({ size = 26 }: { size?: number }) {
   // An original mark: a rising bar inside a rounded square.
   return (
     <svg width={size} height={size} viewBox="0 0 28 28" aria-hidden="true">
-      <rect x="1" y="1" width="26" height="26" rx="8" fill="var(--surface-3)" stroke="var(--hairline-strong)" />
-      <path d="M8 19v-3M12.5 19v-6M17 19v-9M21 19V7" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" />
+      <rect x="1" y="1" width="26" height="26" rx="8" fill="var(--accent)" />
+      <path d="M8 19v-3M12.5 19v-6M17 19v-9M21 19V7" stroke="var(--accent-ink)" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
   );
 }
@@ -376,14 +373,14 @@ function TopNav({ onMenu }: { onMenu: () => void }) {
           {nav.map((item) => item.href ? (
             <Link key={item.key} href={item.href}
               className={clsx("whitespace-nowrap rounded-full px-3 py-2 text-body-lg transition-colors",
-                item.active ? "font-semibold text-[var(--ink-primary)]" : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]")}>
+                item.active ? "font-medium text-[var(--accent)]" : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]")}>
               {item.label}
             </Link>
           ) : (
             <button key={item.key} onClick={() => setOpenMenu(openMenu === item.key ? null : item.key)}
               aria-expanded={openMenu === item.key}
               className={clsx("flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-body-lg transition-colors",
-                item.active || openMenu === item.key ? "font-semibold text-[var(--ink-primary)]" : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]")}>
+                item.active || openMenu === item.key ? "font-medium text-[var(--accent)]" : "text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]")}>
               {item.label}
               <Icon name="chevron" size={14} className={clsx("transition-transform", openMenu === item.key && "rotate-180")} />
             </button>
@@ -414,7 +411,7 @@ function MegaMenu({ sections, cols, onPick }: { sections: MenuSection[]; cols: n
       <div className="grid gap-x-12 gap-y-8" style={{ gridTemplateColumns: `repeat(${cols}, minmax(180px, auto))` }}>
         {sections.map((s) => (
           <div key={s.title}>
-            <div className="mb-3 text-caption font-semibold uppercase tracking-[0.12em] text-[var(--ink-muted)]">{s.title}</div>
+            <div className="label mb-3 text-[var(--ink-muted)]">{s.title}</div>
             <ul className="space-y-1">
               {s.items.map((it) => (
                 <li key={it.label}>
@@ -521,17 +518,16 @@ function AlertsBell() {
 
 /** Theme: the dark terminal by default, a light theme on request; remembered. */
 export function useTheme() {
-  const [theme, setTheme] = useState<"terminal" | "light">("terminal");
+  // The boot script in app/layout.tsx has already applied the saved theme;
+  // read it back rather than overwrite it. Light is the default.
+  const [theme, setTheme] = useState<"terminal" | "light">("light");
   useEffect(() => {
-    const saved = window.localStorage.getItem("wealthos.theme");
-    if (saved === "light" || saved === "terminal") setTheme(saved);
+    setTheme(document.documentElement.dataset.theme === "terminal" ? "terminal" : "light");
   }, []);
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
   const toggle = useCallback(() => {
     setTheme((t) => {
       const next = t === "terminal" ? "light" : "terminal";
+      document.documentElement.dataset.theme = next;
       window.localStorage.setItem("wealthos.theme", next);
       return next;
     });
@@ -647,12 +643,13 @@ function AccountMenu() {
 }
 
 /** Heading used on the trading pages. */
-export function TradeHead({ title, lede, aside }: { title: ReactNode; lede?: ReactNode; aside?: ReactNode }) {
+export function TradeHead({ title, lede, aside, eyebrow }: { title: ReactNode; lede?: ReactNode; aside?: ReactNode; eyebrow?: string }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="rise mb-8 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
-        <h1 className="display text-display leading-none tracking-tight">{title}</h1>
-        {lede && <p className="mt-2.5 max-w-3xl text-body leading-relaxed text-[var(--ink-secondary)]">{lede}</p>}
+        {eyebrow && <div className="label mb-3 text-[var(--accent)]">{eyebrow}</div>}
+        <h1 className="display text-display">{editorial(title)}</h1>
+        {lede && <p className="mt-3 max-w-3xl text-body-lg leading-relaxed text-[var(--ink-secondary)]">{lede}</p>}
       </div>
       {aside}
     </div>

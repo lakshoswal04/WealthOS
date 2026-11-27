@@ -193,7 +193,7 @@ export default function GoalsPage() {
                       type="button"
                       aria-label={`Delete the goal ${goal.name}`}
                       onClick={() => void removeGoal(goal.id)}
-                      className="shrink-0 text-caption text-[var(--ink-muted)] hover:text-[#ff8f8f]"
+                      className="shrink-0 text-caption text-[var(--ink-muted)] hover:text-[var(--critical-ink)]"
                     >
                       Delete
                     </button>
@@ -274,7 +274,7 @@ function GoalDetail({ forecast }: { forecast: GoalForecast }) {
                   ? forecast.projected_value - forecast.target_amount
                   : forecast.shortfall,
               )}
-              tone={forecast.on_track ? "text-[var(--good)]" : "text-[#ff8f8f]"}
+              tone={forecast.on_track ? "text-[var(--good)]" : "text-[var(--critical-ink)]"}
             />
           </div>
 

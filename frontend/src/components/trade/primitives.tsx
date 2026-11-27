@@ -144,7 +144,7 @@ export function Segmented<T extends string>({ options, value, onChange, size = "
   size?: "sm" | "md"; className?: string;
 }) {
   return (
-    <div role="tablist" className={clsx("inline-flex items-center rounded-full border border-[var(--hairline-strong)] bg-[var(--surface-1)] p-1", className)}>
+    <div role="tablist" className={clsx("inline-flex items-center rounded-full border border-[var(--hairline)] bg-[var(--surface-2)] p-1", className)}>
       {options.map((o) => (
         <button key={o.value} role="tab" aria-selected={o.value === value} onClick={() => onChange(o.value)}
           className={clsx("rounded-full font-medium transition-colors",
@@ -168,7 +168,7 @@ export function TextTabs<T extends string>({ options, value, onChange, size = "l
         <button key={o.value} role="tab" aria-selected={o.value === value} onClick={() => onChange(o.value)}
           className={clsx("-mb-px border-b-2 pb-2 font-medium transition-colors",
             size === "lg" ? "text-h3" : "text-body-lg",
-            o.value === value ? "border-[var(--ink-primary)] text-[var(--ink-primary)]"
+            o.value === value ? "border-[var(--accent)] text-[var(--ink-primary)]"
               : "border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-secondary)]")}>
           {o.label}
           {o.count !== undefined && <span className="ml-1.5 text-small text-[var(--ink-muted)]">{o.count}</span>}
@@ -180,7 +180,7 @@ export function TextTabs<T extends string>({ options, value, onChange, size = "l
 
 export function Panel({ className, children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div {...rest} className={clsx("rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)]", className)}>
+    <div {...rest} className={clsx("rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] shadow-[var(--lift-1)]", className)}>
       {children}
     </div>
   );

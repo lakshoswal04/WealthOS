@@ -27,7 +27,7 @@ test.afterEach(async ({ request }) => { await cleanupAccounts(request); });
 
 test("the AI proposes an order and places it only when confirmed", async ({ page }) => {
   await page.goto("/home");
-  await expect(page.getByRole("heading", { name: /What's moving today/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /What would you like to know/ })).toBeVisible();
   await ask(page, "buy 10 shares of RELIANCE");
   const confirm = page.getByRole("button", { name: "Confirm paper order" });
   await expect(confirm).toBeVisible();

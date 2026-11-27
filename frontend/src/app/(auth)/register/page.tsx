@@ -47,7 +47,7 @@ export default function RegisterPage() {
 
   return (
     <div className="rise">
-      <h1 className="display text-h1 leading-tight">Create your account</h1>
+      <h1 className="display text-[44px] leading-none">Begin with <em>clarity.</em></h1>
       <p className="mt-1.5 text-body text-[var(--ink-secondary)]">
         Your profile shapes the risk bands and goal projections, so it is worth
         filling in.

@@ -28,7 +28,7 @@ export default function AnalysisLayout({ children }: { children: React.ReactNode
         {TABS.map((t) => (
           <Link key={t.href} href={t.href}
             className={clsx("-mb-px border-b-2 pb-3 text-body-lg transition-colors",
-              pathname === t.href ? "border-[var(--ink-primary)] font-medium text-[var(--ink-primary)]"
+              pathname === t.href ? "border-[var(--accent)] font-medium text-[var(--ink-primary)]"
                 : "border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-secondary)]")}>
             {t.label}
           </Link>

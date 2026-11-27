@@ -217,7 +217,7 @@ export function SectorBar({ data }: { data: { label: string; weight: number }[] 
         <XAxis type="number" {...AXIS} tickFormatter={(v: number) => percent(v, 0)} />
         <YAxis type="category" dataKey="label" {...AXIS} width={axisWidth} />
         <Tooltip
-          contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+          contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
           formatter={(v: number) => [percent(v, 2), "Weight"]}
         />
         {/* One measure, one hue: a different colour per bar would imply a
@@ -416,7 +416,7 @@ export function HealthBreakdown({ components }: {
         <XAxis type="number" domain={[0, 100]} {...AXIS} />
         <YAxis type="category" dataKey="name" {...AXIS} width={axisWidth} />
         <Tooltip
-          contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+          contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
           formatter={(v: number, _n, item) => [
             `${v.toFixed(1)} / 100 · worth ${(item.payload as { weight: number }).weight} pts`,
             "Score",
@@ -456,7 +456,7 @@ export function AnomalyTimeline({ timeline, threshold }: {
             fill: CHART.accent, fontSize: 10.5 }}
         />
         <Tooltip
-          contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+          contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
           labelFormatter={monthLabel}
           formatter={(v: number) => [v.toFixed(4), "Reconstruction error"]}
         />
@@ -487,7 +487,7 @@ export function ClusterComparison({ rows }: {
         <CartesianGrid {...GRID_VERTICAL} />
         <XAxis type="number" {...AXIS} />
         <YAxis type="category" dataKey="name" {...AXIS} width={axisWidth} />
-        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
                  formatter={(v: number) => v.toFixed(3)} />
         <Legend verticalAlign="top" align="right" {...LEGEND} />
         <Bar dataKey="You" fill={SERIES[0]} radius={[0, 3, 3, 0]} {...STATIC_SERIES} />
@@ -665,7 +665,7 @@ export function MetricComparisonBars({ metrics, seriesNames }: {
         <CartesianGrid {...GRID} />
         <XAxis dataKey="metric" {...AXIS} />
         <YAxis {...AXIS} width={48} domain={[0, 1]} tickFormatter={(v: number) => v.toFixed(1)} />
-        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
                  formatter={(v: number) => v.toFixed(4)} />
         <Legend verticalAlign="top" align="right" {...LEGEND} />
         <Bar dataKey={seriesNames[0]} fill={SERIES[0]} radius={[4, 4, 0, 0]} {...STATIC_SERIES} />
@@ -757,7 +757,7 @@ export function MagnitudeBars({ items, format, color, domain }: {
         <XAxis type="number" {...AXIS} domain={domain ?? [0, "auto"]}
                tickFormatter={format ?? ((v: number) => v.toFixed(2))} />
         <YAxis type="category" dataKey="label" {...AXIS} width={axisWidth} />
-        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.03)" }}
+        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "color-mix(in oklab, var(--ink-primary) 4%, transparent)" }}
                  formatter={(v: number) => (format ?? ((x: number) => x.toFixed(4)))(v)} />
         <Bar dataKey="value" fill={color ?? SERIES[0]} radius={[0, 4, 4, 0]} {...STATIC_SERIES} />
       </BarChart>

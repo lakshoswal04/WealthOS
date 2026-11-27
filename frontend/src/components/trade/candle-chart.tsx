@@ -97,6 +97,29 @@ export const CandleChart = forwardRef<CandleChartHandle, {
     return () => { c.remove(); chart.current = null; main.current = null; vol.current = null; lines.current = []; plines.current = []; };
   }, [kind, volume, compact, intraday]);
 
+  // Theme switches recolour the chart in place (rebuilding it would drop its data).
+  useEffect(() => {
+    const apply = () => {
+      const c = chart.current;
+      if (!c) return;
+      const up = css("--up", "#2c6e48"), down = css("--down", "#b04a33"), grid = css("--grid", "#ebe6da");
+      c.applyOptions({
+        layout: { textColor: css("--ink-muted", "#666b61") },
+        grid: { vertLines: { color: grid }, horzLines: { color: grid } },
+        rightPriceScale: { borderColor: css("--hairline", "#e6e0d2") },
+        timeScale: { borderColor: css("--hairline", "#e6e0d2") },
+      });
+      if (kind === "candles") {
+        main.current?.applyOptions({ upColor: up, downColor: down, borderUpColor: up, borderDownColor: down, wickUpColor: up, wickDownColor: down });
+      } else {
+        main.current?.applyOptions({ color: css("--accent", "#1f4d3a") });
+      }
+    };
+    const watcher = new MutationObserver(apply);
+    watcher.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => watcher.disconnect();
+  }, [kind]);
+
   // Data, overlays and price lines.
   useEffect(() => {
     const c = chart.current, s = main.current;

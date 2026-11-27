@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useChatThreads } from "@/components/trade/app-shell";
 import { ChipRow, Composer, MessageList } from "@/components/trade/chat";
+import { HomeBento } from "@/components/trade/home-bento";
 import { Loading } from "@/components/trade/primitives";
 import { useAuth } from "@/lib/auth";
 import { trade, type ChatMessage } from "@/lib/trade-api";
@@ -74,16 +75,19 @@ function Home() {
 
   if (empty) {
     return (
-      <div className="flex min-h-[calc(100vh-11rem)] flex-col items-center justify-center pb-24">
-        <h1 className="display mb-12 text-center text-[clamp(28px,3.4vw,44px)] tracking-tight text-[var(--ink-primary)]">
-          What&apos;s moving today{firstName ? `, ${firstName}` : ""}?
+      <div className="flex min-h-[calc(100vh-11rem)] flex-col items-center justify-center pb-16 pt-6">
+        <div className="label mb-4 text-[var(--accent)]">{greeting()}</div>
+        <h1 className="display mb-10 text-center text-[clamp(36px,4.6vw,60px)] leading-[1.02] text-[var(--ink-primary)]">
+          {firstName ? <>Hello, <em>{firstName}.</em></> : <>Your wealth, <em>understood.</em></>}
+          <span className="mt-2 block text-[0.55em] text-[var(--ink-secondary)]">What would you like to know?</span>
         </h1>
         <div className="w-full max-w-[760px]">
           <Composer large onSubmit={send} value={draft} onValueChange={setDraft} autoFocus />
         </div>
         <div className="mt-7"><ChipRow onPick={setDraft} /></div>
         {error && <p className="mt-6 text-small text-[var(--down)]">{error}</p>}
-        <p className="mt-16 max-w-xl text-center text-caption leading-relaxed text-[var(--ink-faint)]">
+        <div className="mt-14 flex w-full justify-center"><HomeBento /></div>
+        <p className="mt-12 max-w-xl text-center text-caption leading-relaxed text-[var(--ink-faint)]">
           Answers quote only figures the backend computed, and each one is checked. Prices are delayed about
           fifteen minutes unless Upstox is connected. Trading is paper only, and nothing is placed without your confirmation.
         </p>
@@ -102,4 +106,9 @@ function Home() {
       </div>
     </div>
   );
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 5 ? "Working late" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 }

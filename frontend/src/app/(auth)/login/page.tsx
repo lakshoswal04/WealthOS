@@ -27,11 +27,8 @@ export default function LoginPage() {
 
   return (
     <div className="rise">
-      <div className="mb-7 lg:hidden">
-        <div className="display text-h2">Wealth<span className="text-[var(--accent)]">OS</span></div>
-      </div>
 
-      <h1 className="display text-h1 leading-tight">Sign in</h1>
+      <h1 className="display text-[44px] leading-none">Welcome <em>back.</em></h1>
       <p className="mt-1.5 text-body text-[var(--ink-secondary)]">
         Pick up where your portfolio left off.
       </p>

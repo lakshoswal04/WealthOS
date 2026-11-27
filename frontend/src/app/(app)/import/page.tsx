@@ -196,7 +196,7 @@ function ImportOutcome({ result }: { result: ImportResult }) {
 
       {result.errors.length > 0 && (
         <div className="mt-3 overflow-hidden rounded-[8px] border border-[color-mix(in_oklab,var(--critical)_35%,transparent)]">
-          <div className="bg-[color-mix(in_oklab,var(--critical)_10%,transparent)] px-3 py-2 text-small text-[#ffb3b3]">
+          <div className="bg-[color-mix(in_oklab,var(--critical)_10%,transparent)] px-3 py-2 text-small text-[var(--critical-ink)]">
             Nothing was saved. Fix these rows and upload again.
           </div>
           <table className="w-full text-small">
@@ -219,7 +219,7 @@ function ImportOutcome({ result }: { result: ImportResult }) {
                   </td>
                   <td className="px-3 py-1.5 text-[var(--ink-secondary)]">{rowError.field ?? "—"}</td>
                   <td className="tabular px-3 py-1.5 text-[var(--ink-muted)]">{rowError.value ?? "—"}</td>
-                  <td className="px-3 py-1.5 text-[#ffb3b3]">{rowError.message}</td>
+                  <td className="px-3 py-1.5 text-[var(--critical-ink)]">{rowError.message}</td>
                 </tr>
               ))}
             </tbody>
@@ -231,7 +231,7 @@ function ImportOutcome({ result }: { result: ImportResult }) {
         <ul className="mt-3 space-y-1.5">
           {result.warnings.map((warning, i) => (
             <li key={i}
-                className="rounded-[7px] border border-[color-mix(in_oklab,var(--warning)_35%,transparent)] bg-[color-mix(in_oklab,var(--warning)_8%,transparent)] px-3 py-2 text-caption leading-relaxed text-[#e8b84b]">
+                className="rounded-[7px] border border-[color-mix(in_oklab,var(--warning)_35%,transparent)] bg-[color-mix(in_oklab,var(--warning)_8%,transparent)] px-3 py-2 text-caption leading-relaxed text-[var(--warning-ink)]">
               {warning}
             </li>
           ))}
@@ -240,7 +240,7 @@ function ImportOutcome({ result }: { result: ImportResult }) {
 
       {result.accepted && (
         <a href="/analysis/overview"
-           className="mt-4 inline-block rounded-[8px] bg-[var(--accent)] px-3.5 py-2 text-body font-medium text-[var(--accent-ink)] hover:bg-[#f0b254]">
+           className="mt-4 inline-block rounded-[8px] bg-[var(--accent)] px-3.5 py-2 text-body font-medium text-[var(--accent-ink)] hover:opacity-90">
           See your dashboard
         </a>
       )}

@@ -56,7 +56,7 @@ export default function RiskPage() {
         </CardBody></Card>
         <Card><CardBody>
           <Stat label="Max drawdown" value={percent(summary.max_drawdown, 2)}
-                tone="text-[#ff8f8f]" sub="worst peak-to-trough fall" />
+                tone="text-[var(--critical-ink)]" sub="worst peak-to-trough fall" />
         </CardBody></Card>
         <Card><CardBody>
           <Stat label="Beta" value={ratio(summary.beta)}

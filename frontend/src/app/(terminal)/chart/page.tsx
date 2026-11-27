@@ -12,6 +12,7 @@ import {
   AIPanel, AlertsPanel, ChainPanel, INDEX_KEYS, OIPanel, PositionsPanel, StrategiesPanel, WatchlistPanel, usePriceAlerts,
 } from "@/components/trade/terminal-panels";
 import { useSettings } from "@/components/trade/settings-context";
+import { readToken } from "@/lib/viz";
 import { useDismiss, usePoll } from "@/lib/hooks";
 import { trade, type Instrument, type OptionChain } from "@/lib/trade-api";
 import { inrSigned, num, shortExpiry, tone } from "@/lib/tfmt";
@@ -81,10 +82,10 @@ function Terminal() {
     const out: PriceLineSpec[] = [];
     if (layers.prevClose && quote.data) out.push({ price: quote.data.prev_close, title: "Prev close" });
     if (isIndex && chain.data && layers.oi && interval !== "1D") {
-      if (chain.data.resistance != null) out.push({ price: chain.data.resistance, title: `${chain.data.resistance} CE wall`, color: "#f2665e" });
-      if (chain.data.support != null) out.push({ price: chain.data.support, title: `${chain.data.support} PE wall`, color: "#3fcf7f" });
+      if (chain.data.resistance != null) out.push({ price: chain.data.resistance, title: `${chain.data.resistance} CE wall`, color: readToken("down") || "#b04a33" });
+      if (chain.data.support != null) out.push({ price: chain.data.support, title: `${chain.data.support} PE wall`, color: readToken("up") || "#2c6e48" });
     }
-    if (isIndex && chain.data && layers.maxPain && interval !== "1D") out.push({ price: chain.data.max_pain, title: "Max pain", color: "#e2b450" });
+    if (isIndex && chain.data && layers.maxPain && interval !== "1D") out.push({ price: chain.data.max_pain, title: "Max pain", color: readToken("accent") || "#1f4d3a" });
     return out;
   }, [layers, quote.data, chain.data, isIndex, interval]);
 

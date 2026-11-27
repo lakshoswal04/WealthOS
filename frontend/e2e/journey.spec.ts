@@ -175,7 +175,7 @@ test("protected pages redirect an anonymous visitor to sign in", async ({ page }
   for (const path of ["/home", "/portfolio", "/chart", "/overview"]) {
     await page.goto(path);
     await page.waitForURL("**/login", { timeout: 15_000 });
-    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome back." })).toBeVisible();
   }
 });
 
@@ -196,16 +196,16 @@ test("the landing page is public and routes to sign-up", async ({ page }) => {
 
   // An anonymous visitor must land here, not be bounced to a login form.
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Understand your wealth");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Your wealth.");
 
-  // Measured results are read from the pipeline reports at runtime.
-  await expect(page.getByText("Clustering ARI")).toBeVisible();
-  await expect(page.getByText("Anomaly PR-AUC")).toBeVisible();
+  // The models' measured record is read from the pipeline reports at runtime.
+  await page.locator("#method").scrollIntoViewIfNeeded();
+  await expect(page.getByText("rank IC, out of sample")).toBeVisible();
 
-  // The prototype disclaimer is present, not buried.
-  await expect(page.getByText(/not a regulated financial advisory service/)).toBeVisible();
+  // The disclaimer is present, not buried.
+  await expect(page.getByText(/not investment advice/i).first()).toBeVisible();
 
-  await page.getByRole("link", { name: "Create your account" }).first().click();
+  await page.getByRole("link", { name: "Get started →" }).first().click();
   await page.waitForURL("**/register");
 });
 

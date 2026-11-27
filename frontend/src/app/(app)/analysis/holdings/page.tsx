@@ -205,7 +205,7 @@ export default function PortfolioPage() {
                       <td className="px-5 py-2.5 text-right">
                         <button
                           onClick={() => remove(holding)}
-                          className="text-caption text-[var(--ink-muted)] hover:text-[#ff8f8f]"
+                          className="text-caption text-[var(--ink-muted)] hover:text-[var(--critical-ink)]"
                           aria-label={`Remove ${holding.symbol}`}
                         >
                           Remove

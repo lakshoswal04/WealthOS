@@ -1,124 +1,100 @@
 @import "tailwindcss";
 
 /* ──────────────────────────────────────────────────────────────────────────
-   WealthOS design tokens
+   WealthOS design tokens — "paper"
 
-   A warm private-bank light surface: bone ground, near-black ink, white
-   cards, generous whitespace. Light is the default and the only automatic
-   theme. The dark theme is preserved below under [data-theme="dark"] and is
-   reachable explicitly, because the work that validated it was real and
-   throwing it away would lose it.
+   An editorial, light-first surface: warm paper ground, charcoal ink, deep
+   forest as the one brand colour, sage and ochre as quiet support. Display
+   headlines are a light serif with one italic word; data is a neutral sans
+   with tabular figures; labels are a small mono. Contrast is measured, not
+   eyeballed:
 
-   --surface-1 (#ffffff) is the CHART GROUND and is load-bearing. The eight
-   series colours in lib/viz.ts are validated against the page ground
-   (#f4ede7), which is the harder of the two surfaces because it is darker
-   and therefore gives a mid-tone mark less luminance to work with. Passing
-   there passes on white. Changing either value invalidates that work:
-   re-run the validator before touching them.
+     ink #1C1F1A 14.9:1 · secondary 7.5 · muted 4.6 · forest 8.6 on paper
+     up #2C6E48 5.5 · down #B04A33 4.9 · warning 5.3 · critical 5.6
 
-   The light series palette is NOT the dark one reused. The dark eight were
-   validated against #0e1116 and five of them fall below 3:1 on bone
-   (#199e70 2.94, #c98500 2.65, #0ca30c 2.89, #9085e9 2.70, #e66767 2.79),
-   which the contrast check calls non-dismissable. Each hue was re-stepped
-   darker until it cleared 3.3:1 on bone, keeping its hue angle so an asset
-   class means the same colour in either theme.
+   The categorical series below were run through the dataviz validator on
+   both the paper ground (#F5F2EA) and the card (#FFFDF8): lightness band,
+   chroma floor, normal-vision floor and contrast PASS; worst adjacent CVD
+   pair 6.3 (protan, series 1/2), legal because every chart carries a legend
+   and direct labels. Re-run the validator before changing any of them.
    ────────────────────────────────────────────────────────────────── */
 
 :root {
   color-scheme: light;
 
-  /* Local fallbacks keep the app buildable and visually stable when a deploy
-     environment cannot fetch a web font. Inter is used when installed; the
-     surrounding system UI faces preserve the same neutral grotesk character. */
-  --font-display: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  /* Families come from next/font in app/layout.tsx; the fallbacks keep the
+     look close if a font fails to load. */
+  --font-display: var(--font-serif-face, "Iowan Old Style"), "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-body: var(--font-sans-face, Inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-mono-face, "SFMono-Regular"), "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
   /* ── surfaces ── */
-  --surface-0: #f4ede7;   /* page ground — bone, sampled from the reference */
-  --surface-1: #ffffff;   /* chart + input ground — validated, do not change */
-  --surface-2: #fbf8f5;   /* card */
-  --surface-3: #ece5de;   /* raised / hover */
-  --surface-4: #ded5cc;   /* control, active */
+  --surface-0: #f5f2ea;   /* page ground — warm paper */
+  --surface-1: #fffdf8;   /* card and chart ground */
+  --surface-2: #faf7f0;   /* inset / input */
+  --surface-3: #ede8dc;   /* hover, chips */
+  --surface-4: #e0d9c9;   /* control, active */
 
-  /* Glass: a card that lets a little of the ground through reads as a
-     physical layer rather than a flat rectangle. */
-  --glass: color-mix(in oklab, var(--surface-2) 88%, transparent);
-  --glass-strong: color-mix(in oklab, var(--surface-2) 96%, transparent);
+  --glass: color-mix(in oklab, var(--surface-1) 92%, transparent);
+  --glass-strong: color-mix(in oklab, var(--surface-1) 97%, transparent);
 
-  --hairline: #e6ddd5;
-  --hairline-strong: #d6cbc1;
+  --hairline: #e6e0d2;
+  --hairline-strong: #d5cdbb;
 
-  /* ── ink ──
-     Contrast against the bone ground, measured: 17.06, 6.88, 5.08, 2.17.
-     --ink-faint is decorative only and never carries text that must be read;
-     it is the muted half of the split headline. */
-  --ink-primary: #0b0a09;
-  --ink-secondary: #55504a;
-  --ink-muted: #6b635c;
-  --ink-faint: #a9a29b;
+  /* ── ink ── */
+  --ink-primary: #1c1f1a;
+  --ink-secondary: #4a4f46;
+  --ink-muted: #666b61;
+  --ink-faint: #9ea197;
 
-  /* ── accent ──
-     The reference's primary action is black, not a colour, and that
-     restraint is most of the look. --accent stays gold for identity and is
-     stepped dark enough to carry text (4.52:1 on bone); --action is the
-     near-black the buttons actually use. */
-  --accent: #926300;
-  --accent-bright: #845500;
-  --accent-dim: #d8c79d;
-  --accent-ink: #fdfbf8;
-  --accent-wash: color-mix(in oklab, var(--accent) 10%, transparent);
-  --action: #121010;
-  --action-ink: #f7f3ef;
+  /* ── brand ──
+     Forest is the action and the accent; sage is its quiet partner. */
+  --accent: #1f4d3a;
+  --accent-bright: #2c6e52;
+  --accent-dim: #a9bfa9;
+  --accent-ink: #f5f2ea;
+  --accent-wash: color-mix(in oklab, var(--accent) 8%, transparent);
+  --action: #1f4d3a;
+  --action-ink: #f7f5ee;
+  --sage: #8fa68e;
+  --sage-wash: #e7eee6;
+  --gold: #86651c;
 
-  /* ── status: reserved for state, never reused as a series colour ──
-     All four stepped to >= 4.5:1 on the bone ground so they work as text. */
-  --good: #007e00;
-  --good-ink: #00660a;
-  --warning: #9e5d00;
-  --warning-ink: #824c00;
-  --serious: #c04201;
-  --serious-ink: #9e3601;
-  --critical: #bd4145;
-  --critical-ink: #9c3539;
+  /* ── status (reserved for state, never a series colour) ── */
+  --good: #2c6e48;
+  --good-ink: #245c3c;
+  --warning: #8a5a00;
+  --warning-ink: #744b00;
+  --serious: #b04a33;
+  --serious-ink: #963e2a;
+  --critical: #a63d3d;
+  --critical-ink: #8e3333;
 
-  /* ── categorical series (validated against --surface-0 #f4ede7) ──
-     Lightness band PASS, chroma floor PASS, adjacent-pair CVD separation
-     PASS (worst 8.5 protan / 7.4 tritan), normal-vision floor PASS (17.6),
-     contrast PASS (all 8 >= 3.3:1). The tritan figure sits in the 6-8 band,
-     which is legal only with secondary encoding — every chart here carries a
-     legend and direct labels, which is that encoding. */
-  --series-1: #3583e1;  /* blue */
-  --series-2: #d95926;  /* orange */
-  --series-3: #009467;  /* aqua */
-  --series-4: #b67400;  /* yellow */
-  --series-5: #d55181;  /* magenta */
-  --series-6: #009700;  /* green */
-  --series-7: #8175d8;  /* violet */
-  --series-8: #d7595b;  /* red */
+  /* ── categorical series (validated on #F5F2EA and #FFFDF8) ── */
+  --series-1: #1f7a55;  /* forest green */
+  --series-2: #c2475e;  /* rose */
+  --series-3: #3a6fb5;  /* slate blue */
+  --series-4: #a97f12;  /* ochre */
+  --series-5: #8e4a8c;  /* plum */
+  --series-6: #c8632a;  /* clay */
+  --series-7: #008c9c;  /* teal */
+  --series-8: #6b8a12;  /* olive */
 
   /* ── recessive chart furniture ── */
-  --grid: #e8e0d9;
-  --axis: #b9afa6;
+  --grid: #ebe6da;
+  --axis: #b8b1a1;
 
-  /* ── elevation ──
-     A light interface casts real shadows, so these are softer and warmer
-     than the dark theme's, which needed a top highlight to read at all. */
-  --lift-1: 0 1px 2px rgb(60 48 38 / 0.06);
-  --lift-2: 0 1px 2px rgb(60 48 38 / 0.06), 0 8px 24px -8px rgb(60 48 38 / 0.12);
-  --lift-3: 0 2px 4px rgb(60 48 38 / 0.07), 0 18px 44px -16px rgb(60 48 38 / 0.18);
-  --glow-accent: 0 0 0 1px color-mix(in oklab, var(--accent) 28%, transparent),
-                 0 8px 28px -10px color-mix(in oklab, var(--accent) 30%, transparent);
+  /* ── elevation: soft, warm, never heavy ── */
+  --lift-1: 0 1px 2px rgb(50 44 30 / 0.05);
+  --lift-2: 0 1px 2px rgb(50 44 30 / 0.05), 0 10px 30px -12px rgb(50 44 30 / 0.12);
+  --lift-3: 0 2px 6px rgb(50 44 30 / 0.06), 0 24px 60px -24px rgb(50 44 30 / 0.22);
+  --glow-accent: 0 0 0 1px color-mix(in oklab, var(--accent) 22%, transparent),
+                 0 10px 30px -14px color-mix(in oklab, var(--accent) 30%, transparent);
+  --edge-lit: rgb(90 78 50 / 0.08);
 
-  /* The top edge of a card, "lit from above". On a dark ground that is a
-     white highlight; on a light one a white line is invisible, so it becomes
-     a faint warm shadow instead. Tokenised because the technique inverts
-     between themes rather than just changing value. */
-  --edge-lit: rgb(120 96 72 / 0.10);
-
-  --radius: 12px;
+  --radius: 16px;
   --radius-sm: 8px;
-  --radius-lg: 18px;
+  --radius-lg: 24px;
 
   --ease: cubic-bezier(0.22, 0.75, 0.3, 1);
 }
@@ -269,7 +245,7 @@
 :root[data-theme="terminal"] .metal { background: none; color: var(--accent); }
 
 /* Up/down tokens for the other themes, so trading components work anywhere. */
-:root { --up: var(--good-ink); --down: var(--critical-ink); --buy: #1f8a4c; --sell: #b8352f; }
+:root { --up: #2c6e48; --down: #b04a33; --buy: #2c6e48; --sell: #b04a33; }
 
 /* The scrolling index strip. Two copies of the list slide by exactly one
    copy's width, so the loop has no seam. */
@@ -302,24 +278,62 @@ body {
   font-feature-settings: "cv05" 1, "ss01" 1;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  /* Two faint pools of light stop a very dark ground reading as flat black. */
-  background-image:
-    radial-gradient(1100px 620px at 12% -12%, color-mix(in oklab, var(--accent) 6%, transparent), transparent 62%),
-    radial-gradient(860px 520px at 94% -4%, color-mix(in oklab, var(--series-1) 6%, transparent), transparent 64%);
-  background-attachment: fixed;
+  /* Paper is flat: depth comes from cards and hairlines, not glows. */
+  background-image: none;
 }
 
 /* Figures line up in columns only with tabular, same-width digits. */
 .tabular {
   font-variant-numeric: tabular-nums;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
+}
+/* The terminal theme keeps its monospaced figures. */
+:root[data-theme="terminal"] .tabular { font-family: var(--font-mono), ui-monospace, monospace; letter-spacing: -0.01em; }
+
+/* Editorial display type: a light serif, one italic word in forest. */
+.display {
+  font-family: var(--font-display);
+  font-weight: 300;
+  letter-spacing: -0.018em;
+  font-optical-sizing: auto;
+}
+.display em, .display i, .serif em {
+  font-style: italic;
+  color: var(--accent);
+}
+.serif { font-family: var(--font-display); font-weight: 300; letter-spacing: -0.015em; }
+
+/* Small mono label: eyebrows, buttons, data captions. */
+.label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.display {
-  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
-  font-weight: 500;
-  letter-spacing: -0.02em;
+/* Scroll reveal (see lib/use-in-view.ts) and staggered children. */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity 700ms var(--ease), transform 700ms var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+[data-stagger] > * { opacity: 0; transform: translateY(14px); animation: rise 640ms var(--ease) forwards; }
+[data-stagger] > *:nth-child(1) { animation-delay: 60ms; }
+[data-stagger] > *:nth-child(2) { animation-delay: 160ms; }
+[data-stagger] > *:nth-child(3) { animation-delay: 260ms; }
+[data-stagger] > *:nth-child(4) { animation-delay: 360ms; }
+[data-stagger] > *:nth-child(5) { animation-delay: 460ms; }
+[data-stagger] > *:nth-child(6) { animation-delay: 560ms; }
+@keyframes float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+/* Arrives (rise), then drifts gently. Kept out of [data-stagger], whose
+   own animation would otherwise replace this one. */
+.float-slow { animation: rise 700ms var(--ease) both, float-y 7s ease-in-out 900ms infinite; }
+/* Italic accents on a forest band take the band's ink, not forest. */
+.on-accent .display em, .on-accent em { color: var(--accent-ink); }
+@keyframes draw-line { from { stroke-dashoffset: var(--len, 1200); } to { stroke-dashoffset: 0; } }
+.draw { stroke-dasharray: var(--len, 1200); animation: draw-line 1800ms var(--ease) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal, [data-stagger] > * { opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important; }
+  .float-slow, .draw { animation: none !important; stroke-dasharray: none; }
 }
 
 /* The wordmark's second half.
@@ -331,7 +345,8 @@ body {
  * gradient survives in the dark theme, where it still works.
  */
 .metal {
-  color: var(--ink-muted);
+  color: var(--accent);
+  font-style: italic;
   font-weight: 400;
 }
 
@@ -428,15 +443,15 @@ body {
    ────────────────────────────────────────────────────────────────────── */
 
 :root {
-  --text-micro: 10px;      /* units, footnote markers, axis overflow */
-  --text-caption: 11.5px;  /* captions, table meta, chart furniture */
-  --text-small: 12.5px;    /* dense table cells, secondary body */
-  --text-body: 13px;       /* default reading size */
-  --text-body-lg: 15px;    /* lead paragraphs, card values */
-  --text-h3: 18px;         /* panel titles */
-  --text-h2: 22px;         /* section headings */
-  --text-h1: 26px;         /* page headings */
-  --text-display: 34px;    /* a single hero figure per page */
+  --text-micro: 10.5px;    /* units, footnote markers, axis overflow */
+  --text-caption: 12px;    /* captions, table meta, chart furniture */
+  --text-small: 13px;      /* dense table cells, secondary body */
+  --text-body: 14px;       /* default reading size */
+  --text-body-lg: 16px;    /* lead paragraphs, card values */
+  --text-h3: 19px;         /* panel titles */
+  --text-h2: 26px;         /* section headings */
+  --text-h1: 32px;         /* page headings */
+  --text-display: 46px;    /* page titles in the serif */
 
   --leading-tight: 1.25;
   --leading-normal: 1.5;
@@ -450,32 +465,14 @@ body {
 .text-h3       { font-size: var(--text-h3);       line-height: var(--leading-tight); }
 .text-h2       { font-size: var(--text-h2);       line-height: var(--leading-tight); }
 .text-h1       { font-size: var(--text-h1);       line-height: var(--leading-tight); }
-.text-display  { font-size: var(--text-display);  line-height: var(--leading-tight); }
+.text-display  { font-size: var(--text-display);  line-height: 1.06; }
 
-/* Atmospheric surfaces and typography inspired by the Origin reference. */
-.origin-hero {
-  background:
-    radial-gradient(ellipse 55% 42% at 50% 0%, rgb(84 169 210 / .38), transparent 75%),
-    radial-gradient(ellipse 40% 28% at 18% 5%, rgb(21 104 150 / .35), transparent 75%),
-    linear-gradient(180deg, #103a50 0%, #102432 28%, #0b0d10 68%);
-}
-.hero-title, .landing-page h2 {
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 400;
-}
-.hero-title em { font-weight: 400; }
-.landing-page .origin-hero > div:last-child { position: relative; }
-.wealth-card {
-  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
-}
-@media (hover: hover) {
-  .wealth-card:hover {
-    border-color: color-mix(in oklab, var(--accent) 38%, var(--hairline));
-    box-shadow: var(--lift-2), 0 0 28px -18px color-mix(in oklab, var(--accent) 50%, transparent);
-  }
-}
+/* Landing page. */
 .landing-page section { scroll-margin-top: 5rem; }
-.landing-page h2 { letter-spacing: -.035em; }
+.wealth-card { transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease; }
+@media (hover: hover) {
+  .wealth-card:hover { border-color: var(--hairline-strong); box-shadow: var(--lift-2); transform: translateY(-2px); }
+}
 @keyframes page-arrive {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }

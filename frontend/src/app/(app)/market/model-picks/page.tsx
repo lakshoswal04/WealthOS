@@ -173,7 +173,7 @@ function PickRow({ pick }: { pick: SignalPick }) {
       </td>
       <td className="py-3 pr-5 text-right">
         <button onClick={() => ticket.open({ instrument: "equity", symbol: pick.symbol, side: "buy", ltp: pick.last_close, tag: "model:swing" })}
-          className="rounded-full border border-[var(--hairline-strong)] px-3 py-1 text-small hover:bg-[var(--surface-3)]">
+          className="whitespace-nowrap rounded-full border border-[var(--hairline-strong)] px-3 py-1 text-small hover:bg-[var(--surface-3)]">
           Paper trade
         </button>
       </td>
